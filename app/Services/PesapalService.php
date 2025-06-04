@@ -19,47 +19,77 @@ class PesapalService
         $this->secret = config('pesapal.consumer_secret');
     }
 
-     public function getAccessToken(): string
+     public function requestAccessToken()
     {
-        $baseUrl = config('pesapal.base_url');
-        $key = config('pesapal.consumer_key');
-        $secret = config('pesapal.consumer_secret');
+        $url = $this->baseUrl . '/api/Auth/RequestToken';
+
+        $headers = [
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+        ];
+
+        $body = [
+            'consumer_key' => $this->key,
+            'consumer_secret' => $this->secret,
+        ];
+
+        $response = Http::withHeaders($headers)->post($url, $body);
+
+        return $response->json(); // Will contain token or error
+    }
+
+    public function initiatePayment(array $payload)
+    {
+        $token = $this->getAccessToken(); // Reuse token if still valid
+        $response = Http::withHeaders([
+            'Authorization' => "Bearer $token",
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+        ])->post("{$this->baseUrl}/api/Transactions/SubmitOrderRequest", $payload);
+
+        if ($response->successful()) {
+            return $response->json();
+        }
+
+        \Log::error('Pesapal SubmitOrderRequest Error', [
+            'status' => $response->status(),
+            'body' => $response->body(),
+        ]);
+
+        throw new \Exception('Failed to submit order to Pesapal.');
+    }
+
+  public function getAccessToken(): string
+    {
+        $url = $this->baseUrl . '/api/Auth/RequestToken';
 
         $response = Http::withHeaders([
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
-        ])->post("{$baseUrl}/api/Auth/RequestToken", [
-            'consumer_key' => $key,
-            'consumer_secret' => $secret,
+        ])->post($url, [
+            'consumer_key' => $this->key,
+            'consumer_secret' => $this->secret,
         ]);
 
-        if ($response->successful() && isset($response['token'])) {
-            return $response['token'];
+        if ($response->successful()) {
+            $data = $response->json();
 
-                // ✅ Log the token for debugging
-            Log::info('Pesapal Access Token Retrieved', [
-                'token' => $token
-            ]);
+            if (!isset($data['token'])) {
+                Log::error('Pesapal token missing from response', ['body' => $data]);
+                throw new \Exception('Access token missing from Pesapal response.');
+            }
+
+            return $data['token'];
         }
 
-       
-
-        Log::error('Pesapal Auth Error', [
-        'status' => $response->status(),
-        'body' => $response->body(),
-    ]);
-        
+        Log::error('Pesapal Token Request Failed', [
+            'status' => $response->status(),
+            'body' => $response->body(),
+        ]);
 
         throw new \Exception('Failed to retrieve access token from Pesapal.');
     }
 
-    public function initiatePayment(array $data)
-    {
-        $token = $this->getAccessToken();
 
-        $response = Http::withToken($token)
-            ->post("{$this->baseUrl}/api/Transactions/SubmitOrderRequest", $data);
 
-        return $response->json();
-    }
 }

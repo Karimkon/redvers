@@ -36,47 +36,85 @@ class PesapalController extends Controller
      */
     public function handleCallback(Request $request)
     {
-        $orderTrackingId = $request->get('OrderTrackingId');
+        $data = $request->all();
 
-        if (!$orderTrackingId) {
-            Log::warning('Pesapal callback received without OrderTrackingId.');
-            return response('Missing OrderTrackingId', 400);
+        Log::info('📥 Pesapal Callback Received', $data);
+
+        if (!isset($data['order_tracking_id'])) {
+            return response()->json(['error' => 'Missing tracking ID'], 400);
         }
 
-        $payment = Payment::where('external_reference', $orderTrackingId)->first();
+        // Find payment by pesapal_transaction_id
+        $payment = Payment::where('pesapal_transaction_id', $data['order_tracking_id'])->first();
 
         if (!$payment) {
-            Log::warning("Payment not found for OrderTrackingId: {$orderTrackingId}");
-            return response('Payment not found', 404);
+            Log::warning('⚠️ Payment not found for callback', ['tracking_id' => $data['order_tracking_id']]);
+            return response()->json(['error' => 'Payment not found'], 404);
         }
 
-        try {
-            $token = app(PesapalService::class)->getAccessToken();
+        // You can further validate or call Pesapal API for confirmation if needed
 
-            $response = Http::withToken($token)->get(config('pesapal.base_url') . '/api/Transactions/GetTransactionStatus', [
-                'orderTrackingId' => $orderTrackingId,
-            ]);
+        // Update payment status (assumes success, adjust if more fields needed)
+        $payment->status = 'completed'; // or use $data['status'] if returned
+        $payment->save();
 
-            if ($response->successful()) {
-                $status = strtolower($response['payment_status']);
-
-                if (in_array($status, ['completed', 'failed', 'pending'])) {
-                    $payment->update(['status' => $status]);
-                    Log::info("Payment status updated to {$status} for OrderTrackingId: {$orderTrackingId}");
-                } else {
-                    Log::warning("Unexpected status '{$status}' for OrderTrackingId: {$orderTrackingId}");
-                }
-
-                return response('Callback handled', 200);
-            } else {
-                Log::error("Failed to query transaction status: {$response->body()}");
-                return response('Failed to retrieve transaction status', 500);
-            }
-        } catch (\Exception $e) {
-            Log::error("Pesapal callback exception: " . $e->getMessage());
-            return response('Internal Server Error', 500);
-        }
+        return response()->json(['message' => 'Callback processed'], 200);
     }
+
+
+    public function handleIPN(Request $request)
+{
+    $orderTrackingId = $request->input('OrderTrackingId');
+    $merchantRef = $request->input('OrderMerchantReference');
+    $notificationType = $request->input('OrderNotificationType');
+
+    \Log::info('📥 IPN received from Pesapal', [
+        'tracking_id' => $orderTrackingId,
+        'merchant_reference' => $merchantRef,
+        'type' => $notificationType,
+    ]);
+
+    try {
+        $token = app(PesapalService::class)->getAccessToken();
+
+        $response = Http::withToken($token)->get(
+            config('pesapal.base_url') . '/api/Transactions/GetTransactionStatus',
+            ['orderTrackingId' => $orderTrackingId]
+        );
+
+        if ($response->successful()) {
+            $status = strtolower($response['payment_status_description']);
+
+            $payment = Payment::where('external_reference', $orderTrackingId)->first();
+
+            if ($payment) {
+                $payment->update(['status' => $status]);
+
+                \Log::info("✅ Payment updated via IPN: {$status}", [
+                    'payment_id' => $payment->id,
+                    'tracking_id' => $orderTrackingId,
+                ]);
+            }
+        }
+
+        return response()->json([
+            'orderNotificationType' => $notificationType,
+            'orderTrackingId' => $orderTrackingId,
+            'orderMerchantReference' => $merchantRef,
+            'status' => 200
+        ]);
+    } catch (\Exception $e) {
+        \Log::error('❌ Error in IPN handler: ' . $e->getMessage());
+
+        return response()->json([
+            'orderNotificationType' => $notificationType,
+            'orderTrackingId' => $orderTrackingId,
+            'orderMerchantReference' => $merchantRef,
+            'status' => 500
+        ]);
+    }
+}
+
 
     public function testSubmitOrder()
 {

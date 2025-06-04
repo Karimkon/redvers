@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Agent;
 use Illuminate\Support\Facades\DB;
+use App\Services\PesapalService;
+use Illuminate\Support\Facades\Http;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\{Swap, Station, Payment, User, Battery, BatterySwap};
@@ -119,16 +121,68 @@ if (!$isFirstTime && $request->filled('battery_returned_id')) {
         ]);
     }
 
-    if ($request->payment_method && $payableAmount > 0) {
+   if ($request->payment_method && $payableAmount > 0) {
+    $reference = 'SWAP-PESAPAL-' . uniqid();
+
+    if ($request->payment_method === 'pesapal') {
+        try {
+            $token = app(PesapalService::class)->getAccessToken();
+
+            $rider = User::find($request->rider_id);
+
+            $response = Http::withToken($token)->post(config('pesapal.base_url') . '/api/Transactions/SubmitOrderRequest', [
+                "id" => null,
+                "currency" => "UGX",
+                "amount" => $payableAmount,
+                "description" => "Battery Swap Payment",
+                "callback_url" => route('pesapal.callback'),
+                "billing_address" => [
+                    "email_address" => $rider->email,
+                    "phone_number" => $rider->phone,
+                    "first_name" => explode(' ', $rider->name)[0],
+                    "last_name" => explode(' ', $rider->name)[1] ?? '',
+                    "line_1" => "Redvers Station",
+                    "city" => "Kampala",
+                    "state" => "Central",
+                    "postal_code" => "256",
+                    "zip_code" => "256",
+                    "country_code" => "UG"
+                ]
+            ]);
+
+            if ($response->successful()) {
+                $body = $response->json();
+
+                Payment::create([
+                    'swap_id' => $swap->id,
+                    'amount' => $payableAmount,
+                    'method' => 'pesapal',
+                    'status' => 'pending',
+                    'pesapal_transaction_id' => $body['order_tracking_id'] ?? null,
+                    'reference' => $reference,
+                    'initiated_by' => 'agent',
+                ]);
+
+                return redirect()->away($body['redirect_url']); // Go to Pesapal payment page
+            } else {
+                return back()->withErrors(['pesapal' => 'Failed to initiate Pesapal payment.'])->withInput();
+            }
+        } catch (\Exception $e) {
+            \Log::error('Pesapal Payment Init Error', ['error' => $e->getMessage()]);
+            return back()->withErrors(['pesapal' => 'Error: ' . $e->getMessage()])->withInput();
+        }
+    } else {
+        // For MTN or Airtel
         Payment::create([
             'swap_id' => $swap->id,
             'amount' => $payableAmount,
             'method' => $request->payment_method,
             'status' => 'pending',
-            'reference' => 'SWAP-' . strtoupper($request->payment_method) . '-' . uniqid(),
+            'reference' => $reference,
             'initiated_by' => 'agent',
         ]);
     }
+}
 
     return redirect()->route('agent.swaps.index')->with('success', 'Swap created successfully.');
 }

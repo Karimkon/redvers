@@ -33,6 +33,8 @@ use App\Http\Controllers\Admin\DiscountController;
 use App\Http\Controllers\Admin\MotorcycleUnitController;
 use App\Http\Controllers\Finance\FinancePurchaseController;
 use App\Services\PesapalService;
+use App\Http\Controllers\PesapalTokenTestController;
+
 
 
 
@@ -42,6 +44,7 @@ use App\Services\PesapalService;
 
 // Home
 Route::get('/', fn () => view('welcome'));
+Route::get('/pesapal/request-token', [PesapalTokenTestController::class, 'getToken']);
 
 // Login views per role
 Route::get('/admin/login', fn () => view('auth.admin-login'))->name('admin.login');
@@ -296,7 +299,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
-Route::post('/pesapal/callback', [PesapalController::class, 'handleCallback'])->name('pesapal.callback');
+Route::match(['post', 'get'], '/pesapal/ipn', [PesapalController::class, 'handleIPN'])->name('pesapal.ipn');
 
 
 
