@@ -98,21 +98,16 @@ public function create()
     return redirect()->route('admin.purchases.index')->with('success', 'Motorcycle assigned successfully.');
 }
 
-    public function show(Purchase $purchase)
+public function show(Purchase $purchase)
 {
+    $purchase->loadMissing(['discounts', 'payments', 'motorcycle']);
     $schedule = $purchase->getPaymentScheduleSummary();
-
-    // 🟢 Include discounts relationship if not already eager loaded
-    $purchase->loadMissing('discounts');
-
-    // 🟢 Add this: Sum up all discount amounts
     $totalDiscount = $purchase->discounts->sum('amount');
-
-    // 🟢 Real paid = deposit + manual payments + discounts
-    $trueAmountPaid = $purchase->amount_paid + $totalDiscount;
+    $trueAmountPaid = $purchase->payments->sum('amount');
 
     return view('admin.purchases.show', compact('purchase', 'schedule', 'trueAmountPaid', 'totalDiscount'));
 }
+
 
 
 

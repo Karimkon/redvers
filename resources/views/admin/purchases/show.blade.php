@@ -28,8 +28,7 @@
                 <p class="mb-1"><strong>Total Price:</strong> UGX {{ number_format($purchase->total_price) }}</p>
                 <p class="mb-1"><strong>Amount Paid (Including Discounts):</strong> UGX {{ number_format($trueAmountPaid) }}</p>
                 <small class="text-muted">
-                    (Initial Deposit: UGX {{ number_format($purchase->initial_deposit) }},
-                    Payments: UGX {{ number_format($purchase->amount_paid - $purchase->initial_deposit) }},
+                    (Payments: UGX {{ number_format($purchase->payments->sum('amount')) }},
                     Discounts: UGX {{ number_format($totalDiscount) }})
                 </small>
 
@@ -150,40 +149,51 @@
 
     
 
-    {{-- Payment Schedule Summary --}}
-    <div class="card mb-4">
-        <div class="card-header"><strong>🗓️ Payment Schedule Summary</strong></div>
-        <div class="card-body">
-            <p><strong>Expected Payments:</strong> {{ $schedule['expected_days'] }}</p>
-            <p><strong>Payments Made:</strong> {{ $schedule['actual_payments'] }}</p>
-            <p>
-                <strong>Missed Payments:</strong>
-                <span class="badge bg-{{ $schedule['missed_payments'] > 0 ? 'danger' : 'success' }}">
-                    {{ $schedule['missed_payments'] }}
-                </span>
-                @if(count($schedule['missed_dates']))
-                    <br>
-                    <small class="text-muted">
-                        Missed Dates: {{ implode(', ', $schedule['missed_dates']->toArray()) }}
-                    </small>
-                @endif
-            </p>
-            <p><strong>Next Due Date:</strong> {{ $schedule['next_due_date'] ?? 'N/A' }}</p>
-        </div>
-    </div>
+    {{-- 🗓️ Payment Schedule Summary --}}
+<div class="card mb-4">
+    <div class="card-header"><strong>🗓️ Payment Schedule Summary</strong></div>
+    <div class="card-body">
+        <p><strong>Expected Payments:</strong> {{ $schedule['expected_days'] }}</p>
+        <p><strong>Payments Made:</strong> {{ $schedule['actual_payments'] }}</p>
+        <p>
+            <strong>Missed Payments:</strong>
+            <span class="badge bg-{{ $schedule['missed_payments'] > 0 ? 'danger' : 'success' }}">
+                {{ $schedule['missed_payments'] }}
+            </span>
+            @if(count($schedule['missed_dates']))
+                <br>
+                <small class="text-muted">
+                    Missed Dates: {{ implode(', ', $schedule['missed_dates']->toArray()) }}
+                </small>
+            @endif
+        </p>
+        <p><strong>Next Due Date:</strong> {{ $schedule['next_due_date'] ?? 'N/A' }}</p>
 
-    @if($schedule['paid_ahead_days'] > 0)
+        {{-- 🆕 New line for remaining expected payment --}}
+        @if(isset($schedule['remaining_expected_amount']))
+    <p><strong>Remaining Expected Amount:</strong> UGX {{ number_format($schedule['remaining_expected_amount']) }}</p>
+@endif
+
+
+        {{-- 🆕 Paid Ahead Logic --}}
+        @if(isset($schedule['paid_ahead_days']) && $schedule['paid_ahead_days'] > 0)
     <p>
         <strong>Advance Payments:</strong>
         <span class="badge bg-success">
             {{ $schedule['paid_ahead_days'] }} day{{ $schedule['paid_ahead_days'] > 1 ? 's' : '' }} ahead
         </span>
         <br>
-        <small class="text-muted">
-            Overpaid by UGX {{ number_format($schedule['overpaid_amount']) }}
-        </small>
+        @if(isset($schedule['overpaid_amount']))
+            <small class="text-muted">
+                Overpaid by UGX {{ number_format($schedule['overpaid_amount']) }}
+            </small>
+        @endif
     </p>
 @endif
+
+    </div>
+</div>
+
 <details>
     <summary class="text-muted">Show Expected Dates</summary>
     <ul class="small">

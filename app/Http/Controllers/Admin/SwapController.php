@@ -172,43 +172,60 @@ public function store(Request $request)
         return view('admin.swaps.show', compact('swap'));
     }
 
-    public function edit($id)
-    {
-        $swap = Swap::findOrFail($id);
-        $riders = User::where('role', 'rider')->get();
-        $agents = User::where('role', 'agent')->get();
-        $stations = Station::all();
-        return view('admin.swaps.edit', compact('swap', 'riders', 'stations', 'agents'));
-    }
+public function edit($id)
+{
+    $swap = Swap::findOrFail($id);
+
+    $riders = User::where('role', 'rider')
+        ->with(['purchases' => function ($query) {
+            $query->where('status', 'active')->latest();
+        }, 'purchases.motorcycleUnit'])
+        ->get();
+
+    $agents = User::where('role', 'agent')->get();
+    $stations = Station::all();
+
+    // Batteries list for dropdowns
+    $batteries = \App\Models\Battery::whereIn('status', ['in_stock', 'charging', 'in_use'])->get();
+
+    return view('admin.swaps.edit', compact('swap', 'riders', 'stations', 'agents', 'batteries'));
+}
+
 
     public function update(Request $request, $id)
-    {
-        $swap = Swap::findOrFail($id);
+{
+    $swap = Swap::findOrFail($id);
 
-        $request->validate([
-            'rider_id' => 'required|exists:users,id',
-            'station_id' => 'required|exists:stations,id',
-            'agent_id' => 'nullable|exists:users,id',
-            'percentage_difference' => 'required|numeric|min:0|max:100',
-            'payment_method' => 'nullable|in:mtn,airtel,pesapal',
-        ]);
+    $request->validate([
+        'rider_id' => 'required|exists:users,id',
+        'motorcycle_unit_id' => 'required|exists:motorcycle_units,id',
+        'station_id' => 'required|exists:stations,id',
+        'battery_id' => 'required|exists:batteries,id',
+        'battery_returned_id' => 'nullable|exists:batteries,id',
+        'agent_id' => 'nullable|exists:users,id',
+        'percentage_difference' => 'required|numeric|min:0|max:100',
+        'payment_method' => 'nullable|in:mtn,airtel,pesapal',
+    ]);
 
-        $basePrice = env('BASE_PRICE', 15000);
-        $missingPercentage = 100 - $request->percentage_difference;
-        $payableAmount = ($missingPercentage / 100) * $basePrice;
+    $basePrice = config('billing.base_price', 15000);
+    $missing = 100 - $request->percentage_difference;
+    $payableAmount = ($missing / 100) * $basePrice;
 
-        $swap->update([
-            'rider_id' => $request->rider_id,
-            'station_id' => $request->station_id,
-            'agent_id' => $request->agent_id,
-            'percentage_difference' => $request->percentage_difference,
-            'payable_amount' => $payableAmount,
-            'payment_method' => $request->payment_method,
-            'swapped_at' => now(),
-        ]);
+    $swap->update([
+        'rider_id' => $request->rider_id,
+        'motorcycle_unit_id' => $request->motorcycle_unit_id,
+        'station_id' => $request->station_id,
+        'battery_id' => $request->battery_id,
+        'battery_returned_id' => $request->battery_returned_id,
+        'agent_id' => $request->agent_id,
+        'percentage_difference' => $request->percentage_difference,
+        'payable_amount' => $payableAmount,
+        'payment_method' => $request->payment_method,
+        'swapped_at' => now(),
+    ]);
 
-        return redirect()->route('admin.swaps.index')->with('success', 'Swap updated successfully.');
-    }
+    return redirect()->route('admin.swaps.index')->with('success', 'Swap updated successfully.');
+}
 
     public function destroy($id)
     {
