@@ -20,6 +20,7 @@
                     Rider: {{ $purchase->user->name }}
                     <small class="text-muted">({{ $purchase->user->email }})</small>
                 </h5>
+                <p class="mb-1"><strong>Started On:</strong> {{ $purchase->start_date ? \Carbon\Carbon::parse($purchase->start_date)->translatedFormat('F jS, Y') : 'Not Set' }}</p>
                 <p class="mb-1"><strong>Motorcycle:</strong> {{ ucfirst($purchase->motorcycle->type) }}</p>
                 <p class="mb-1"><strong>Phone:</strong> {{ $purchase->user->phone ?? 'N/A' }}</p>
                 <p class="mb-1"><strong>NIN Number:</strong> {{ $purchase->user->nin_number ?? 'Not Provided' }}</p>
@@ -195,13 +196,14 @@
 </div>
 
 <details>
-    <summary class="text-muted">Show Expected Dates</summary>
-    <ul class="small">
-        @foreach($schedule['expected_dates'] as $day)
-            <li>{{ \Carbon\Carbon::parse($day)->translatedFormat('l, F jS, Y') }}</li>
+    <summary class="text-muted">Show Missed Dates Only</summary>
+    <ul class="small text-danger">
+        @foreach($schedule['missed_dates'] as $day)
+            <li>{{ $day }}</li>
         @endforeach
     </ul>
 </details>
+
 
 
     {{-- Discount History --}}

@@ -27,6 +27,7 @@
         <table class="table table-bordered table-hover">
             <thead>
                 <tr>
+                    <th>Started On</th>
                     <th>Rider</th>
                     <th>Motorcycle</th>
                     <th>Number Plate</th>
@@ -42,6 +43,7 @@
             <tbody>
                 @foreach($purchases as $purchase)
                     <tr>
+                        <td>{{ \Carbon\Carbon::parse($purchase->start_date)->format('Y-m-d') }}</td>
                         <td>{{ $purchase->user->name }}</td>
                         <td>{{ ucfirst($purchase->motorcycle->type) }}</td>
                         <td>{{ $purchase->motorcycleUnit->number_plate ?? 'N/A' }}</td>
