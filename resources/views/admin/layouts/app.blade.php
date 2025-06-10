@@ -182,6 +182,11 @@
             <i class="bi bi-hash me-2"></i> Motorcycle Units
         </a>
 
+        <a href="{{ route('admin.chat') }}" class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+            <i class="bi bi-chat-dots me-2"></i> Chat
+        </a>
+
+
         <form method="POST" action="{{ route('logout') }}">
             @csrf
             <button class="logout-button" type="submit">

@@ -98,6 +98,11 @@
         <i class="bi bi-person-circle me-2"></i> Profile
     </a>
 
+    <a href="{{ route('rider.chat') }}" class="{{ request()->routeIs('rider.chat.*') ? 'active' : '' }}">
+        <i class="bi bi-chat-dots me-2"></i> Chat
+    </a>
+
+
 
     <form method="POST" action="{{ route('logout') }}">
         @csrf

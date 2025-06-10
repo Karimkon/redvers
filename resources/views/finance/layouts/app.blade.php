@@ -128,6 +128,10 @@
             <a href="{{ route('finance.purchases.index') }}" class="{{ request()->routeIs('finance.purchases.*') ? 'active' : '' }}">
                 <i class="bi bi-truck me-2"></i> Purchases
             </a>
+            <a href="{{ route('finance.chat.users') }}" class="{{ request()->routeIs('finance.chat.*') ? 'active' : '' }}">
+                <i class="bi bi-chat-dots me-2"></i> Chat
+            </a>
+
         </div>
 
         <form method="POST" action="{{ route('logout') }}">

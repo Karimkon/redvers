@@ -34,6 +34,7 @@ use App\Http\Controllers\Admin\MotorcycleUnitController;
 use App\Http\Controllers\Finance\FinancePurchaseController;
 use App\Services\PesapalService;
 use App\Http\Controllers\PesapalTokenTestController;
+use App\Http\Controllers\ChatController;
 
 
 
@@ -233,6 +234,16 @@ Route::get('/admin/api/rider-motorcycle/{rider}', function ($riderId) {
             ->get();
     })->name('api.batteries.by.station');
 
+    Route::get('/chat', function () {
+    $users = \App\Models\User::where('id', '!=', auth()->id())->get();
+    return view('admin.chat.users', compact('users'));
+})->name('chat');
+
+Route::get('/chat/{user}', [ChatController::class, 'index'])->name('chat.index');
+Route::post('/chat/send', [ChatController::class, 'store'])->name('chat.send');
+
+
+
 });
 
 
@@ -258,6 +269,11 @@ Route::middleware(['auth', 'role:agent'])->prefix('agent')->name('agent.')->grou
     return response()->json(null);
 });
 
+    Route::get('/chat', [ChatController::class, 'users'])->name('chat.users');
+    Route::get('/chat/{user}', [ChatController::class, 'index'])->name('chat.index');
+    Route::post('/chat/send', [ChatController::class, 'store'])->name('chat.send');
+
+
 });
 
 Route::middleware(['auth', 'role:rider'])->prefix('rider')->name('rider.')->group(function () {
@@ -272,6 +288,13 @@ Route::middleware(['auth', 'role:rider'])->prefix('rider')->name('rider.')->grou
         return view('rider.stations.stations', compact('stations'));
     })->name('stations');
 
+    Route::get('/chat', function () {
+    $users = \App\Models\User::where('id', '!=', auth()->id())->get();
+    return view('rider.chat.users', compact('users'));
+})->name('chat');
+
+    Route::get('/chat/{user}', [ChatController::class, 'index'])->name('chat.index');
+    Route::post('/chat/send', [ChatController::class, 'store'])->name('chat.send');
 
 });
 
@@ -289,6 +312,10 @@ Route::middleware(['auth', 'role:finance'])->prefix('finance')->name('finance.')
     Route::post('/followup/mark/{purchase}', [\App\Http\Controllers\Finance\FinanceOverdueController::class, 'markAsContacted'])->name('followup.mark');
     Route::get('/followup/history/{purchase}', [FollowUpController::class, 'history'])->name('followup.history');
 
+
+    Route::get('/chat', [ChatController::class, 'users'])->name('chat.users');
+    Route::get('/chat/{user}', [ChatController::class, 'index'])->name('chat.index');
+    Route::post('/chat/send', [ChatController::class, 'store'])->name('chat.send');
 
 });
 

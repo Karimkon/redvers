@@ -157,6 +157,10 @@
             <a href="{{ route('agent.swap-history') }}" class="{{ request()->routeIs('agent.swap-history') ? 'active' : '' }}" onclick="closeSidebar()">
                 <i class="bi bi-clock-history me-2"></i> Swap History 
             </a>
+            <a href="{{ route('agent.chat.users') }}" class="{{ request()->routeIs('agent.chat.*') ? 'active' : '' }}">
+                <i class="bi bi-chat-dots me-2"></i> Chat
+            </a>
+
         </div>
 
         <form method="POST" action="{{ route('logout') }}">
