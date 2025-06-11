@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\DB;
 use App\Services\PesapalService;
 use Illuminate\Support\Facades\Http;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Models\{Swap, Station, Payment, User, Battery, BatterySwap};
 use Illuminate\Support\Facades\Auth;
@@ -131,29 +132,31 @@ if (!$isFirstTime && $request->filled('battery_returned_id')) {
             $rider = User::find($request->rider_id);
 
             $response = Http::withToken($token)->post(config('pesapal.base_url') . '/api/Transactions/SubmitOrderRequest', [
-                "id" => null,
-                "currency" => "UGX",
-                "amount" => $payableAmount,
-                "description" => "Battery Swap Payment",
-                "callback_url" => route('pesapal.callback'),
-                "billing_address" => [
-                    "email_address" => $rider->email,
-                    "phone_number" => $rider->phone,
-                    "first_name" => explode(' ', $rider->name)[0],
-                    "last_name" => explode(' ', $rider->name)[1] ?? '',
-                    "line_1" => "Redvers Station",
-                    "city" => "Kampala",
-                    "state" => "Central",
-                    "postal_code" => "256",
-                    "zip_code" => "256",
-                    "country_code" => "UG"
-                ]
-            ]);
+            "id" => Str::uuid()->toString(),
+            "currency" => "UGX",
+            "amount" => $payableAmount,
+            "description" => "Battery Swap Payment",
+            "callback_url" => route('pesapal.callback'),
+            "notification_id" => "34f2ce63-9c4c-430d-adb8-dbba55243d85",
+            "billing_address" => [
+                "email_address" => $rider->email,
+                "phone_number" => $rider->phone,
+                "first_name" => explode(' ', $rider->name)[0],
+                "last_name" => explode(' ', $rider->name)[1] ?? '',
+                "line_1" => "Redvers Station",
+                "city" => "Kampala",
+                "state" => "Central",
+                "postal_code" => "256",
+                "zip_code" => "256",
+                "country_code" => "UG"
+            ]
+        ]);
+
 
             if ($response->successful()) {
                 $body = $response->json();
 
-                Payment::create([
+                $payment = Payment::create([
                     'swap_id' => $swap->id,
                     'amount' => $payableAmount,
                     'method' => 'pesapal',

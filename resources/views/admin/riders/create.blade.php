@@ -8,7 +8,7 @@
         <div class="col-lg-10">
             <div class="card shadow-sm p-4">
                 <div class="text-center mb-4">
-                    <img src="{{ asset('images/redvers.jpeg') }}" alt="Redvers Logo" width="80" class="mb-2">
+                    <img src="{{ asset('images/redvers.jpeg') }}" alt="Redvers Logo" width="600" class="mb-2">
                     <h4 class="fw-bold text-primary">Redvers Riders Registration</h4>
                 </div>
 
