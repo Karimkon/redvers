@@ -10,6 +10,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+
+
     <style>
         body {
             background-color: #f8f9fa;
@@ -166,6 +170,15 @@
         <a href="{{ route('admin.batteries.index') }}" class="{{ request()->routeIs('batteries.*') ? 'active' : '' }}" onclick="closeSidebar()">
             <i class="bi bi-battery me-2"></i> Batteries
         </a>
+        <a href="{{ route('admin.deliveries.index') }}" class="{{ request()->routeIs('admin.deliveries.*') ? 'active' : '' }}" onclick="closeSidebar()">
+            <i class="bi bi-truck-front-fill me-2"></i> Battery Deliveries
+        </a>
+        <a href="{{ route('admin.deliveries.returns') }}" class="{{ request()->routeIs('admin.deliveries.returns') ? 'active' : '' }}" onclick="closeSidebar()">
+            <i class="bi bi-arrow-return-left me-2"></i> Returned Batteries
+        </a>
+        <a href="{{ route('admin.deliveries.history') }}" class="{{ request()->routeIs('admin.deliveries.history') ? 'active' : '' }}" onclick="closeSidebar()">
+            <i class="bi bi-clock-history me-2"></i> Batteries History
+        </a>
         <a href="{{ route('admin.agents.index') }}" class="{{ request()->routeIs('admin.agents.*') ? 'active' : '' }}" onclick="closeSidebar()">
             <i class="bi bi-person-badge-fill me-2"></i> Agents
         </a>
@@ -221,6 +234,10 @@
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
 
     @stack('scripts')
 </body>

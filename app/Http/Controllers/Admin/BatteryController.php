@@ -12,15 +12,18 @@ class BatteryController extends Controller
     public function index(Request $request)
     {
         $stationId = $request->get('station_id');
-        $stations = \App\Models\Station::all();
+        $search = $request->get('search');
+        $stations = Station::all();
 
         $batteries = Battery::with('currentStation', 'currentRider')
             ->when($stationId, fn($query) => $query->where('current_station_id', $stationId))
+            ->when($search, fn($query) => $query->where('serial_number', 'like', "%{$search}%"))
             ->latest()
             ->paginate(10);
 
-        return view('admin.batteries.index', compact('batteries', 'stations', 'stationId'));
+        return view('admin.batteries.index', compact('batteries', 'stations', 'stationId', 'search'));
     }
+
 
 
     public function create()

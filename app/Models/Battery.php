@@ -23,4 +23,16 @@ class Battery extends Model
         return $this->belongsTo(User::class, 'current_rider_id');
     }
 
+    public function deliveries()
+    {
+        return $this->hasMany(BatteryDelivery::class);
+    }
+
+    public function latestDelivery()
+    {
+        return $this->hasOne(BatteryDelivery::class)->latestOfMany();
+    }
+
+
+
 }

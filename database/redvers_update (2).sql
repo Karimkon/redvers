@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 03, 2025 at 04:08 PM
+-- Generation Time: Jun 13, 2025 at 10:01 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -42,13 +42,15 @@ CREATE TABLE `batteries` (
 --
 
 INSERT INTO `batteries` (`id`, `serial_number`, `status`, `current_station_id`, `current_rider_id`, `created_at`, `updated_at`) VALUES
-(1, 'redversbattery1', 'in_use', NULL, 5, '2025-05-29 05:48:21', '2025-06-02 06:38:29'),
-(2, 'redversbattery2', 'in_use', NULL, 11, '2025-05-29 05:48:21', '2025-06-03 10:50:50'),
-(3, 'redversbattery3', 'in_use', NULL, 4, '2025-05-29 05:48:21', '2025-06-03 10:10:10'),
-(4, 'redversbattery4', 'in_use', NULL, 7, '2025-05-29 05:48:21', '2025-06-02 15:36:09'),
-(5, 'redversbattery5', 'charging', 1, NULL, '2025-05-29 05:48:21', '2025-06-03 10:50:50'),
-(6, 'redversbattery6', 'in_use', NULL, 4, '2025-05-29 06:07:52', '2025-06-02 15:21:16'),
-(7, 'redversbattery7', 'charging', 1, NULL, '2025-06-01 15:33:15', '2025-06-02 06:38:29');
+(1, 'redversbattery1', 'in_use', NULL, NULL, '2025-05-29 05:48:21', '2025-06-04 09:46:57'),
+(2, 'redversbattery2', 'in_use', NULL, NULL, '2025-05-29 05:48:21', '2025-06-11 06:43:37'),
+(3, 'redversbattery3', 'in_use', NULL, NULL, '2025-05-29 05:48:21', '2025-06-09 13:53:28'),
+(4, 'redversbattery4', 'in_use', NULL, 12, '2025-05-29 05:48:21', '2025-06-12 04:42:04'),
+(5, 'redversbattery5', 'in_use', NULL, NULL, '2025-05-29 05:48:21', '2025-06-05 07:39:35'),
+(6, 'redversbattery6', 'in_use', NULL, NULL, '2025-05-29 06:07:52', '2025-06-02 15:21:16'),
+(7, 'redversbattery7', 'in_use', NULL, NULL, '2025-06-01 15:33:15', '2025-06-05 14:03:24'),
+(8, 'redversbattery8', 'in_use', NULL, NULL, '2025-06-09 14:40:39', '2025-06-12 05:18:17'),
+(9, 'redversbattery9', 'charging', 1, NULL, '2025-06-11 10:08:54', '2025-06-12 05:18:17');
 
 -- --------------------------------------------------------
 
@@ -70,20 +72,9 @@ CREATE TABLE `battery_swaps` (
 --
 
 INSERT INTO `battery_swaps` (`id`, `battery_id`, `swap_id`, `from_station_id`, `to_station_id`, `swapped_at`) VALUES
-(24, 5, 40, 1, 1, '2025-06-02 05:55:19'),
-(25, 7, 41, 1, 1, '2025-06-02 06:06:50'),
-(26, 5, 42, 1, 1, '2025-06-02 06:16:02'),
-(27, 7, 43, 1, 1, '2025-06-02 06:20:56'),
-(28, 5, 44, 1, 1, '2025-06-02 06:24:09'),
-(29, 7, 45, 1, 1, '2025-06-02 06:38:29'),
-(30, 4, 47, 2, 2, '2025-06-02 15:34:18'),
-(31, 2, 48, 2, 2, '2025-06-02 15:35:45'),
-(32, 4, 49, 2, 2, '2025-06-02 15:36:09'),
-(33, 2, 50, 2, 2, '2025-06-02 15:36:35'),
-(34, 5, 51, 2, 2, '2025-06-02 15:37:34'),
-(35, 5, 52, 1, 1, '2025-06-03 10:10:10'),
-(36, 2, 54, 1, 1, '2025-06-03 10:16:54'),
-(37, 2, 55, 1, 1, '2025-06-03 10:50:50');
+(58, 4, 76, 1, 1, '2025-06-09 14:43:06'),
+(59, 8, 77, 1, 1, '2025-06-09 14:43:37'),
+(68, 4, 86, 1, 1, '2025-06-12 04:42:04');
 
 -- --------------------------------------------------------
 
@@ -125,6 +116,13 @@ CREATE TABLE `discounts` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `discounts`
+--
+
+INSERT INTO `discounts` (`id`, `purchase_id`, `amount`, `percentage`, `reason`, `created_at`, `updated_at`) VALUES
+(17, 17, 3231000.00, NULL, NULL, '2025-06-12 14:33:20', '2025-06-12 14:33:20');
+
 -- --------------------------------------------------------
 
 --
@@ -157,13 +155,6 @@ CREATE TABLE `follow_ups` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `follow_ups`
---
-
-INSERT INTO `follow_ups` (`id`, `purchase_id`, `contacted_at`, `missed_date`, `status`, `note`, `created_at`, `updated_at`) VALUES
-(4, 6, '2025-06-02 21:17:41', '2025-06-02', 'contacted', 'Contacted by finance team', '2025-06-02 18:17:41', '2025-06-02 18:17:41');
 
 -- --------------------------------------------------------
 
@@ -199,6 +190,36 @@ CREATE TABLE `job_batches` (
   `created_at` int(11) NOT NULL,
   `finished_at` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `messages`
+--
+
+CREATE TABLE `messages` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `sender_id` bigint(20) UNSIGNED NOT NULL,
+  `receiver_id` bigint(20) UNSIGNED NOT NULL,
+  `message` text NOT NULL,
+  `is_read` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `messages`
+--
+
+INSERT INTO `messages` (`id`, `sender_id`, `receiver_id`, `message`, `is_read`, `created_at`, `updated_at`) VALUES
+(1, 1, 12, 'hi', 0, '2025-06-09 10:42:31', '2025-06-09 10:42:31'),
+(2, 1, 2, 'hlo', 0, '2025-06-09 10:42:53', '2025-06-09 10:42:53'),
+(5, 2, 1, 'hi', 0, '2025-06-09 11:26:07', '2025-06-09 11:26:07'),
+(9, 6, 12, 'hi', 0, '2025-06-09 12:00:15', '2025-06-09 12:00:15'),
+(10, 6, 1, 'hi', 0, '2025-06-09 12:00:25', '2025-06-09 12:00:25'),
+(11, 1, 12, 'hlo', 0, '2025-06-09 12:00:49', '2025-06-09 12:00:49'),
+(12, 2, 1, 'hau', 0, '2025-06-09 12:01:12', '2025-06-09 12:01:12'),
+(14, 1, 2, 'im okay', 0, '2025-06-09 13:44:37', '2025-06-09 13:44:37');
 
 -- --------------------------------------------------------
 
@@ -253,7 +274,9 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (35, '2025_06_02_123704_add_start_date_to_purchases_table', 14),
 (36, '2025_06_02_153217_create_follow_ups_table', 15),
 (37, '2025_06_03_095228_add_motorcycle_id_to_swaps_table', 16),
-(38, '2025_06_03_101153_add_motorcycle_unit_id_to_swaps_table', 17);
+(38, '2025_06_03_101153_add_motorcycle_unit_id_to_swaps_table', 17),
+(39, '2025_06_04_121525_add_pesapal_transaction_id_to_payments_table', 18),
+(40, '2025_06_09_124110_create_messages_table', 19);
 
 -- --------------------------------------------------------
 
@@ -271,15 +294,6 @@ CREATE TABLE `missed_payments` (
   `updated_at` timestamp NULL DEFAULT NULL,
   `contacted_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `missed_payments`
---
-
-INSERT INTO `missed_payments` (`id`, `purchase_id`, `missed_date`, `status`, `note`, `created_at`, `updated_at`, `contacted_at`) VALUES
-(5, 5, '2025-06-01', 'missed', NULL, '2025-06-03 10:52:09', '2025-06-03 10:52:09', NULL),
-(6, 5, '2025-06-02', 'missed', NULL, '2025-06-03 10:52:09', '2025-06-03 10:52:09', NULL),
-(7, 5, '2025-06-03', 'missed', NULL, '2025-06-03 10:52:09', '2025-06-03 10:52:09', NULL);
 
 -- --------------------------------------------------------
 
@@ -306,7 +320,7 @@ CREATE TABLE `motorcycles` (
 
 INSERT INTO `motorcycles` (`id`, `type`, `number_plate`, `cash_price`, `hire_price_total`, `daily_payment`, `weekly_payment`, `duration_days`, `created_at`, `updated_at`) VALUES
 (1, 'brand_new', NULL, 5500000.00, 9685714.29, 15000.00, 90000.00, 730, '2025-05-30 09:12:31', '2025-05-30 09:12:31'),
-(2, 'retrofitted', NULL, 4500000.00, 7708571.43, 0.00, 72000.00, 730, '2025-05-30 09:12:31', '2025-05-30 09:12:31');
+(2, 'retrofitted', NULL, 4500000.00, 7708571.43, 12000.00, 72000.00, 730, '2025-05-30 09:12:31', '2025-05-30 09:12:31');
 
 -- --------------------------------------------------------
 
@@ -330,8 +344,7 @@ CREATE TABLE `motorcycle_payments` (
 --
 
 INSERT INTO `motorcycle_payments` (`id`, `purchase_id`, `payment_date`, `amount`, `type`, `note`, `created_at`, `updated_at`) VALUES
-(14, 6, '2025-06-01', 15000.00, 'daily', 'paid on sunday', '2025-06-02 18:16:19', '2025-06-02 18:16:19'),
-(15, 6, '2025-05-30', 15000.00, 'daily', NULL, '2025-06-02 18:17:05', '2025-06-02 18:17:05');
+(35, 17, '2025-06-12', 12000.00, 'daily', NULL, '2025-06-12 14:32:21', '2025-06-12 14:32:21');
 
 -- --------------------------------------------------------
 
@@ -353,10 +366,7 @@ CREATE TABLE `motorcycle_units` (
 --
 
 INSERT INTO `motorcycle_units` (`id`, `motorcycle_id`, `number_plate`, `status`, `created_at`, `updated_at`) VALUES
-(1, 1, 'UAZ 1920', 'assigned', '2025-05-30 13:40:37', '2025-06-02 18:13:14'),
-(2, 1, 'UAZ K120', 'assigned', '2025-05-31 06:24:08', '2025-06-03 10:05:48'),
-(3, 2, 'UAP I891', 'assigned', '2025-06-02 18:09:34', '2025-06-02 18:09:52'),
-(4, 2, 'UGZ 212', 'assigned', '2025-06-03 08:39:11', '2025-06-03 08:39:31');
+(8, 2, 'UAZ 900', 'assigned', '2025-06-12 11:51:39', '2025-06-12 14:31:58');
 
 -- --------------------------------------------------------
 
@@ -401,6 +411,7 @@ CREATE TABLE `payments` (
   `updated_at` timestamp NULL DEFAULT NULL,
   `status` enum('pending','completed','failed') NOT NULL DEFAULT 'pending',
   `reference` varchar(255) DEFAULT NULL,
+  `pesapal_transaction_id` varchar(255) DEFAULT NULL,
   `initiated_by` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -408,19 +419,9 @@ CREATE TABLE `payments` (
 -- Dumping data for table `payments`
 --
 
-INSERT INTO `payments` (`id`, `swap_id`, `amount`, `method`, `created_at`, `updated_at`, `status`, `reference`, `initiated_by`) VALUES
-(30, 40, 13800.00, 'airtel', '2025-06-02 05:55:19', '2025-06-02 05:55:19', 'pending', 'SWAP-AIRTEL-683d66f7964f2', 'admin'),
-(31, 41, 14100.00, 'airtel', '2025-06-02 06:06:51', '2025-06-02 06:06:51', 'pending', 'SWAP-AIRTEL-683d69ab03a03', 'admin'),
-(32, 42, 13800.00, 'airtel', '2025-06-02 06:16:02', '2025-06-02 06:16:02', 'pending', 'SWAP-AIRTEL-683d6bd282f5c', 'admin'),
-(33, 43, 13800.00, 'airtel', '2025-06-02 06:20:56', '2025-06-02 06:20:56', 'pending', 'SWAP-AIRTEL-683d6cf8aa2fc', 'admin'),
-(34, 44, 13950.00, 'airtel', '2025-06-02 06:24:09', '2025-06-02 06:24:09', 'pending', 'SWAP-AIRTEL-683d6db9e6375', 'admin'),
-(35, 45, 14100.00, 'airtel', '2025-06-02 06:38:29', '2025-06-02 06:38:29', 'pending', 'SWAP-AIRTEL-683d7115c897a', 'admin'),
-(36, 48, 14850.00, 'airtel', '2025-06-02 15:35:45', '2025-06-02 15:35:45', 'pending', 'SWAP-AIRTEL-683def01377cf', 'agent'),
-(37, 49, 13950.00, 'airtel', '2025-06-02 15:36:09', '2025-06-02 15:36:09', 'pending', 'SWAP-AIRTEL-683def19120ba', 'agent'),
-(38, 51, 13800.00, 'mtn', '2025-06-02 15:37:34', '2025-06-02 15:37:34', 'pending', 'SWAP-MTN-683def6eaf12c', 'agent'),
-(39, 52, 5100.00, 'airtel', '2025-06-03 10:10:10', '2025-06-03 10:10:10', 'pending', 'SWAP-AIRTEL-683ef432bdbc2', 'admin'),
-(40, 54, 13200.00, 'airtel', '2025-06-03 10:16:54', '2025-06-03 10:16:54', 'pending', 'SWAP-AIRTEL-683ef5c693398', 'admin'),
-(41, 55, 14850.00, 'airtel', '2025-06-03 10:50:50', '2025-06-03 10:50:50', 'pending', 'SWAP-AIRTEL-683efdba1c8cb', 'agent');
+INSERT INTO `payments` (`id`, `swap_id`, `amount`, `method`, `created_at`, `updated_at`, `status`, `reference`, `pesapal_transaction_id`, `initiated_by`) VALUES
+(53, 77, 13350.00, 'airtel', '2025-06-09 14:43:37', '2025-06-09 14:43:37', 'pending', 'SWAP-PESAPAL-68471d4933041', NULL, 'agent'),
+(60, 86, 3300.00, 'pesapal', '2025-06-12 04:42:12', '2025-06-12 04:42:12', 'pending', 'SWAP-PESAPAL-684a84cca79d3', NULL, 'agent');
 
 -- --------------------------------------------------------
 
@@ -440,6 +441,14 @@ CREATE TABLE `personal_access_tokens` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `personal_access_tokens`
+--
+
+INSERT INTO `personal_access_tokens` (`id`, `tokenable_type`, `tokenable_id`, `name`, `token`, `abilities`, `last_used_at`, `expires_at`, `created_at`, `updated_at`) VALUES
+(1, 'App\\Models\\User', 1, 'FlutterWeb', 'f705c90c361ec2ea11370c5833ba82bcf0394b16f27a0121b44372a57563c1ce', '[\"*\"]', NULL, NULL, '2025-06-05 12:04:09', '2025-06-05 12:04:09'),
+(2, 'App\\Models\\User', 1, 'FlutterWeb', 'be682ab69a5d2503efd2a98d8513dd2ed1fb5f9a6eb419d9ecd9a35505e0314e', '[\"*\"]', NULL, NULL, '2025-06-05 12:06:26', '2025-06-05 12:06:26');
 
 -- --------------------------------------------------------
 
@@ -468,10 +477,7 @@ CREATE TABLE `purchases` (
 --
 
 INSERT INTO `purchases` (`id`, `user_id`, `motorcycle_id`, `purchase_type`, `initial_deposit`, `total_price`, `amount_paid`, `remaining_balance`, `status`, `start_date`, `created_at`, `updated_at`, `motorcycle_unit_id`) VALUES
-(5, 5, 2, 'hire', 200000.00, 7708571.43, 200000.00, 7508571.43, 'active', '2025-06-01', '2025-06-02 18:09:52', '2025-06-02 18:09:52', 3),
-(6, 4, 1, 'hire', 300000.00, 9685714.29, 330000.00, 9355714.29, 'active', '2025-05-30', '2025-06-02 18:13:14', '2025-06-02 18:17:05', 1),
-(7, 11, 2, 'hire', 200000.00, 7708571.43, 200000.00, 7508571.43, 'active', '2025-05-29', '2025-06-03 08:39:31', '2025-06-03 08:39:31', 4),
-(8, 7, 1, 'hire', 300000.00, 9685714.29, 300000.00, 9385714.29, 'active', '2025-06-03', '2025-06-03 10:05:48', '2025-06-03 10:05:48', 2);
+(17, 12, 2, 'hire', 200000.00, 7708571.43, 212000.00, 4265571.43, 'active', '2024-08-01', '2025-06-12 14:31:58', '2025-06-12 14:33:20', 8);
 
 -- --------------------------------------------------------
 
@@ -493,8 +499,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('3tLbkIBerNFTI4f8pXoZBRlyFTmwwktvv8idKSOs', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoialV2TFNiTzZxcko2QmxnZjkyVEpmb3lCWE1MZGxPZlNXdzJiTWlaVCI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6Mzc6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9hZG1pbi9iYXR0ZXJpZXMiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxO30=', 1748958160),
-('vyWZKRD6czbVUWs5XX3PRaDcS1n4372MK3lp8JUT', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiWnpoS0pUNTNvSE5XNEJmcGNvVXpYb05GVVFab3ZCVW1ZdDVhTXloWSI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7fX0=', 1748959612);
+('VT1PAayLYzF9zA0N30mvPDgjB2edJ5MgJiRJXH6c', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiUFlpOEJHaWNBU0hTczZWd1V2Qm9zYUJGN1AxRURVUXljS3RJOVBSeiI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NDA6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9hZG1pbi9wdXJjaGFzZXMvMTciO31zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxO30=', 1749749600);
 
 -- --------------------------------------------------------
 
@@ -548,23 +553,9 @@ CREATE TABLE `swaps` (
 --
 
 INSERT INTO `swaps` (`id`, `rider_id`, `station_id`, `agent_id`, `battery_id`, `motorcycle_unit_id`, `battery_returned_id`, `swapped_at`, `created_at`, `updated_at`, `percentage_difference`, `payable_amount`, `payment_method`) VALUES
-(39, 5, 1, 2, 5, NULL, NULL, '2025-06-02 05:50:29', '2025-06-02 05:50:29', '2025-06-02 05:50:29', 6.00, 0.00, 'mtn'),
-(40, 5, 1, 2, 7, NULL, 5, '2025-06-02 05:55:19', '2025-06-02 05:55:19', '2025-06-02 05:55:19', 8.00, 13800.00, 'airtel'),
-(41, 5, 1, 2, 5, NULL, 7, '2025-06-02 06:06:50', '2025-06-02 06:06:50', '2025-06-02 06:06:50', 6.00, 14100.00, 'airtel'),
-(42, 5, 1, 2, 7, NULL, 5, '2025-06-02 06:16:02', '2025-06-02 06:16:02', '2025-06-02 06:16:02', 8.00, 13800.00, 'airtel'),
-(43, 5, 1, 2, 5, NULL, 7, '2025-06-02 06:20:56', '2025-06-02 06:20:56', '2025-06-02 06:20:56', 8.00, 13800.00, 'airtel'),
-(44, 5, 1, 2, 7, NULL, 5, '2025-06-02 06:24:09', '2025-06-02 06:24:09', '2025-06-02 06:24:09', 7.00, 13950.00, 'airtel'),
-(45, 5, 1, 2, 1, NULL, 7, '2025-06-02 06:38:29', '2025-06-02 06:38:29', '2025-06-02 06:38:29', 6.00, 14100.00, 'airtel'),
-(46, 4, 2, 3, 6, NULL, NULL, '2025-06-02 15:21:16', '2025-06-02 15:21:16', '2025-06-02 15:21:16', 100.00, 0.00, NULL),
-(47, 7, 2, 3, 4, NULL, NULL, '2025-06-02 15:34:18', '2025-06-02 15:34:18', '2025-06-02 15:34:18', 100.00, 0.00, 'airtel'),
-(48, 7, 2, 3, 2, NULL, 4, '2025-06-02 15:35:45', '2025-06-02 15:35:45', '2025-06-02 15:35:45', 1.00, 14850.00, 'airtel'),
-(49, 7, 2, 3, 4, NULL, 2, '2025-06-02 15:36:09', '2025-06-02 15:36:09', '2025-06-02 15:36:09', 7.00, 13950.00, 'airtel'),
-(50, 4, 2, 3, 2, NULL, NULL, '2025-06-02 15:36:35', '2025-06-02 15:36:35', '2025-06-02 15:36:35', 100.00, 0.00, NULL),
-(51, 4, 2, 3, 5, NULL, 2, '2025-06-02 15:37:34', '2025-06-02 15:37:34', '2025-06-02 15:37:34', 8.00, 13800.00, 'mtn'),
-(52, 4, 1, 2, 3, NULL, 5, '2025-06-03 10:10:10', '2025-06-03 10:10:10', '2025-06-03 10:10:10', 66.00, 5100.00, 'airtel'),
-(53, 11, 2, 3, 2, NULL, NULL, '2025-06-03 10:12:12', '2025-06-03 10:12:12', '2025-06-03 10:12:12', 100.00, 0.00, NULL),
-(54, 11, 1, 2, 5, 4, 2, '2025-06-03 10:16:54', '2025-06-03 10:16:54', '2025-06-03 10:16:54', 12.00, 13200.00, 'airtel'),
-(55, 11, 1, 2, 2, 4, 5, '2025-06-03 10:50:50', '2025-06-03 10:50:50', '2025-06-03 10:50:50', 1.00, 14850.00, 'airtel');
+(76, 12, 1, 2, 4, NULL, NULL, '2025-06-09 14:43:06', '2025-06-09 14:43:06', '2025-06-09 14:43:06', 100.00, 0.00, NULL),
+(77, 12, 1, 2, 8, NULL, 4, '2025-06-09 14:43:37', '2025-06-09 14:43:37', '2025-06-09 14:43:37', 11.00, 13350.00, 'airtel'),
+(86, 12, 1, 2, 4, NULL, 8, '2025-06-12 04:42:04', '2025-06-12 04:42:04', '2025-06-12 04:42:04', 78.00, 3300.00, 'pesapal');
 
 -- --------------------------------------------------------
 
@@ -598,13 +589,9 @@ INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `password`, `ro
 (1, 'Admin', 'admin@redvers.com', NULL, '$2y$12$QG4lpA1BJUjRQcX3CdkcBu3fKwM1RQ5m5u0nr2iARO1zyv2rtBovC', 'admin', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-05-29 05:48:19', '2025-05-29 05:48:19'),
 (2, 'Nalya Agent Moses', 'agent1@redvers.com', NULL, '$2y$12$b719zC3JBydWl7ynh8qvX.uQbL3p53FEbN4sOoVxDaC.7HUlAz4Ky', 'agent', '078839290', NULL, NULL, NULL, NULL, 1, NULL, '2025-05-29 05:48:20', '2025-05-29 05:50:41'),
 (3, 'Agent Two', 'agent2@redvers.com', NULL, '$2y$12$VlSqHqcrAtUHc0ypNrRymepzQmR0zLGX04NN2HbVP7.N/fTggBHy2', 'agent', NULL, NULL, NULL, NULL, NULL, 2, NULL, '2025-05-29 05:48:20', '2025-05-29 05:48:20'),
-(4, 'Ssekitto Alex', 'rider1@redvers.com', NULL, '$2y$12$9WhqOz9asJ2tIzZP4Q700Ofjpl/TcHnIgtdMfslIWRNS5VaAzAgjO', 'rider', '0477398882', 'CM00939047837D', 'riders/photos/nJc21RWEnlvmWXNntg8KQHFPEBae3OtEwBE6XmgF.jpg', 'riders/ids/front/KVmzJJP8KeDmnnt9NWXQwkhLPLyR8s6RcLb0yBS9.jpg', 'riders/ids/back/e6P2gq8aRz3aysS6FXSHBalPVByMgHmI21dDaOcd.jpg', NULL, NULL, '2025-05-29 05:48:20', '2025-05-29 14:31:46'),
-(5, 'Sserunkuma Muhaiminu', 'rider2@redvers.com', NULL, '$2y$12$ZfqDUsgsQLRy6w1XmApqk.bphgvrxTcyC6DLw/JxqOZ.B4xkkG56u', 'rider', '0788329932', NULL, NULL, NULL, NULL, NULL, NULL, '2025-05-29 05:48:21', '2025-05-29 10:54:28'),
 (6, 'Waruda Head Finance', 'finance@redvers.com', NULL, '$2y$12$ZfqDUsgsQLRy6w1XmApqk.bphgvrxTcyC6DLw/JxqOZ.B4xkkG56u', 'finance', '0788329992', NULL, NULL, NULL, NULL, NULL, NULL, '2025-05-29 05:48:21', '2025-05-29 10:54:28'),
-(7, 'Ssekitto Hamuza', 'ssekitto@gmail.com', NULL, '$2y$12$sNsvLQ88w1KLx1b97lDPA.TcJ8jI6Xk0b3h2hW8hO5l9HibKFVSjC', 'rider', '0788302017', NULL, NULL, NULL, NULL, NULL, NULL, '2025-05-29 14:06:55', '2025-05-29 14:06:55'),
-(8, 'Waswa Robert', 'waswa@gmail.com', NULL, '$2y$12$TatSrCoQejwj8P6GoniGb.7r1m9Zs77h96bvR3XcxCuCYXPxzxMVS', 'rider', '0788811100', 'CM8993NSJNjl', 'riders/photos/CcPH0aNT1s5ttIqmFNIF5bALRCkIPS6Pk3qZBfIK.jpg', 'riders/ids/front/Pfw7oavUoDGAT4d7nWd8m9LFcPHst2b8wzuDuVj5.jpg', 'riders/ids/back/bMWiF4xKGxY2r3m2Wpz5S8xwlNBmLRz3l9hqghdx.jpg', NULL, NULL, '2025-05-29 14:13:03', '2025-06-01 17:47:42'),
 (10, 'Mr. Kizza', 'kizza@redvers.com', NULL, '$2y$12$yLY0Q10KmjDVXq1GbNaaf.zNosVYfu86CXF4JYMz3rB8P8aQsI.aq', 'agent', '0783223322', NULL, NULL, NULL, NULL, 5, NULL, '2025-06-03 06:24:03', '2025-06-03 06:24:03'),
-(11, 'Higeni Abdulkarim', 'habdulkarimf@gmail.com', NULL, '$2y$12$frmkFKJRUFAUBesnpvGZgefbhRzAZG6yCPAKRTQB38l810SVo4pRa', 'rider', '0707208954', 'CM000UZ23JHN', 'riders/photos/PnYe8ye8dMnE0iAuprYmi5AOLfETPGCOK8itupFa.jpg', 'riders/ids/front/nOkS3ZFeKWoBW4Dur1rkyqplEjlsk0D6IbWuNBjv.jpg', 'riders/ids/back/4bUmslBWcNv3SiPU20Yz2MaH0OGHhpJOZH4nuxyu.jpg', NULL, NULL, '2025-06-03 08:38:11', '2025-06-03 08:38:11');
+(12, 'Malamu', 'aziz@gmail.com', NULL, '$2y$12$wRANWKoGESOJh/uijgKSAOqt5yM1uaseeBdOyVulhn0g5hDqKINsS', 'rider', 'Aziz', 'CM000UZ23JHNQ', 'riders/photos/jO6ihu7myKye6XlUJrYg2kRMc0ykJ46ZNorjB7Y2.png', 'riders/ids/front/DHcRoDsSigJQkZyGggA2JYTRkxypam4m069Lppl4.jpg', 'riders/ids/back/pH2tyvbcOJw2QPrvAHgqHvAkAhVoVa1Nk83wSosA.jpg', NULL, NULL, '2025-06-09 05:21:39', '2025-06-09 05:21:39');
 
 --
 -- Indexes for dumped tables
@@ -674,6 +661,14 @@ ALTER TABLE `jobs`
 --
 ALTER TABLE `job_batches`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `messages`
+--
+ALTER TABLE `messages`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `messages_sender_id_foreign` (`sender_id`),
+  ADD KEY `messages_receiver_id_foreign` (`receiver_id`);
 
 --
 -- Indexes for table `migrations`
@@ -789,19 +784,19 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `batteries`
 --
 ALTER TABLE `batteries`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `battery_swaps`
 --
 ALTER TABLE `battery_swaps`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=76;
 
 --
 -- AUTO_INCREMENT for table `discounts`
 --
 ALTER TABLE `discounts`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `failed_jobs`
@@ -813,7 +808,7 @@ ALTER TABLE `failed_jobs`
 -- AUTO_INCREMENT for table `follow_ups`
 --
 ALTER TABLE `follow_ups`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `jobs`
@@ -822,16 +817,22 @@ ALTER TABLE `jobs`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `messages`
+--
+ALTER TABLE `messages`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+
+--
 -- AUTO_INCREMENT for table `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
 -- AUTO_INCREMENT for table `missed_payments`
 --
 ALTER TABLE `missed_payments`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `motorcycles`
@@ -843,13 +844,13 @@ ALTER TABLE `motorcycles`
 -- AUTO_INCREMENT for table `motorcycle_payments`
 --
 ALTER TABLE `motorcycle_payments`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
 
 --
 -- AUTO_INCREMENT for table `motorcycle_units`
 --
 ALTER TABLE `motorcycle_units`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `notifications`
@@ -861,19 +862,19 @@ ALTER TABLE `notifications`
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=68;
 
 --
 -- AUTO_INCREMENT for table `personal_access_tokens`
 --
 ALTER TABLE `personal_access_tokens`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `purchases`
 --
 ALTER TABLE `purchases`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `stations`
@@ -885,13 +886,13 @@ ALTER TABLE `stations`
 -- AUTO_INCREMENT for table `swaps`
 --
 ALTER TABLE `swaps`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=94;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- Constraints for dumped tables
@@ -924,6 +925,13 @@ ALTER TABLE `discounts`
 --
 ALTER TABLE `follow_ups`
   ADD CONSTRAINT `follow_ups_purchase_id_foreign` FOREIGN KEY (`purchase_id`) REFERENCES `purchases` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `messages`
+--
+ALTER TABLE `messages`
+  ADD CONSTRAINT `messages_receiver_id_foreign` FOREIGN KEY (`receiver_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `messages_sender_id_foreign` FOREIGN KEY (`sender_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `missed_payments`

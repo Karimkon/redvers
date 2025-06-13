@@ -19,30 +19,31 @@
     <form action="{{ route('agent.swaps.store') }}" method="POST" id="swapForm">
         @csrf
 
-        {{-- Rider Selection --}}
-        <div class="mb-3">
-            <label for="rider_id" class="form-label">Rider</label>
-            <select class="form-select" name="rider_id" id="riderSelect" required>
-                <option value="">Select Rider</option>
-                @foreach($riders as $rider)
-                    @php
-                        $unit = optional($rider->purchases->first())->motorcycleUnit;
-                        $battery = \App\Models\Battery::where('current_rider_id', $rider->id)
-                                    ->where('status', 'in_use')
-                                    ->first();
-                    @endphp
-                    <option 
-                        value="{{ $rider->id }}"
-                        data-bike-id="{{ $unit->id ?? '' }}"
-                        data-bike-plate="{{ $unit->number_plate ?? '' }}"
-                        data-battery-id="{{ $battery->id ?? '' }}"
-                        data-battery-serial="{{ $battery->serial_number ?? '' }}"
-                    >
-                        {{ $rider->name }} ({{ $rider->email }})
-                    </option>
-                @endforeach
-            </select>
-        </div>
+    {{-- Rider Selection --}}
+    {{-- Rider Selection --}}
+<div class="mb-3">
+    <label for="rider_id" class="form-label fw-semibold">Select Rider</label>
+    <select name="rider_id" id="riderSelect"
+        class="form-control select2"
+        required
+        data-placeholder="Search rider by name or phone"
+        style="width: 100%;">
+        <option value="">-- Select Rider --</option>
+        @foreach($riders as $rider)
+            <option 
+                value="{{ $rider->id }}"
+                data-bike-id="{{ optional($rider->purchases->first())->motorcycleUnit->id ?? '' }}"
+                data-bike-plate="{{ optional($rider->purchases->first())->motorcycleUnit->number_plate ?? '' }}"
+                data-battery-id="{{ optional(\App\Models\Battery::where('current_rider_id', $rider->id)->where('status', 'in_use')->first())->id ?? '' }}"
+                data-battery-serial="{{ optional(\App\Models\Battery::where('current_rider_id', $rider->id)->where('status', 'in_use')->first())->serial_number ?? '' }}"
+            >
+                {{ $rider->name }} ({{ $rider->phone }})
+            </option>
+        @endforeach
+    </select>
+</div>
+
+
 
         {{-- Motorcycle Unit (Auto-filled) --}}
         <div class="mb-3">
@@ -111,45 +112,64 @@
     </form>
 </div>
 
+@push('scripts')
 <script>
-    const batteryInput = document.getElementById('battery');
-    const payableInput = document.getElementById('payable');
-    const payableDisplay = document.getElementById('payable_display');
-    const riderSelect = document.getElementById('riderSelect');
-    const batteryReturnedSelect = document.getElementById('batteryReturnedSelect');
-    const motorcycleDisplay = document.getElementById('motorcycleDisplay');
-    const motorcycleUnitId = document.getElementById('motorcycleUnitId');
-    const basePrice = {{ config('billing.base_price') ?? 15000 }};
+    $(document).ready(function () {
+        const batteryInput = $('#battery');
+        const payableInput = $('#payable');
+        const payableDisplay = $('#payable_display');
+        const riderSelect = $('#riderSelect');
+        const batteryReturnedSelect = $('#batteryReturnedSelect');
+        const motorcycleDisplay = $('#motorcycleDisplay');
+        const motorcycleUnitId = $('#motorcycleUnitId');
+        const basePrice = {{ config('billing.base_price') ?? 15000 }};
 
-    batteryInput.addEventListener('input', () => {
-        const value = parseFloat(batteryInput.value);
-        if (!isNaN(value) && value >= 0 && value <= 100) {
-            const missing = 100 - value;
-            const amount = (missing / 100) * basePrice;
-            payableInput.value = amount.toFixed(2);
-            payableDisplay.value = amount.toLocaleString('en-UG', {
-                style: 'currency', currency: 'UGX'
-            });
-        } else {
-            payableInput.value = '';
-            payableDisplay.value = '';
-        }
-    });
+        // Initialize Select2
+        $('#riderSelect').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: $('#riderSelect').data('placeholder'),
+            allowClear: true,
+            dropdownAutoWidth: true,
+            minimumResultsForSearch: 0
+        });
 
-    riderSelect.addEventListener('change', function () {
-        const selected = this.options[this.selectedIndex];
-        motorcycleDisplay.value = selected.getAttribute('data-bike-plate') || 'N/A';
-        motorcycleUnitId.value = selected.getAttribute('data-bike-id') || '';
 
-        // Set returned battery manually
-        const batteryId = selected.getAttribute('data-battery-id');
-        const batterySerial = selected.getAttribute('data-battery-serial');
+        // Battery percentage input logic
+        batteryInput.on('input', function () {
+            const value = parseFloat($(this).val());
+            if (!isNaN(value) && value >= 0 && value <= 100) {
+                const missing = 100 - value;
+                const amount = (missing / 100) * basePrice;
+                payableInput.val(amount.toFixed(2));
+                payableDisplay.val(amount.toLocaleString('en-UG', {
+                    style: 'currency',
+                    currency: 'UGX'
+                }));
+            } else {
+                payableInput.val('');
+                payableDisplay.val('');
+            }
+        });
 
-        if (batteryId && batterySerial) {
-            batteryReturnedSelect.innerHTML = `<option value="${batteryId}" selected>${batterySerial}</option>`;
-        } else {
-            batteryReturnedSelect.innerHTML = `<option value="">No battery found</option>`;
-        }
+        // Rider selection logic
+        riderSelect.on('change', function () {
+            const selected = this.options[this.selectedIndex];
+
+            motorcycleDisplay.val(selected.getAttribute('data-bike-plate') || 'N/A');
+            motorcycleUnitId.val(selected.getAttribute('data-bike-id') || '');
+
+            const batteryId = selected.getAttribute('data-battery-id');
+            const batterySerial = selected.getAttribute('data-battery-serial');
+
+            if (batteryId && batterySerial) {
+                batteryReturnedSelect.html(`<option value="${batteryId}" selected>${batterySerial}</option>`);
+            } else {
+                batteryReturnedSelect.html('<option value="">No battery found</option>');
+            }
+        });
     });
 </script>
+@endpush
+
 @endsection

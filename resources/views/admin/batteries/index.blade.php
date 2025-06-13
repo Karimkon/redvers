@@ -29,7 +29,17 @@
             @endforeach
         </select>
     </div>
+    <div class="col-md-4">
+    <label for="search" class="form-label">Search Serial Number:</label>
+    <input type="text" name="search" id="search" class="form-control"
+           placeholder="e.g. redversbattery7" value="{{ request('search') }}">
+</div>
+<div class="col-md-2">
+    <button class="btn btn-primary w-100" type="submit">Filter</button>
+</div>
+
 </form>
+
 
 <div class="card shadow-sm">
     <div class="card-body p-0">

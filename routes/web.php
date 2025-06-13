@@ -35,6 +35,10 @@ use App\Http\Controllers\Finance\FinancePurchaseController;
 use App\Services\PesapalService;
 use App\Http\Controllers\PesapalTokenTestController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\Admin\BatteryDeliveryController;
+use App\Http\Controllers\Agent\AgentBatteryDeliveryController;
+
+
 
 
 
@@ -59,6 +63,7 @@ Route::post('/pesapal/callback', [\App\Http\Controllers\PesapalController::class
 
 Route::get('/pesapal/test-submit', [PesapalController::class, 'testSubmitOrder'])->name('pesapal.test');
 
+Route::post('/pesapal/ipn', [PesapalController::class, 'handleIPN'])->name('pesapal.ipn');
 
 
 // Dedicated login submits
@@ -167,6 +172,24 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/batteries/{battery}/history', [BatteryController::class, 'history'])->name('batteries.history');
 
     /** -----------------------------------
+     * 🔹 Battery Delivery Routes
+     * ---------------------------------- */
+    Route::prefix('deliveries')->name('deliveries.')->group(function () {
+        Route::get('/', [BatteryDeliveryController::class, 'index'])->name('index');
+    Route::get('/create', [BatteryDeliveryController::class, 'create'])->name('create');
+    Route::post('/', [BatteryDeliveryController::class, 'store'])->name('store');
+
+    //Delivery Returns
+    Route::get('/returns', [BatteryDeliveryController::class, 'showReturns'])->name('returns');
+    Route::post('/accept-returns', [BatteryDeliveryController::class, 'acceptReturns'])->name('acceptReturns');
+    Route::get('/return-history', [BatteryDeliveryController::class, 'returnHistory'])->name('history');
+
+
+    });
+
+
+
+    /** -----------------------------------
      * 🔹 Admin API Endpoints (AJAX support)
      * ---------------------------------- */
 
@@ -251,6 +274,14 @@ Route::middleware(['auth', 'role:agent'])->prefix('agent')->name('agent.')->grou
     Route::get('/dashboard', [AgentDashboardController::class, 'index'])->name('dashboard');
     Route::resource('swaps', AgentSwapController::class);
     Route::get('/swap-history', [AgentSwapHistoryController::class, 'index'])->name('swap-history');
+
+    //Batteries Deliveries
+    Route::prefix('deliveries')->name('deliveries.')->group(function () {
+        Route::get('/', [AgentBatteryDeliveryController::class, 'index'])->name('index');
+        Route::post('/{delivery}/receive', [AgentBatteryDeliveryController::class, 'receive'])->name('receive');
+        Route::post('/accept-multiple', [AgentBatteryDeliveryController::class, 'acceptMultiple'])->name('acceptMultiple');
+
+    });
 
     // ✅ Add this inside
     Route::get('/agent/api/rider-last-battery/{rider}', function ($riderId) {

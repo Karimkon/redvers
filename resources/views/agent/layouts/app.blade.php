@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@yield('title', 'Agent Dashboard')</title>
+    <!-- CSS Select 2 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
     <!-- Bootstrap + Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
@@ -111,6 +113,26 @@
             display: block;
         }
 
+        .select2-container--bootstrap-5 .select2-selection {
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            min-height: 38px;
+            box-shadow: none;
+        }
+
+        .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+            color: #212529;
+            font-weight: 500;
+            padding-left: 0;
+        }
+
+        .select2-container--bootstrap-5 .select2-selection--single .select2-selection__arrow {
+            height: 100%;
+            right: 0.75rem;
+        }
+
+
         @media (max-width: 767.98px) {
             .sidebar {
                 left: -260px;
@@ -157,6 +179,9 @@
             <a href="{{ route('agent.swap-history') }}" class="{{ request()->routeIs('agent.swap-history') ? 'active' : '' }}" onclick="closeSidebar()">
                 <i class="bi bi-clock-history me-2"></i> Swap History 
             </a>
+            <a href="{{ route('agent.deliveries.index') }}" class="{{ request()->routeIs('agent.deliveries.*') ? 'active' : '' }}" onclick="closeSidebar()">
+                <i class="bi bi-truck-front-fill me-2"></i> My Battery Deliveries
+            </a>
             <a href="{{ route('agent.chat.users') }}" class="{{ request()->routeIs('agent.chat.*') ? 'active' : '' }}">
                 <i class="bi bi-chat-dots me-2"></i> Chat
             </a>
@@ -192,7 +217,40 @@
         }
     </script>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     @stack('scripts')
+    
+    @push('scripts')
+<script>
+    $(document).ready(function () {
+        $('#riderSelect').select2({
+            placeholder: 'Search for a rider',
+            allowClear: true,
+            width: '100%'
+        });
+
+        // Retain battery assignment logic after rider is selected
+        $('#riderSelect').on('change', function () {
+            const selected = this.options[this.selectedIndex];
+            $('#motorcycleDisplay').val(selected.getAttribute('data-bike-plate') || 'N/A');
+            $('#motorcycleUnitId').val(selected.getAttribute('data-bike-id') || '');
+
+            const batteryId = selected.getAttribute('data-battery-id');
+            const batterySerial = selected.getAttribute('data-battery-serial');
+
+            if (batteryId && batterySerial) {
+                $('#batteryReturnedSelect').html(`<option value="${batteryId}" selected>${batterySerial}</option>`);
+            } else {
+                $('#batteryReturnedSelect').html(`<option value="">No battery found</option>`);
+            }
+        });
+    });
+</script>
+@endpush
+
 </body>
 </html>
