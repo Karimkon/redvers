@@ -12,8 +12,11 @@
     </div>
 
     @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
+  <div class="alert alert-success">
+    {{ session('success') }}
+  </div>
+@endif
+
 
     <div class="table-responsive">
         <table class="table table-striped">
@@ -35,8 +38,16 @@
                         <td>{{ $swap->riderUser->name ?? 'N/A' }}</td>
                         <td>{{ $swap->station->name ?? 'N/A' }}</td>
                         <td>{{ $swap->percentage_difference }}%</td>
+                        <td>
+                            {{ strtoupper($swap->payment_method ?? '-') }}
+                            @if($swap->payment && $swap->payment->status === 'completed')
+                                <span class="badge bg-success ms-1">Paid</span>
+                            @elseif($swap->payment && $swap->payment->status === 'pending')
+                                <span class="badge bg-warning ms-1">Pending</span>
+                            @endif
+                        </td>
+
                         <td>UGX {{ number_format($swap->payable_amount) }}</td>
-                        <td>{{ strtoupper($swap->payment_method ?? '-') }}</td>
                         <td>
                             <a href="{{ route('agent.swaps.show', $swap->id) }}" class="btn btn-sm btn-info">
                                 <i class="bi bi-eye"></i> View

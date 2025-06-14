@@ -15,7 +15,7 @@ class AgentSwapController extends Controller
     public function index()
     {
         $swaps = Swap::where('agent_id', Auth::id())
-            ->with(['riderUser', 'station'])
+            ->with(['riderUser', 'station', 'payment'])
             ->latest()
             ->paginate(20);
 
@@ -44,138 +44,166 @@ class AgentSwapController extends Controller
         return view('agent.swaps.create', compact('riders', 'availableBatteries', 'returnableBatteries'));
     }
 
-public function store(Request $request)
-{
-    $request->validate([
-        'rider_id' => 'required|exists:users,id',
-        'motorcycle_unit_id' => 'required|exists:motorcycle_units,id',
-        'station_id' => 'required|exists:stations,id',
-        'battery_id' => 'required|exists:batteries,id',
-        'battery_returned_id' => 'nullable|exists:batteries,id', // ✅ Optional now
-        'percentage_difference' => 'required|numeric|min:0|max:100',
-        'payment_method' => 'nullable|in:mtn,airtel,pesapal',
-    ]);
-
-    $battery = Battery::where('id', $request->battery_id)
-        ->where('current_station_id', $request->station_id)
-        ->whereIn('status', ['in_stock', 'charging'])
-        ->firstOrFail();
-
-    // Check if rider has previous swap
-    $isFirstTime = Swap::where('rider_id', $request->rider_id)->count() === 0;
-
-if (!$isFirstTime && $request->filled('battery_returned_id')) {
-    $lastSwap = Swap::where('rider_id', $request->rider_id)->latest()->first();
-    $lastBatterySwap = BatterySwap::where('swap_id', $lastSwap->id)->first();
-
-    if (
-        $lastSwap &&
-        $lastSwap->percentage_difference < 100 &&
-        (int) $request->battery_returned_id !== (int) $lastSwap->battery_id
-    ) {
-        return back()->withErrors([
-            'battery_returned_id' => 'Returned battery does not match the last one assigned to this rider.',
-        ])->withInput();
-    }
-}
-
-
-    $basePrice = config('billing.base_price', 15000);
-    $missingPercentage = $isFirstTime ? 0 : 100 - $request->percentage_difference;
-    $payableAmount = ($missingPercentage / 100) * $basePrice;
-
-    $swap = Swap::create([
-        'rider_id' => $request->rider_id,
-        'motorcycle_unit_id' => $request->motorcycle_unit_id, // ✅ Add this line
-        'station_id' => $request->station_id,
-        'agent_id' => auth()->id(),
-        'battery_id' => $battery->id,
-        'battery_returned_id' => $request->battery_returned_id, // ✅ This line tracks the returned battery
-        'percentage_difference' => $request->percentage_difference,
-        'payable_amount' => $payableAmount,
-        'payment_method' => $request->payment_method,
-        'swapped_at' => now(),
-    ]);
-
-    // Mark assigned battery as in_use
-    $battery->update([
-        'status' => 'in_use',
-        'current_station_id' => null,
-        'current_rider_id' => $request->rider_id, // ✅ To track rider's current battery
-    ]);
-
-    BatterySwap::create([
-    'battery_id' => $battery->id,
-    'swap_id' => $swap->id,
-    'from_station_id' => $request->station_id,
-    'to_station_id' => $request->station_id, // ✅ fix: station receiving the battery
-    'swapped_at' => now(),
-]);
-
-
-    // ✅ If battery was returned, mark it as charging
-    if ($request->filled('battery_returned_id')) {
-        Battery::where('id', $request->battery_returned_id)->update([
-            'status' => 'charging',
-            'current_station_id' => $request->station_id,
-            'current_rider_id' => null, // ✅ rider no longer has this battery
-        ]);
-    }
-
-   if ($request->payment_method && $payableAmount > 0) {
-    $reference = 'SWAP-PESAPAL-' . uniqid();
-
-    if ($request->payment_method === 'pesapal') {
-        try {
-            $token = app(PesapalService::class)->getAccessToken();
-
-            $rider = User::find($request->rider_id);
-
-            $response = Http::withToken($token)->post(config('pesapal.base_url') . '/api/Transactions/SubmitOrderRequest', [
-            "id" => Str::uuid()->toString(),
-            "currency" => "UGX",
-            "amount" => $payableAmount,
-            "description" => "Battery Swap Payment",
-            "callback_url" => route('pesapal.callback'),
-            "notification_id" => "34f2ce63-9c4c-430d-adb8-dbba55243d85",
-            "billing_address" => [
-                "email_address" => $rider->email,
-                "phone_number" => $rider->phone,
-                "first_name" => explode(' ', $rider->name)[0],
-                "last_name" => explode(' ', $rider->name)[1] ?? '',
-                "line_1" => "Redvers Station",
-                "city" => "Kampala",
-                "state" => "Central",
-                "postal_code" => "256",
-                "zip_code" => "256",
-                "country_code" => "UG"
-            ]
+    public function store(Request $request)
+    {
+        $request->validate([
+            'rider_id' => 'required|exists:users,id',
+            'motorcycle_unit_id' => 'required|exists:motorcycle_units,id',
+            'station_id' => 'required|exists:stations,id',
+            'battery_id' => 'required|exists:batteries,id',
+            'battery_returned_id' => 'nullable|exists:batteries,id',
+            'percentage_difference' => 'required|numeric|min:0|max:100',
+            'payment_method' => 'nullable|in:mtn,airtel,pesapal',
         ]);
 
+        $battery = Battery::where('id', $request->battery_id)
+            ->where('current_station_id', $request->station_id)
+            ->whereIn('status', ['in_stock', 'charging'])
+            ->firstOrFail();
 
-            if ($response->successful()) {
-                $body = $response->json();
+        $isFirstTime = Swap::where('rider_id', $request->rider_id)->count() === 0;
 
-                $payment = Payment::create([
-                    'swap_id' => $swap->id,
-                    'amount' => $payableAmount,
-                    'method' => 'pesapal',
-                    'status' => 'pending',
-                    'pesapal_transaction_id' => $body['order_tracking_id'] ?? null,
-                    'reference' => $reference,
-                    'initiated_by' => 'agent',
+        if (!$isFirstTime && $request->filled('battery_returned_id')) {
+            $lastSwap = Swap::where('rider_id', $request->rider_id)->latest()->first();
+
+            if (
+                $lastSwap &&
+                $lastSwap->percentage_difference < 100 &&
+                (int) $request->battery_returned_id !== (int) $lastSwap->battery_id
+            ) {
+                return back()->withErrors([
+                    'battery_returned_id' => 'Returned battery does not match the last one assigned to this rider.',
+                ])->withInput();
+            }
+        }
+
+        $basePrice = config('billing.base_price', 15000);
+        $missingPercentage = $isFirstTime ? 0 : 100 - $request->percentage_difference;
+        $payableAmount = ($missingPercentage / 100) * $basePrice;
+
+        if ($payableAmount <= 0) {
+            // Free swap — create immediately
+            $swap = Swap::create([
+                'rider_id' => $request->rider_id,
+                'motorcycle_unit_id' => $request->motorcycle_unit_id,
+                'station_id' => $request->station_id,
+                'agent_id' => auth()->id(),
+                'battery_id' => $battery->id,
+                'battery_returned_id' => $request->battery_returned_id,
+                'percentage_difference' => $request->percentage_difference,
+                'payable_amount' => 0,
+                'payment_method' => null,
+                'swapped_at' => now(),
+            ]);
+
+            BatterySwap::create([
+                'battery_id' => $battery->id,
+                'swap_id' => $swap->id,
+                'from_station_id' => $request->station_id,
+                'to_station_id' => $request->station_id,
+                'swapped_at' => now(),
+            ]);
+
+            $battery->update([
+                'status' => 'in_use',
+                'current_station_id' => null,
+                'current_rider_id' => $request->rider_id,
+            ]);
+
+            if ($request->filled('battery_returned_id')) {
+                Battery::where('id', $request->battery_returned_id)->update([
+                    'status' => 'charging',
+                    'current_station_id' => $request->station_id,
+                    'current_rider_id' => null,
+                ]);
+            }
+
+            return redirect()->route('agent.swaps.index')
+                ->with('success', 'Swap created successfully (no payment required).');
+        }
+
+        // Store in session for delayed save
+        if ($request->payment_method === 'pesapal') {
+            try {
+                $reference = 'SWAP-PESAPAL-' . uniqid();
+                $token = app(PesapalService::class)->getAccessToken();
+                $rider = User::find($request->rider_id);
+
+                session([
+                    'pending_swap_data' => $request->all(),
+                    'pending_reference' => $reference,
+                    'pending_amount' => $payableAmount,
                 ]);
 
-                return redirect()->away($body['redirect_url']); // Go to Pesapal payment page
-            } else {
-                return back()->withErrors(['pesapal' => 'Failed to initiate Pesapal payment.'])->withInput();
+                $response = Http::withToken($token)->post(config('pesapal.base_url') . '/api/Transactions/SubmitOrderRequest', [
+                    "id" => Str::uuid()->toString(),
+                    "currency" => "UGX",
+                    "amount" => $payableAmount,
+                    "description" => "Battery Swap Payment",
+                    "callback_url" => route('pesapal.callback'),
+                    "notification_id" => "34f2ce63-9c4c-430d-adb8-dbba55243d85",
+                    "billing_address" => [
+                        "email_address" => $rider->email,
+                        "phone_number" => $rider->phone,
+                        "first_name" => explode(' ', $rider->name)[0],
+                        "last_name" => explode(' ', $rider->name)[1] ?? '',
+                        "line_1" => "Redvers Station",
+                        "city" => "Kampala",
+                        "state" => "Central",
+                        "postal_code" => "256",
+                        "zip_code" => "256",
+                        "country_code" => "UG"
+                    ]
+                ]);
+
+                if ($response->successful()) {
+                    return redirect()->away($response['redirect_url']);
+                } else {
+                    return back()->withErrors(['pesapal' => 'Failed to initiate Pesapal payment.'])->withInput();
+                }
+            } catch (\Exception $e) {
+                \Log::error('Pesapal Error: ' . $e->getMessage());
+                return back()->withErrors(['pesapal' => 'Error: ' . $e->getMessage()])->withInput();
             }
-        } catch (\Exception $e) {
-            \Log::error('Pesapal Payment Init Error', ['error' => $e->getMessage()]);
-            return back()->withErrors(['pesapal' => 'Error: ' . $e->getMessage()])->withInput();
         }
-    } else {
-        // For MTN or Airtel
+
+        // Optional: For MTN or Airtel (still create immediately)
+        $reference = 'SWAP-' . uniqid();
+        $swap = Swap::create([
+            'rider_id' => $request->rider_id,
+            'motorcycle_unit_id' => $request->motorcycle_unit_id,
+            'station_id' => $request->station_id,
+            'agent_id' => auth()->id(),
+            'battery_id' => $battery->id,
+            'battery_returned_id' => $request->battery_returned_id,
+            'percentage_difference' => $request->percentage_difference,
+            'payable_amount' => $payableAmount,
+            'payment_method' => $request->payment_method,
+            'swapped_at' => now(),
+        ]);
+
+        BatterySwap::create([
+            'battery_id' => $battery->id,
+            'swap_id' => $swap->id,
+            'from_station_id' => $request->station_id,
+            'to_station_id' => $request->station_id,
+            'swapped_at' => now(),
+        ]);
+
+        $battery->update([
+            'status' => 'in_use',
+            'current_station_id' => null,
+            'current_rider_id' => $request->rider_id,
+        ]);
+
+        if ($request->filled('battery_returned_id')) {
+            Battery::where('id', $request->battery_returned_id)->update([
+                'status' => 'charging',
+                'current_station_id' => $request->station_id,
+                'current_rider_id' => null,
+            ]);
+        }
+
         Payment::create([
             'swap_id' => $swap->id,
             'amount' => $payableAmount,
@@ -184,11 +212,10 @@ if (!$isFirstTime && $request->filled('battery_returned_id')) {
             'reference' => $reference,
             'initiated_by' => 'agent',
         ]);
-    }
-}
 
-    return redirect()->route('agent.swaps.index')->with('success', 'Swap created successfully.');
-}
+        return redirect()->route('agent.swaps.index')->with('success', 'Swap created and payment pending.');
+    }
+
 
 
 

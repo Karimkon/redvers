@@ -17,7 +17,8 @@ class Payment extends Model
 
     public function rider()
     {
-        return $this->swap->riderUser(); // safer and cleaner
+        return $this->swap ? $this->swap->riderUser() : null;
     }
+
 
 }

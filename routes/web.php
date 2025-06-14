@@ -39,14 +39,6 @@ use App\Http\Controllers\Admin\BatteryDeliveryController;
 use App\Http\Controllers\Agent\AgentBatteryDeliveryController;
 
 
-
-
-
-
-
-
-
-
 // Home
 Route::get('/', fn () => view('welcome'));
 Route::get('/pesapal/request-token', [PesapalTokenTestController::class, 'getToken']);
@@ -59,7 +51,8 @@ Route::get('/finance/login', fn () => view('auth.finance-login'))->name('finance
 
 Route::get('/pesapal/auth', [\App\Http\Controllers\PesapalController::class, 'authenticate'])->name('pesapal.auth');
 
-Route::post('/pesapal/callback', [\App\Http\Controllers\PesapalController::class, 'handleCallback'])->name('pesapal.callback');
+Route::match(['GET', 'POST'], '/pesapal/callback', [PesapalController::class, 'handleCallback'])->name('pesapal.callback');
+
 
 Route::get('/pesapal/test-submit', [PesapalController::class, 'testSubmitOrder'])->name('pesapal.test');
 

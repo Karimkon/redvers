@@ -36,84 +36,172 @@ class PesapalController extends Controller
      */
     public function handleCallback(Request $request)
     {
-        $data = $request->all();
+        $trackingId = $request->get('order_tracking_id');
 
-        Log::info('📥 Pesapal Callback Received', $data);
-
-        if (!isset($data['order_tracking_id'])) {
-            return response()->json(['error' => 'Missing tracking ID'], 400);
+        if (!$trackingId) {
+            return redirect()->route('agent.swaps.index')->with('error', 'Invalid callback');
         }
 
-        // Find payment by pesapal_transaction_id
-        $payment = Payment::where('pesapal_transaction_id', $data['order_tracking_id'])->first();
+        try {
+            $token = app(PesapalService::class)->getAccessToken();
 
-        if (!$payment) {
-            Log::warning('⚠️ Payment not found for callback', ['tracking_id' => $data['order_tracking_id']]);
-            return response()->json(['error' => 'Payment not found'], 404);
-        }
+            $response = Http::withToken($token)->get(
+                config('pesapal.base_url') . '/api/Transactions/GetTransactionStatus',
+                ['orderTrackingId' => $trackingId]
+            );
 
-        // You can further validate or call Pesapal API for confirmation if needed
+            if (!$response->successful()) {
+                return redirect()->route('agent.swaps.index')->with('error', 'Failed to verify payment.');
+            }
 
-        // Update payment status (assumes success, adjust if more fields needed)
-        $payment->status = 'completed'; // or use $data['status'] if returned
-        $payment->save();
-
-        return response()->json(['message' => 'Callback processed'], 200);
-    }
-
-
-    public function handleIPN(Request $request)
-{
-    $orderTrackingId = $request->input('OrderTrackingId');
-    $merchantRef = $request->input('OrderMerchantReference');
-    $notificationType = $request->input('OrderNotificationType');
-
-    \Log::info('📥 IPN received from Pesapal', [
-        'tracking_id' => $orderTrackingId,
-        'merchant_reference' => $merchantRef,
-        'type' => $notificationType,
-    ]);
-
-    try {
-        $token = app(PesapalService::class)->getAccessToken();
-
-        $response = Http::withToken($token)->get(
-            config('pesapal.base_url') . '/api/Transactions/GetTransactionStatus',
-            ['orderTrackingId' => $orderTrackingId]
-        );
-
-        if ($response->successful()) {
             $status = strtolower($response['payment_status_description']);
 
-            $payment = Payment::where('external_reference', $orderTrackingId)->first();
+            if ($status !== 'completed') {
+                return redirect()->route('agent.swaps.index')->with('error', 'Payment not completed.');
+            }
 
+            // ✅ Fetch session data
+            $data = session('pending_swap_data');
+            $reference = session('pending_reference');
+
+            // ✅ Clean session immediately to avoid stale state
+            session()->forget(['pending_swap_data', 'pending_reference']);
+
+            if (!$data || !$reference) {
+                return redirect()->route('agent.swaps.index')->with('error', 'Session expired. Please try again.');
+            }
+
+            // ✅ Try to find existing payment first
+            $payment = Payment::where('reference', $reference)->first();
+
+            // ✅ Ensure the battery exists
+            $battery = \App\Models\Battery::findOrFail($data['battery_id']);
+
+            $amount = session('pending_amount') ?? $data['payable_amount'] ?? 0;
+
+            // ✅ Create swap
+            $swap = \App\Models\Swap::create([
+                'rider_id' => $data['rider_id'],
+                'motorcycle_unit_id' => $data['motorcycle_unit_id'],
+                'station_id' => $data['station_id'],
+                'agent_id' => auth()->id(),
+                'battery_id' => $battery->id,
+                'battery_returned_id' => $data['battery_returned_id'] ?? null,
+                'percentage_difference' => $data['percentage_difference'],
+                'payable_amount' => $amount,
+                'payment_method' => 'pesapal',
+                'swapped_at' => now(),
+            ]);
+            
+
+            // Create or update payment
             if ($payment) {
-                $payment->update(['status' => $status]);
-
-                \Log::info("✅ Payment updated via IPN: {$status}", [
-                    'payment_id' => $payment->id,
-                    'tracking_id' => $orderTrackingId,
+                $payment->update([
+                    'swap_id' => $swap->id,
+                    'status' => 'completed',
+                    'amount' => $amount ?? $payment->amount, // fallback if session lost
+                    'pesapal_transaction_id' => $trackingId,
+                    'method' => 'pesapal',
+                    'reference' => $reference,
+                ]);
+            } else {
+                    Payment::create([
+                    'swap_id' => $swap->id,
+                    'amount' => $amount,
+                    'method' => 'pesapal',
+                    'status' => 'completed',
+                    'pesapal_transaction_id' => $trackingId,
+                    'reference' => $reference,
+                    'initiated_by' => 'agent',
                 ]);
             }
+
+            // ✅ Create Battery Swap log
+            \App\Models\BatterySwap::create([
+                'battery_id' => $battery->id,
+                'swap_id' => $swap->id,
+                'from_station_id' => $data['station_id'],
+                'to_station_id' => $data['station_id'],
+                'swapped_at' => now(),
+            ]);
+
+            // ✅ Update battery status
+            $battery->update([
+                'status' => 'in_use',
+                'current_station_id' => null,
+                'current_rider_id' => $data['rider_id'],
+            ]);
+
+            if (!empty($data['battery_returned_id'])) {
+                \App\Models\Battery::where('id', $data['battery_returned_id'])->update([
+                    'status' => 'charging',
+                    'current_station_id' => $data['station_id'],
+                    'current_rider_id' => null,
+                ]);
+            }
+
+            return redirect()->route('agent.swaps.index')
+                ->with('success', '✅ Payment received and swap completed successfully.');
+
+        } catch (\Exception $e) {
+            \Log::error('Pesapal callback error', ['msg' => $e->getMessage()]);
+            return redirect()->route('agent.swaps.index')->with('error', 'Payment processing error.');
         }
-
-        return response()->json([
-            'orderNotificationType' => $notificationType,
-            'orderTrackingId' => $orderTrackingId,
-            'orderMerchantReference' => $merchantRef,
-            'status' => 200
-        ]);
-    } catch (\Exception $e) {
-        \Log::error('❌ Error in IPN handler: ' . $e->getMessage());
-
-        return response()->json([
-            'orderNotificationType' => $notificationType,
-            'orderTrackingId' => $orderTrackingId,
-            'orderMerchantReference' => $merchantRef,
-            'status' => 500
-        ]);
     }
-}
+
+
+        public function handleIPN(Request $request)
+    {
+        $orderTrackingId = $request->input('OrderTrackingId');
+        $merchantRef = $request->input('OrderMerchantReference');
+        $notificationType = $request->input('OrderNotificationType');
+
+        \Log::info('📥 IPN received from Pesapal', [
+            'tracking_id' => $orderTrackingId,
+            'merchant_reference' => $merchantRef,
+            'type' => $notificationType,
+        ]);
+
+        try {
+            $token = app(PesapalService::class)->getAccessToken();
+
+            $response = Http::withToken($token)->get(
+                config('pesapal.base_url') . '/api/Transactions/GetTransactionStatus',
+                ['orderTrackingId' => $orderTrackingId]
+            );
+
+            if ($response->successful()) {
+                $status = strtolower($response['payment_status_description']);
+
+                $payment = Payment::where('external_reference', $orderTrackingId)->first();
+
+                if ($payment) {
+                    $payment->update(['status' => $status]);
+
+                    \Log::info("✅ Payment updated via IPN: {$status}", [
+                        'payment_id' => $payment->id,
+                        'tracking_id' => $orderTrackingId,
+                    ]);
+                }
+            }
+
+            return response()->json([
+                'orderNotificationType' => $notificationType,
+                'orderTrackingId' => $orderTrackingId,
+                'orderMerchantReference' => $merchantRef,
+                'status' => 200
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('❌ Error in IPN handler: ' . $e->getMessage());
+
+            return response()->json([
+                'orderNotificationType' => $notificationType,
+                'orderTrackingId' => $orderTrackingId,
+                'orderMerchantReference' => $merchantRef,
+                'status' => 500
+            ]);
+        }
+    }
 
 
     public function testSubmitOrder()
