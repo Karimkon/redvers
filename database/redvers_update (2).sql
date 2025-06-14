@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 13, 2025 at 10:01 AM
+-- Generation Time: Jun 13, 2025 at 09:43 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -42,15 +42,52 @@ CREATE TABLE `batteries` (
 --
 
 INSERT INTO `batteries` (`id`, `serial_number`, `status`, `current_station_id`, `current_rider_id`, `created_at`, `updated_at`) VALUES
-(1, 'redversbattery1', 'in_use', NULL, NULL, '2025-05-29 05:48:21', '2025-06-04 09:46:57'),
-(2, 'redversbattery2', 'in_use', NULL, NULL, '2025-05-29 05:48:21', '2025-06-11 06:43:37'),
-(3, 'redversbattery3', 'in_use', NULL, NULL, '2025-05-29 05:48:21', '2025-06-09 13:53:28'),
-(4, 'redversbattery4', 'in_use', NULL, 12, '2025-05-29 05:48:21', '2025-06-12 04:42:04'),
-(5, 'redversbattery5', 'in_use', NULL, NULL, '2025-05-29 05:48:21', '2025-06-05 07:39:35'),
-(6, 'redversbattery6', 'in_use', NULL, NULL, '2025-05-29 06:07:52', '2025-06-02 15:21:16'),
-(7, 'redversbattery7', 'in_use', NULL, NULL, '2025-06-01 15:33:15', '2025-06-05 14:03:24'),
-(8, 'redversbattery8', 'in_use', NULL, NULL, '2025-06-09 14:40:39', '2025-06-12 05:18:17'),
-(9, 'redversbattery9', 'charging', 1, NULL, '2025-06-11 10:08:54', '2025-06-12 05:18:17');
+(1, 'redversbattery1', 'in_use', NULL, 12, '2025-05-29 05:48:21', '2025-06-13 13:38:54'),
+(2, 'redversbattery2', 'in_stock', NULL, NULL, '2025-05-29 05:48:21', '2025-06-13 12:00:43'),
+(3, 'redversbattery3', 'in_stock', NULL, NULL, '2025-05-29 05:48:21', '2025-06-13 12:00:58'),
+(4, 'redversbattery4', 'charging', 5, NULL, '2025-05-29 05:48:21', '2025-06-13 13:38:54'),
+(5, 'redversbattery5', 'in_stock', NULL, NULL, '2025-05-29 05:48:21', '2025-06-13 12:01:09'),
+(6, 'redversbattery6', 'charging', NULL, NULL, '2025-05-29 06:07:52', '2025-06-13 09:31:48'),
+(7, 'redversbattery7', 'charging', NULL, NULL, '2025-06-01 15:33:15', '2025-06-13 09:09:16'),
+(8, 'redversbattery8', 'charging', NULL, NULL, '2025-06-09 14:40:39', '2025-06-13 08:55:11'),
+(9, 'redversbattery9', 'charging', NULL, NULL, '2025-06-11 10:08:54', '2025-06-13 08:55:11');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `battery_deliveries`
+--
+
+CREATE TABLE `battery_deliveries` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `delivery_code` varchar(255) DEFAULT NULL,
+  `battery_id` bigint(20) UNSIGNED NOT NULL,
+  `delivered_to_agent_id` bigint(20) UNSIGNED NOT NULL,
+  `station_id` bigint(20) UNSIGNED NOT NULL,
+  `delivered_by` varchar(255) DEFAULT NULL,
+  `received` tinyint(1) NOT NULL DEFAULT 0,
+  `returned` tinyint(1) NOT NULL DEFAULT 0,
+  `received_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `returned_to_admin` tinyint(1) NOT NULL DEFAULT 0,
+  `returned_by_admin_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `returned_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `battery_deliveries`
+--
+
+INSERT INTO `battery_deliveries` (`id`, `delivery_code`, `battery_id`, `delivered_to_agent_id`, `station_id`, `delivered_by`, `received`, `returned`, `received_at`, `created_at`, `updated_at`, `returned_to_admin`, `returned_by_admin_id`, `returned_at`) VALUES
+(1, 'BATCH-684C02FD90FE9', 9, 10, 5, 'Dan', 1, 0, '2025-06-13 08:06:09', '2025-06-13 07:52:45', '2025-06-13 12:02:27', 1, 1, '2025-06-13 12:02:27'),
+(2, 'BATCH-684C07DB7D7B2', 9, 10, 5, 'Daniel', 1, 0, '2025-06-13 08:21:13', '2025-06-13 08:13:31', '2025-06-13 09:30:50', 1, 1, '2025-06-13 09:30:50'),
+(3, 'BATCH-684C07DB7F25E', 8, 10, 5, 'Daniel', 1, 0, '2025-06-13 08:21:13', '2025-06-13 08:13:31', '2025-06-13 09:31:16', 1, 1, '2025-06-13 09:31:16'),
+(4, 'BATCH-684C07DB803A1', 7, 10, 5, 'Daniel', 1, 0, '2025-06-13 08:14:22', '2025-06-13 08:13:31', '2025-06-13 09:31:30', 1, 1, '2025-06-13 09:31:30'),
+(5, 'BATCH-684C07DB80E4D', 6, 10, 5, 'Daniel', 1, 0, '2025-06-13 08:14:21', '2025-06-13 08:13:31', '2025-06-13 09:31:48', 1, 1, '2025-06-13 09:31:48'),
+(6, 'BATCH-684C07DB819DC', 1, 10, 5, 'Daniel', 1, 0, '2025-06-13 08:14:19', '2025-06-13 08:13:31', '2025-06-13 09:32:31', 1, 1, '2025-06-13 09:32:31'),
+(7, 'BATCH-684C1ADF136DF', 8, 10, 5, 'Dan Vehicle ID UAZ 123', 0, 0, NULL, '2025-06-13 09:34:39', '2025-06-13 09:34:39', 0, NULL, NULL),
+(8, 'BATCH-684C1ADF15A46', 1, 10, 5, 'Dan Vehicle ID UAZ 123', 1, 0, '2025-06-13 09:35:10', '2025-06-13 09:34:39', '2025-06-13 09:35:10', 0, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -74,7 +111,8 @@ CREATE TABLE `battery_swaps` (
 INSERT INTO `battery_swaps` (`id`, `battery_id`, `swap_id`, `from_station_id`, `to_station_id`, `swapped_at`) VALUES
 (58, 4, 76, 1, 1, '2025-06-09 14:43:06'),
 (59, 8, 77, 1, 1, '2025-06-09 14:43:37'),
-(68, 4, 86, 1, 1, '2025-06-12 04:42:04');
+(68, 4, 86, 1, 1, '2025-06-12 04:42:04'),
+(76, 1, 94, 5, 5, '2025-06-13 13:38:54');
 
 -- --------------------------------------------------------
 
@@ -121,7 +159,7 @@ CREATE TABLE `discounts` (
 --
 
 INSERT INTO `discounts` (`id`, `purchase_id`, `amount`, `percentage`, `reason`, `created_at`, `updated_at`) VALUES
-(17, 17, 3231000.00, NULL, NULL, '2025-06-12 14:33:20', '2025-06-12 14:33:20');
+(22, 22, 5908000.00, NULL, NULL, '2025-06-13 11:55:36', '2025-06-13 11:55:36');
 
 -- --------------------------------------------------------
 
@@ -276,7 +314,11 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (37, '2025_06_03_095228_add_motorcycle_id_to_swaps_table', 16),
 (38, '2025_06_03_101153_add_motorcycle_unit_id_to_swaps_table', 17),
 (39, '2025_06_04_121525_add_pesapal_transaction_id_to_payments_table', 18),
-(40, '2025_06_09_124110_create_messages_table', 19);
+(40, '2025_06_09_124110_create_messages_table', 19),
+(41, '2025_06_13_085614_create_battery_deliveries_table', 20),
+(42, '2025_06_13_113038_add_returned_to_admin_to_battery_deliveries_table', 21),
+(43, '2025_06_13_115359_add_returned_to_battery_deliveries_table', 22),
+(44, '2025_06_13_122909_add_returned_by_admin_to_battery_deliveries_table', 23);
 
 -- --------------------------------------------------------
 
@@ -344,7 +386,7 @@ CREATE TABLE `motorcycle_payments` (
 --
 
 INSERT INTO `motorcycle_payments` (`id`, `purchase_id`, `payment_date`, `amount`, `type`, `note`, `created_at`, `updated_at`) VALUES
-(35, 17, '2025-06-12', 12000.00, 'daily', NULL, '2025-06-12 14:32:21', '2025-06-12 14:32:21');
+(39, 22, '2025-06-13', 12000.00, 'daily', NULL, '2025-06-13 11:54:27', '2025-06-13 11:54:27');
 
 -- --------------------------------------------------------
 
@@ -366,7 +408,7 @@ CREATE TABLE `motorcycle_units` (
 --
 
 INSERT INTO `motorcycle_units` (`id`, `motorcycle_id`, `number_plate`, `status`, `created_at`, `updated_at`) VALUES
-(8, 2, 'UAZ 900', 'assigned', '2025-06-12 11:51:39', '2025-06-12 14:31:58');
+(10, 2, 'UAZ 999', 'assigned', '2025-06-13 11:45:54', '2025-06-13 11:54:14');
 
 -- --------------------------------------------------------
 
@@ -421,7 +463,8 @@ CREATE TABLE `payments` (
 
 INSERT INTO `payments` (`id`, `swap_id`, `amount`, `method`, `created_at`, `updated_at`, `status`, `reference`, `pesapal_transaction_id`, `initiated_by`) VALUES
 (53, 77, 13350.00, 'airtel', '2025-06-09 14:43:37', '2025-06-09 14:43:37', 'pending', 'SWAP-PESAPAL-68471d4933041', NULL, 'agent'),
-(60, 86, 3300.00, 'pesapal', '2025-06-12 04:42:12', '2025-06-12 04:42:12', 'pending', 'SWAP-PESAPAL-684a84cca79d3', NULL, 'agent');
+(60, 86, 3300.00, 'pesapal', '2025-06-12 04:42:12', '2025-06-12 04:42:12', 'pending', 'SWAP-PESAPAL-684a84cca79d3', NULL, 'agent'),
+(68, 94, 600.00, 'pesapal', '2025-06-13 13:39:02', '2025-06-13 13:39:02', 'pending', 'SWAP-PESAPAL-684c541eea887', NULL, 'agent');
 
 -- --------------------------------------------------------
 
@@ -477,7 +520,7 @@ CREATE TABLE `purchases` (
 --
 
 INSERT INTO `purchases` (`id`, `user_id`, `motorcycle_id`, `purchase_type`, `initial_deposit`, `total_price`, `amount_paid`, `remaining_balance`, `status`, `start_date`, `created_at`, `updated_at`, `motorcycle_unit_id`) VALUES
-(17, 12, 2, 'hire', 200000.00, 7708571.43, 212000.00, 4265571.43, 'active', '2024-08-01', '2025-06-12 14:31:58', '2025-06-12 14:33:20', 8);
+(22, 12, 2, 'hire', 200000.00, 7708571.43, 212000.00, 1588571.43, 'active', '2023-11-16', '2025-06-13 11:54:14', '2025-06-13 11:55:36', 10);
 
 -- --------------------------------------------------------
 
@@ -499,7 +542,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('VT1PAayLYzF9zA0N30mvPDgjB2edJ5MgJiRJXH6c', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiUFlpOEJHaWNBU0hTczZWd1V2Qm9zYUJGN1AxRURVUXljS3RJOVBSeiI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NDA6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9hZG1pbi9wdXJjaGFzZXMvMTciO31zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxO30=', 1749749600);
+('T8K5f5gQsH4j8EemKBGc2qwhOY4UOPAmjKIxozDc', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiN0VXY0M4T1dmRUZ1S21EUDJweGlqZlIxMVJ2bXdaN3Y5M2docHg3MSI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6Mzg6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9hZG1pbi9kZWxpdmVyaWVzIjt9czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6MTt9', 1749836990);
 
 -- --------------------------------------------------------
 
@@ -555,7 +598,8 @@ CREATE TABLE `swaps` (
 INSERT INTO `swaps` (`id`, `rider_id`, `station_id`, `agent_id`, `battery_id`, `motorcycle_unit_id`, `battery_returned_id`, `swapped_at`, `created_at`, `updated_at`, `percentage_difference`, `payable_amount`, `payment_method`) VALUES
 (76, 12, 1, 2, 4, NULL, NULL, '2025-06-09 14:43:06', '2025-06-09 14:43:06', '2025-06-09 14:43:06', 100.00, 0.00, NULL),
 (77, 12, 1, 2, 8, NULL, 4, '2025-06-09 14:43:37', '2025-06-09 14:43:37', '2025-06-09 14:43:37', 11.00, 13350.00, 'airtel'),
-(86, 12, 1, 2, 4, NULL, 8, '2025-06-12 04:42:04', '2025-06-12 04:42:04', '2025-06-12 04:42:04', 78.00, 3300.00, 'pesapal');
+(86, 12, 1, 2, 4, NULL, 8, '2025-06-12 04:42:04', '2025-06-12 04:42:04', '2025-06-12 04:42:04', 78.00, 3300.00, 'pesapal'),
+(94, 12, 5, 10, 1, 10, 4, '2025-06-13 13:38:54', '2025-06-13 13:38:54', '2025-06-13 13:38:54', 96.00, 600.00, 'pesapal');
 
 -- --------------------------------------------------------
 
@@ -591,7 +635,8 @@ INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `password`, `ro
 (3, 'Agent Two', 'agent2@redvers.com', NULL, '$2y$12$VlSqHqcrAtUHc0ypNrRymepzQmR0zLGX04NN2HbVP7.N/fTggBHy2', 'agent', NULL, NULL, NULL, NULL, NULL, 2, NULL, '2025-05-29 05:48:20', '2025-05-29 05:48:20'),
 (6, 'Waruda Head Finance', 'finance@redvers.com', NULL, '$2y$12$ZfqDUsgsQLRy6w1XmApqk.bphgvrxTcyC6DLw/JxqOZ.B4xkkG56u', 'finance', '0788329992', NULL, NULL, NULL, NULL, NULL, NULL, '2025-05-29 05:48:21', '2025-05-29 10:54:28'),
 (10, 'Mr. Kizza', 'kizza@redvers.com', NULL, '$2y$12$yLY0Q10KmjDVXq1GbNaaf.zNosVYfu86CXF4JYMz3rB8P8aQsI.aq', 'agent', '0783223322', NULL, NULL, NULL, NULL, 5, NULL, '2025-06-03 06:24:03', '2025-06-03 06:24:03'),
-(12, 'Malamu', 'aziz@gmail.com', NULL, '$2y$12$wRANWKoGESOJh/uijgKSAOqt5yM1uaseeBdOyVulhn0g5hDqKINsS', 'rider', 'Aziz', 'CM000UZ23JHNQ', 'riders/photos/jO6ihu7myKye6XlUJrYg2kRMc0ykJ46ZNorjB7Y2.png', 'riders/ids/front/DHcRoDsSigJQkZyGggA2JYTRkxypam4m069Lppl4.jpg', 'riders/ids/back/pH2tyvbcOJw2QPrvAHgqHvAkAhVoVa1Nk83wSosA.jpg', NULL, NULL, '2025-06-09 05:21:39', '2025-06-09 05:21:39');
+(12, 'Malamu', 'aziz@gmail.com', NULL, '$2y$12$wRANWKoGESOJh/uijgKSAOqt5yM1uaseeBdOyVulhn0g5hDqKINsS', 'rider', 'Aziz', 'CM000UZ23JHNQ', 'riders/photos/jO6ihu7myKye6XlUJrYg2kRMc0ykJ46ZNorjB7Y2.png', 'riders/ids/front/DHcRoDsSigJQkZyGggA2JYTRkxypam4m069Lppl4.jpg', 'riders/ids/back/pH2tyvbcOJw2QPrvAHgqHvAkAhVoVa1Nk83wSosA.jpg', NULL, NULL, '2025-06-09 05:21:39', '2025-06-09 05:21:39'),
+(14, 'Higeni Abdulkarim', 'habdulkarimf@gmail.com', NULL, '$2y$12$A9SbRbjgZXnWVFkw9wxmfOvyhmVB0Z/XmyGh4JN/NCYtZtNZUPoz2', 'rider', '0707208954', 'HSDKSAHE983823N', NULL, NULL, NULL, NULL, NULL, '2025-06-13 05:45:37', '2025-06-13 05:45:37');
 
 --
 -- Indexes for dumped tables
@@ -605,6 +650,16 @@ ALTER TABLE `batteries`
   ADD UNIQUE KEY `batteries_serial_number_unique` (`serial_number`),
   ADD KEY `batteries_current_station_id_foreign` (`current_station_id`),
   ADD KEY `batteries_current_rider_id_foreign` (`current_rider_id`);
+
+--
+-- Indexes for table `battery_deliveries`
+--
+ALTER TABLE `battery_deliveries`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `battery_deliveries_battery_id_foreign` (`battery_id`),
+  ADD KEY `battery_deliveries_delivered_to_agent_id_foreign` (`delivered_to_agent_id`),
+  ADD KEY `battery_deliveries_station_id_foreign` (`station_id`),
+  ADD KEY `battery_deliveries_returned_by_admin_id_foreign` (`returned_by_admin_id`);
 
 --
 -- Indexes for table `battery_swaps`
@@ -787,16 +842,22 @@ ALTER TABLE `batteries`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
+-- AUTO_INCREMENT for table `battery_deliveries`
+--
+ALTER TABLE `battery_deliveries`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
 -- AUTO_INCREMENT for table `battery_swaps`
 --
 ALTER TABLE `battery_swaps`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=76;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=77;
 
 --
 -- AUTO_INCREMENT for table `discounts`
 --
 ALTER TABLE `discounts`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `failed_jobs`
@@ -826,7 +887,7 @@ ALTER TABLE `messages`
 -- AUTO_INCREMENT for table `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
 
 --
 -- AUTO_INCREMENT for table `missed_payments`
@@ -844,13 +905,13 @@ ALTER TABLE `motorcycles`
 -- AUTO_INCREMENT for table `motorcycle_payments`
 --
 ALTER TABLE `motorcycle_payments`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
 
 --
 -- AUTO_INCREMENT for table `motorcycle_units`
 --
 ALTER TABLE `motorcycle_units`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `notifications`
@@ -862,7 +923,7 @@ ALTER TABLE `notifications`
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=68;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=69;
 
 --
 -- AUTO_INCREMENT for table `personal_access_tokens`
@@ -874,7 +935,7 @@ ALTER TABLE `personal_access_tokens`
 -- AUTO_INCREMENT for table `purchases`
 --
 ALTER TABLE `purchases`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `stations`
@@ -886,13 +947,13 @@ ALTER TABLE `stations`
 -- AUTO_INCREMENT for table `swaps`
 --
 ALTER TABLE `swaps`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=94;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=95;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- Constraints for dumped tables
@@ -904,6 +965,15 @@ ALTER TABLE `users`
 ALTER TABLE `batteries`
   ADD CONSTRAINT `batteries_current_rider_id_foreign` FOREIGN KEY (`current_rider_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `batteries_current_station_id_foreign` FOREIGN KEY (`current_station_id`) REFERENCES `stations` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `battery_deliveries`
+--
+ALTER TABLE `battery_deliveries`
+  ADD CONSTRAINT `battery_deliveries_battery_id_foreign` FOREIGN KEY (`battery_id`) REFERENCES `batteries` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `battery_deliveries_delivered_to_agent_id_foreign` FOREIGN KEY (`delivered_to_agent_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `battery_deliveries_returned_by_admin_id_foreign` FOREIGN KEY (`returned_by_admin_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `battery_deliveries_station_id_foreign` FOREIGN KEY (`station_id`) REFERENCES `stations` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `battery_swaps`

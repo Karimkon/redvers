@@ -54,6 +54,9 @@ class DiscountController extends Controller
 
         // Apply discount to balance
         $purchase->remaining_balance -= $discountValue;
+        
+        // ✅ Auto-determine correct status based on updated schedule
+        $purchase->status = $purchase->determineStatusBasedOnMissedDays();
         $purchase->save();
 
         return redirect()

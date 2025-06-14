@@ -52,51 +52,70 @@ public function create()
      * Store the assigned motorcycle purchase.
      */
     public function store(Request $request)
-{
-    $request->validate([
-        'user_id' => 'required|exists:users,id',
-        'start_date' => ['required', 'date'],
-        'motorcycle_id' => 'required|exists:motorcycles,id',
-        'motorcycle_unit_id' => 'required|exists:motorcycle_units,id',
-        'purchase_type' => 'required|in:cash,hire',
-    ]);
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'start_date' => ['required', 'date'],
+            'motorcycle_id' => 'required|exists:motorcycles,id',
+            'motorcycle_unit_id' => 'required|exists:motorcycle_units,id',
+            'purchase_type' => 'required|in:cash,hire',
+        ]);
 
-    $motorcycle = Motorcycle::findOrFail($request->motorcycle_id);
-    $unit = MotorcycleUnit::where('id', $request->motorcycle_unit_id)
-                          ->where('status', 'available')
-                          ->firstOrFail();
+        $motorcycle = Motorcycle::findOrFail($request->motorcycle_id);
+        $unit = MotorcycleUnit::where('id', $request->motorcycle_unit_id)
+                            ->where('status', 'available')
+                            ->firstOrFail();
 
-    // Set deposit and total based on type
-    $deposit = 0;
-    $total = 0;
+        // Defaults
+        $deposit = 0;
+        $total = 0;
+        $amountPaid = 0;
+        $remaining = 0;
+        $status = 'active';
 
-    if ($request->purchase_type === 'cash') {
-        $total = $motorcycle->cash_price;
-    } elseif ($request->purchase_type === 'hire') {
-        $total = $motorcycle->hire_price_total;
-        $deposit = $motorcycle->type === 'brand_new' ? 300000 : 200000;
+        if ($request->purchase_type === 'cash') {
+            $total = $motorcycle->cash_price;
+            $deposit = $total;
+            $amountPaid = $total;
+            $remaining = 0;
+            $status = 'completed'; // ✅ cash = fully paid
+        } elseif ($request->purchase_type === 'hire') {
+            $total = $motorcycle->hire_price_total;
+            $deposit = $motorcycle->type === 'brand_new' ? 300000 : 200000;
+            $amountPaid = $deposit;
+            $remaining = $total - $deposit;
+        }
+
+        $existing = Purchase::where('motorcycle_unit_id', $request->motorcycle_unit_id)
+            ->where('status', 'active')
+            ->exists();
+
+        if ($existing) {
+            return back()->withErrors(['motorcycle_unit_id' => 'This motorcycle unit is already assigned to another rider.'])
+                        ->withInput();
+        }
+
+        // Create the purchase
+        $purchase = Purchase::create([
+            'user_id' => $request->user_id,
+            'motorcycle_id' => $request->motorcycle_id,
+            'motorcycle_unit_id' => $request->motorcycle_unit_id,
+            'purchase_type' => $request->purchase_type,
+            'initial_deposit' => $deposit,
+            'total_price' => $total,
+            'amount_paid' => $amountPaid,
+            'remaining_balance' => $remaining,
+            'status' => $status,
+            'start_date' => $request->start_date,
+        ]);
+
+        // Mark motorcycle unit as assigned
+        $unit->status = 'assigned';
+        $unit->save();
+
+        return redirect()->route('admin.purchases.index')->with('success', 'Motorcycle assigned successfully.');
     }
 
-    $purchase = Purchase::create([
-        'user_id' => $request->user_id,
-        'motorcycle_id' => $request->motorcycle_id,
-        'motorcycle_unit_id' => $request->motorcycle_unit_id, // ✅ critical
-        'purchase_type' => $request->purchase_type,
-        'initial_deposit' => $deposit,
-        'total_price' => $total,
-        'amount_paid' => $deposit,
-        'remaining_balance' => $total - $deposit,
-        'status' => 'active',
-        // ✅ Add this line to store the date
-        'start_date' => $request->start_date,
-    ]);
-
-    // Mark the selected motorcycle unit as assigned
-    $unit->status = 'assigned';
-    $unit->save();
-
-    return redirect()->route('admin.purchases.index')->with('success', 'Motorcycle assigned successfully.');
-}
 
 public function show(Purchase $purchase)
 {

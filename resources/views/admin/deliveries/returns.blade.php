@@ -15,6 +15,9 @@
     @else
         <form method="POST" action="{{ route('admin.deliveries.acceptReturns') }}" id="returnForm">
             @csrf
+            <div class="mb-3">
+            <input type="text" class="form-control" id="batterySearchInput" placeholder="Search by battery, station, agent, delivered by...">
+        </div>
 
             <table class="table table-bordered table-striped align-middle">
                 <thead class="table-dark">
@@ -59,5 +62,15 @@
         const checkboxes = document.querySelectorAll('input[name="delivery_ids[]"]:checked');
         document.getElementById('submitButton').disabled = checkboxes.length === 0;
     }
+
+    document.getElementById('batterySearchInput').addEventListener('input', function () {
+        let value = this.value.toLowerCase();
+        let rows = document.querySelectorAll('table tbody tr');
+
+        rows.forEach(row => {
+            let text = row.innerText.toLowerCase();
+            row.style.display = text.includes(value) ? '' : 'none';
+        });
+    });
 </script>
 @endpush

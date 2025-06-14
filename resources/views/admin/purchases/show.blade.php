@@ -25,8 +25,8 @@
                 <p class="mb-1"><strong>Phone:</strong> {{ $purchase->user->phone ?? 'N/A' }}</p>
                 <p class="mb-1"><strong>NIN Number:</strong> {{ $purchase->user->nin_number ?? 'Not Provided' }}</p>
                 <p class="mb-1"><strong>Purchase Type:</strong> {{ ucfirst($purchase->purchase_type) }}</p>
+                <p class="mb-1"><strong>Hire Plan Total:</strong> UGX {{ number_format($purchase->motorcycle->hire_price_total) }}</p>
                 <p class="mb-1"><strong>Initial Deposit:</strong> UGX {{ number_format($purchase->initial_deposit) }}</p>
-                <p class="mb-1"><strong>Total Price:</strong> UGX {{ number_format($purchase->total_price) }}</p>
                 <p class="mb-1"><strong>Amount Paid (Including Discounts):</strong> UGX {{ number_format($trueAmountPaid) }}</p>
                 <small class="text-muted">
                     (Payments: UGX {{ number_format($purchase->payments->sum('amount')) }},

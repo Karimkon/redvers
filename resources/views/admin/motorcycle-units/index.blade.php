@@ -25,7 +25,9 @@
                     <th>Number Plate</th>
                     <th>Type</th>
                     <th>Status</th>
+                    <th>Assigned To</th>
                     <th>Created</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -34,8 +36,28 @@
                         <td>{{ $loop->iteration }}</td>
                         <td>{{ $unit->number_plate }}</td>
                         <td>{{ ucfirst($unit->motorcycle->type) }}</td>
-                        <td><span class="badge bg-{{ $unit->status == 'available' ? 'success' : ($unit->status == 'assigned' ? 'warning' : 'danger') }}">{{ ucfirst($unit->status) }}</span></td>
+                        <td>
+                            <span class="badge bg-{{ $unit->status == 'available' ? 'success' : ($unit->status == 'assigned' ? 'warning' : 'danger') }}">
+                                {{ ucfirst($unit->status) }}
+                            </span>
+                        </td>
+                        <td>
+                            @if($unit->assigned_purchase)
+                                {{ $unit->assigned_purchase->user->name }}<br>
+                                <small class="text-muted">{{ $unit->assigned_purchase->user->phone }}</small>
+                            @else
+                                <span class="text-muted">Unassigned</span>
+                            @endif
+                        </td>
                         <td>{{ $unit->created_at->format('Y-m-d') }}</td>
+                        <td>
+                            <a href="{{ route('admin.motorcycle-units.edit', $unit->id) }}" class="btn btn-sm btn-warning">Edit</a>
+                            <form action="{{ route('admin.motorcycle-units.destroy', $unit->id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                            </form>
+                        </td>
                     </tr>
                 @endforeach
             </tbody>

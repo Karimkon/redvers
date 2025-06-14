@@ -36,16 +36,7 @@ class MotorcyclePaymentController extends Controller
             $purchase->remaining_balance = 0;
             $purchase->status = 'cleared';
         } else {
-            // Check if defaulted logic applies
-            $lastPayment = $purchase->payments()->latest('payment_date')->first();
-            $lastDate = $lastPayment ? Carbon::parse($lastPayment->payment_date) : null;
-            $expectedGap = $request->type === 'weekly' ? 7 : 1;
-            
-            if ($lastDate && $lastDate->diffInDays(now()) > ($expectedGap + 2)) {
-                $purchase->status = 'defaulted';
-            } else {
-                $purchase->status = 'active';
-            }
+           $purchase->status = $purchase->determineStatusBasedOnMissedDays();
         }
 
         $purchase->save();
