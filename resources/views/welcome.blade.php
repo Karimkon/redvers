@@ -13,7 +13,7 @@
     <meta property="og:image" content="{{ asset('images/redvers.jpeg') }}">
 
     <!-- Favicon -->
-    <link rel="icon" href="{{ asset('favicon.png') }}" type="image/png">
+    <link rel="icon" href="{{ asset('images/fevicon.png') }}" type="image/png">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
