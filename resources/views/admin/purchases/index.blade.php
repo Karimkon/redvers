@@ -3,29 +3,42 @@
 @section('title', 'All Motorcycle Purchases')
 
 @section('content')
-<div class="container">
-    <h4 class="mb-4">Motorcycle Purchases</h4>
+<div class="container-fluid px-3 px-md-4">
+    {{-- Page Header --}}
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-2">
+        <h3 class="fw-bold text-primary mb-0 d-flex align-items-center">
+            <img src="{{ asset('images/motorcycle-icon.png') }}" alt="Motorcycle" width="28" class="me-2"> Motorcycle Purchases
+        </h3>
 
+        <a href="{{ route('admin.purchases.create') }}" class="btn btn-success shadow-sm">
+            <i class="bi bi-plus-circle me-1"></i> Assign New Purchase
+        </a>
+    </div>
+
+    {{-- Success Message --}}
     @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-check-circle me-1"></i> {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
     @endif
 
-    <a href="{{ route('admin.purchases.create') }}" class="btn btn-primary mb-3">Assign New Purchase</a>
-
-    <div class="table-responsive bg-white p-3 rounded shadow-sm">
-        <form method="GET" action="{{ route('admin.purchases.index') }}" class="mb-3">
-    <div class="row">
-        <div class="col-md-4">
-            <input type="text" name="search" class="form-control" placeholder="Search by name, email or phone..." value="{{ request('search') }}">
+    {{-- Search Filter --}}
+    <form method="GET" action="{{ route('admin.purchases.index') }}" class="row gx-2 gy-2 align-items-center mb-4">
+        <div class="col-md-5">
+            <input type="text" name="search" class="form-control shadow-sm" placeholder="Search by rider name, phone or email..." value="{{ request('search') }}">
         </div>
-        <div class="col-md-2">
-            <button type="submit" class="btn btn-outline-primary">Search</button>
+        <div class="col-md-2 d-grid">
+            <button type="submit" class="btn btn-outline-primary shadow-sm">
+                <i class="bi bi-search me-1"></i> Search
+            </button>
         </div>
-    </div>
-</form>
+    </form>
 
-        <table class="table table-bordered table-hover">
-            <thead>
+    {{-- Purchases Table --}}
+    <div class="table-responsive bg-white p-3 rounded shadow-sm border">
+        <table class="table table-bordered table-hover align-middle text-center mb-0">
+            <thead class="table-light">
                 <tr>
                     <th>Started On</th>
                     <th>Rider</th>
@@ -37,28 +50,55 @@
                     <th>Paid</th>
                     <th>Remaining</th>
                     <th>Status</th>
-                    <th>Action</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach($purchases as $purchase)
+                @forelse($purchases as $purchase)
                     <tr>
-                        <td>{{ \Carbon\Carbon::parse($purchase->start_date)->format('Y-m-d') }}</td>
-                        <td>{{ $purchase->user->name }}</td>
+                        <td>{{ \Carbon\Carbon::parse($purchase->start_date)->format('d M Y') }}</td>
+                        <td class="text-start">{{ $purchase->user->name }}</td>
                         <td>{{ ucfirst($purchase->motorcycle->type) }}</td>
-                        <td>{{ $purchase->motorcycleUnit->number_plate ?? 'N/A' }}</td>
+                        <td>
+                            <span class="badge bg-info text-dark">
+                                {{ $purchase->motorcycleUnit->number_plate ?? 'N/A' }}
+                            </span>
+                        </td>
                         <td>{{ ucfirst($purchase->purchase_type) }}</td>
                         <td>{{ number_format($purchase->initial_deposit) }}</td>
                         <td>{{ number_format($purchase->total_price) }}</td>
                         <td>{{ number_format($purchase->amount_paid) }}</td>
-                        <td>{{ number_format($purchase->remaining_balance) }}</td>
-                        <td><span class="badge bg-secondary">{{ ucfirst($purchase->status) }}</span></td>
                         <td>
-                            <a href="{{ route('admin.purchases.show', $purchase->id) }}" class="btn btn-sm btn-info">View</a>
-                            <a href="{{ route('admin.purchases.edit', $purchase->id) }}" class="btn btn-sm btn-warning">Edit</a>
+                            <span class="text-danger fw-bold">
+                                {{ number_format($purchase->remaining_balance) }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ 
+                                $purchase->status == 'active' ? 'success' : 
+                                ($purchase->status == 'defaulted' ? 'danger' : 'secondary') 
+                            }}">
+                                {{ ucfirst($purchase->status) }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ route('admin.purchases.show', $purchase->id) }}" class="btn btn-outline-info" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ route('admin.purchases.edit', $purchase->id) }}" class="btn btn-outline-warning" title="Edit">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="11" class="text-center text-muted py-4">
+                            <i class="bi bi-info-circle"></i> No motorcycle purchases found.
+                        </td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
     </div>

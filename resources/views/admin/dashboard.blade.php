@@ -4,16 +4,17 @@
 
 @section('content')
 <div class="container-fluid">
+
     {{-- Animated Logo --}}
     <div class="text-center mb-4">
-        <img src="{{ asset('images/redvers.jpeg') }}"
+        <img src="{{ asset('images/fevicon.png') }}"
              alt="Redvers Logo"
              style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid #dee2e6; animation: pulseLogo 2s infinite;"
              class="shadow">
     </div>
 
     {{-- Filter Form --}}
-    <form method="GET" class="mb-4 row g-3">
+    <form method="GET" class="row g-3 align-items-end mb-4">
         <div class="col-md-3">
             <label class="form-label">Start Date</label>
             <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}">
@@ -32,83 +33,63 @@
                 <option value="year" {{ request('period') == 'year' ? 'selected' : '' }}>This Year</option>
             </select>
         </div>
-        <div class="col-md-3 align-self-end">
-            <button class="btn btn-primary w-100">Filter</button>
+        <div class="col-md-3">
+            <button class="btn btn-primary w-100"><i class="bi bi-filter"></i> Filter</button>
         </div>
     </form>
 
     {{-- Total Revenue Display --}}
-    <div class="alert alert-success text-center fs-5 fw-bold">
-        Total Revenue: UGX {{ number_format($totalRevenue) }}
+    <div class="alert alert-success d-flex justify-content-center align-items-center fs-5 fw-bold rounded-pill">
+        💰 Total Revenue: UGX {{ number_format($totalRevenue) }}
     </div>
 
     {{-- Quick Stats --}}
+    <div class="row justify-content-center mb-4">
+    @foreach ([
+        ['title' => 'Riders', 'count' => $ridersCount, 'color' => 'primary', 'icon' => 'bi-person-fill'],
+        ['title' => 'Stations', 'count' => $stationsCount, 'color' => 'success', 'icon' => 'bi-geo-alt-fill'],
+        ['title' => 'Swaps', 'count' => $swapsCount, 'color' => 'warning', 'icon' => 'bi-arrow-left-right'],
+        ['title' => 'Agents', 'count' => $agentsCount, 'color' => 'info', 'icon' => 'bi-people-fill'],
+        ['title' => 'Payments', 'count' => $paymentsCount, 'color' => 'danger', 'icon' => 'bi-cash-stack'],
+    ] as $card)
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3 d-flex justify-content-center">
+        <div class="card text-white bg-{{ $card['color'] }} shadow-sm w-100 text-center">
+            <div class="card-body">
+                <i class="bi {{ $card['icon'] }} fs-2 mb-2"></i>
+                <h4 class="card-title">{{ $card['count'] }}</h4>
+                <p class="card-text mb-0">{{ $card['title'] }}</p>
+            </div>
+        </div>
+    </div>
+    @endforeach
+</div>
+
+
+    {{-- Battery Status --}}
+    <h5 class="mb-3"><i class="bi bi-battery-charging text-warning"></i> Battery Status Overview</h5>
     <div class="row mb-4">
-        @foreach ([
-            ['title' => 'Riders', 'count' => $ridersCount, 'color' => 'primary'],
-            ['title' => 'Stations', 'count' => $stationsCount, 'color' => 'success'],
-            ['title' => 'Swaps', 'count' => $swapsCount, 'color' => 'warning'],
-            ['title' => 'Agents', 'count' => $agentsCount, 'color' => 'info'],
-            ['title' => 'Payments', 'count' => $paymentsCount, 'color' => 'danger'],
-        ] as $card)
-        <div class="col-md-2 mb-3">
-            <div class="card text-white bg-{{ $card['color'] }} shadow-sm">
-                <div class="card-body text-center">
-                    <h4 class="card-title">{{ $card['count'] }}</h4>
-                    <p class="card-text">{{ $card['title'] }}</p>
+        @foreach([
+            ['label' => 'In Stock', 'key' => 'in_stock', 'color' => 'primary'],
+            ['label' => 'In Use', 'key' => 'in_use', 'color' => 'success'],
+            ['label' => 'Charging', 'key' => 'charging', 'color' => 'warning'],
+            ['label' => 'Damaged', 'key' => 'damaged', 'color' => 'danger'],
+        ] as $status)
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-{{ $status['color'] }} shadow-sm text-center">
+                <div class="card-body">
+                    <h4 class="card-title">{{ $batteryStatusCounts[$status['key']] ?? 0 }}</h4>
+                    <p class="card-text">{{ $status['label'] }}</p>
                 </div>
             </div>
         </div>
         @endforeach
-
-        {{-- Battery Status Overview --}}
-<div class="row mb-4">
-    <h5 class="mb-3 ps-3">Battery Status Overview</h5>
-
-    <div class="col-md-3 mb-3">
-        <div class="card text-white bg-primary shadow-sm text-center">
-            <div class="card-body">
-                <h4 class="card-title">{{ $batteryStatusCounts['in_stock'] ?? 0 }}</h4>
-                <p class="card-text">In Stock</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-3 mb-3">
-        <div class="card text-white bg-success shadow-sm text-center">
-            <div class="card-body">
-                <h4 class="card-title">{{ $batteryStatusCounts['in_use'] ?? 0 }}</h4>
-                <p class="card-text">In Use</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-3 mb-3">
-        <div class="card text-white bg-warning shadow-sm text-center">
-            <div class="card-body">
-                <h4 class="card-title">{{ $batteryStatusCounts['charging'] ?? 0 }}</h4>
-                <p class="card-text">Charging</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-3 mb-3">
-        <div class="card text-white bg-danger shadow-sm text-center">
-            <div class="card-body">
-                <h4 class="card-title">{{ $batteryStatusCounts['damaged'] ?? 0 }}</h4>
-                <p class="card-text">Damaged</p>
-            </div>
-        </div>
-    </div>
-</div>
-
     </div>
 
     {{-- Charts --}}
     <div class="row mb-4">
         <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-dark text-white">Swaps by Day (Last 7 Days)</div>
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-dark text-white">📊 Swaps by Day (Last 7 Days)</div>
                 <div class="card-body">
                     <canvas id="swapsChart" height="100"></canvas>
                 </div>
@@ -116,8 +97,8 @@
         </div>
 
         <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-dark text-white">Payments by Day (Last 7 Days)</div>
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-dark text-white">💳 Payments by Day (Last 7 Days)</div>
                 <div class="card-body">
                     <canvas id="paymentsChart" height="100"></canvas>
                 </div>
@@ -128,8 +109,8 @@
     {{-- Revenue + Averages --}}
     <div class="row">
         <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-dark text-white">Revenue by Station</div>
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-dark text-white">🏬 Revenue by Station</div>
                 <div class="card-body">
                     <canvas id="revenueChart" height="100"></canvas>
                 </div>
@@ -137,8 +118,8 @@
         </div>
 
         <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-dark text-white">Weekly Averages</div>
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-dark text-white">📈 Weekly Averages</div>
                 <div class="card-body">
                     <ul class="list-group">
                         <li class="list-group-item d-flex justify-content-between">
@@ -155,17 +136,21 @@
             </div>
         </div>
     </div>
+
 </div>
 @endsection
 
-@push('scripts')
+@push('styles')
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 <style>
     @keyframes pulseLogo {
         0%, 100% { opacity: 1; transform: scale(1); }
         50% { opacity: 0.85; transform: scale(1.08); }
     }
 </style>
+@endpush
 
+@push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const swapsChart = new Chart(document.getElementById('swapsChart'), {

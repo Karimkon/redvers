@@ -4,23 +4,26 @@
 
 @section('content')
 <div class="container">
+
+    {{-- 🔙 Header --}}
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0">Purchase Details</h4>
+        <h4 class="mb-0"><i class="bi bi-receipt-cutoff me-2"></i> Purchase Details</h4>
         <a href="{{ route('admin.purchases.index') }}" class="btn btn-secondary btn-sm">
-            ← Back to Purchases
+            <i class="bi bi-arrow-left"></i> Back to Purchases
         </a>
     </div>
 
-    {{-- Rider + Purchase Info --}}
-    <div class="card mb-4 shadow-sm">
-        <div class="card-body d-flex justify-content-between align-items-start flex-wrap">
-            {{-- Left: Info --}}
+    {{-- 👤 Rider Info --}}
+    <div class="card mb-4 shadow-sm border-start border-primary border-3">
+        <div class="card-body d-flex justify-content-between flex-wrap align-items-start">
             <div class="me-4">
                 <h5 class="card-title mb-2">
-                    Rider: {{ $purchase->user->name }}
+                    <i class="bi bi-person-circle me-1"></i>
+                    {{ $purchase->user->name }}
                     <small class="text-muted">({{ $purchase->user->email }})</small>
                 </h5>
-                <p class="mb-1"><strong>Started On:</strong> {{ $purchase->start_date ? \Carbon\Carbon::parse($purchase->start_date)->translatedFormat('F jS, Y') : 'Not Set' }}</p>
+
+                <p class="mb-1"><strong><i class="bi bi-calendar-event me-1"></i>Started On:</strong> {{ $purchase->start_date ? \Carbon\Carbon::parse($purchase->start_date)->translatedFormat('F jS, Y') : 'Not Set' }}</p>
                 <p class="mb-1"><strong>Motorcycle:</strong> {{ ucfirst($purchase->motorcycle->type) }}</p>
                 <p class="mb-1"><strong>Phone:</strong> {{ $purchase->user->phone ?? 'N/A' }}</p>
                 <p class="mb-1"><strong>NIN Number:</strong> {{ $purchase->user->nin_number ?? 'Not Provided' }}</p>
@@ -33,35 +36,31 @@
                     Discounts: UGX {{ number_format($totalDiscount) }})
                 </small>
 
-                <p class="mb-1"><strong>Remaining Balance:</strong> UGX {{ number_format($purchase->remaining_balance) }}</p>
+                <p class="mt-2 mb-1"><strong>Remaining Balance:</strong> UGX {{ number_format($purchase->remaining_balance) }}</p>
                 <p>
                     <strong>Status:</strong>
-                    <span class="badge bg-{{ $purchase->status === 'active' ? 'primary' : ($purchase->status === 'cleared' ? 'success' : 'danger') }}">
+                    <span class="badge bg-{{ $purchase->status === 'active' ? 'info' : ($purchase->status === 'cleared' ? 'success' : 'danger') }}">
                         {{ ucfirst($purchase->status) }}
                     </span>
                 </p>
             </div>
 
-            {{-- Right: Profile Image --}}
             @if($purchase->user->profile_photo)
             <div class="text-end">
                 <img src="{{ asset('storage/' . $purchase->user->profile_photo) }}"
                      alt="Profile Photo"
-                     class="rounded-circle shadow"
+                     class="rounded-circle shadow border border-primary"
                      style="width: 120px; height: 120px; object-fit: cover;">
             </div>
             @endif
         </div>
     </div>
 
-    {{-- Success Message --}}
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
-
-    {{-- Add Payment --}}
-    <div class="card mb-4">
-        <div class="card-header"><strong>Add Payment</strong></div>
+    {{-- 💸 Add Payment --}}
+    <div class="card mb-4 border-start border-info border-3">
+        <div class="card-header">
+            <i class="bi bi-cash-coin me-2"></i> Add Payment
+        </div>
         <div class="card-body">
             <form action="{{ route('admin.motorcycle-payments.store', $purchase->id) }}" method="POST">
                 @csrf
@@ -94,122 +93,99 @@
         </div>
     </div>
 
-    {{-- Payment History --}}
-@if($purchase->payments->count())
-<div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <strong>Payment History</strong>
-        <input type="text" class="form-control form-control-sm w-25" placeholder="Search..." onkeyup="filterPayments(this)">
-    </div>
-    <div class="card-body p-0">
-        <table class="table table-striped table-sm mb-0" id="paymentTable">
-            <thead class="table-light">
-                <tr>
-                    <th>Date</th>
-                    <th>Amount</th>
-                    <th>Type</th>
-                    <th>Note</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($purchase->payments as $payment)
+    {{-- 📜 Payment History --}}
+    @if($purchase->payments->count())
+    <div class="card mb-4 border-start border-primary border-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <i class="bi bi-list-ul me-2"></i> Payment History
+            <input type="text" class="form-control form-control-sm w-25" placeholder="Search..." onkeyup="filterPayments(this)">
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-striped table-sm mb-0" id="paymentTable">
+                <thead class="table-light">
                     <tr>
-                        <td>{{ $payment->payment_date }}</td>
-                        <td>UGX {{ number_format($payment->amount) }}</td>
-                        <td>{{ ucfirst($payment->type) }}</td>
-                        <td>{{ $payment->note ?? '-' }}</td>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Type</th>
+                        <th>Note</th>
                     </tr>
-                @endforeach
-            </tbody>
-            <tfoot>
-                <tr class="table-light">
-                    <th colspan="3" class="text-end">Total Paid (Including Discounts):</th>
-                    <th>
-                        UGX {{ number_format($purchase->payments->sum('amount') + $purchase->discounts->sum('amount')) }}
-                    </th>
-                </tr>
-            </tfoot>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach($purchase->payments as $payment)
+                        <tr>
+                            <td>{{ $payment->payment_date }}</td>
+                            <td>UGX {{ number_format($payment->amount) }}</td>
+                            <td>{{ ucfirst($payment->type) }}</td>
+                            <td>{{ $payment->note ?? '-' }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+                <tfoot>
+                    <tr class="table-light">
+                        <th colspan="3" class="text-end">Total Paid (Including Discounts):</th>
+                        <th>UGX {{ number_format($purchase->payments->sum('amount') + $purchase->discounts->sum('amount')) }}</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
     </div>
-</div>
-@endif
+    @endif
 
-<script>
-    function filterPayments(input) {
-        const filter = input.value.toLowerCase();
-        const rows = document.querySelectorAll("#paymentTable tbody tr");
-
-        rows.forEach(row => {
-            const match = [...row.cells].some(cell =>
-                cell.textContent.toLowerCase().includes(filter)
-            );
-            row.style.display = match ? "" : "none";
-        });
-    }
-</script>
-
-    
-
-    {{-- 🗓️ Payment Schedule Summary --}}
-<div class="card mb-4">
-    <div class="card-header"><strong>🗓️ Payment Schedule Summary</strong></div>
-    <div class="card-body">
-        <p><strong>Expected Payments:</strong> {{ $schedule['expected_days'] }}</p>
-        <p><strong>Payments Made:</strong> {{ $schedule['actual_payments'] }}</p>
-        <p>
-            <strong>Missed Payments:</strong>
-            <span class="badge bg-{{ $schedule['missed_payments'] > 0 ? 'danger' : 'success' }}">
-                {{ $schedule['missed_payments'] }}
-            </span>
+    {{-- 📅 Payment Schedule --}}
+    <div class="card mb-4 border-start border-info border-3">
+        <div class="card-header">
+            <i class="bi bi-calendar-check me-2"></i> Payment Schedule Summary
+        </div>
+        <div class="card-body">
+            <p><strong>Expected Payments:</strong> {{ $schedule['expected_days'] }}</p>
+            <p><strong>Payments Made:</strong> {{ $schedule['actual_payments'] }}</p>
+            <p>
+                <strong>Missed Payments:</strong>
+                <span class="badge bg-{{ $schedule['missed_payments'] > 0 ? 'danger' : 'success' }}">
+                    {{ $schedule['missed_payments'] }}
+                </span>
+            </p>
             @if(count($schedule['missed_dates']))
-                <br>
-                <small class="text-muted">
-                    Missed Dates: {{ implode(', ', $schedule['missed_dates']->toArray()) }}
-                </small>
+            <details class="border rounded p-2 mb-2">
+                <summary class="text-danger">Missed Dates</summary>
+                <ul class="small text-danger mb-0">
+                    @foreach($schedule['missed_dates'] as $day)
+                        <li>{{ $day }}</li>
+                    @endforeach
+                </ul>
+            </details>
             @endif
-        </p>
-        <p><strong>Next Due Date:</strong> {{ $schedule['next_due_date'] ?? 'N/A' }}</p>
 
-        {{-- 🆕 New line for remaining expected payment --}}
-        @if(isset($schedule['remaining_expected_amount']))
-    <p><strong>Remaining Expected Amount:</strong> UGX {{ number_format($schedule['remaining_expected_amount']) }}</p>
-@endif
+            <p>
+                <strong>Next Due Date:</strong>
+                <span class="badge bg-warning text-dark">
+                    {{ $schedule['next_due_date'] ?? 'N/A' }}
+                </span>
+            </p>
 
+            @if(isset($schedule['remaining_expected_amount']))
+            <p><strong>Remaining Expected Amount:</strong> UGX {{ number_format($schedule['remaining_expected_amount']) }}</p>
+            @endif
 
-        {{-- 🆕 Paid Ahead Logic --}}
-        @if(isset($schedule['paid_ahead_days']) && $schedule['paid_ahead_days'] > 0)
-    <p>
-        <strong>Advance Payments:</strong>
-        <span class="badge bg-success">
-            {{ $schedule['paid_ahead_days'] }} day{{ $schedule['paid_ahead_days'] > 1 ? 's' : '' }} ahead
-        </span>
-        <br>
-        @if(isset($schedule['overpaid_amount']))
-            <small class="text-muted">
-                Overpaid by UGX {{ number_format($schedule['overpaid_amount']) }}
-            </small>
-        @endif
-    </p>
-@endif
-
+            @if(isset($schedule['paid_ahead_days']) && $schedule['paid_ahead_days'] > 0)
+            <p>
+                <strong>Advance Payments:</strong>
+                <span class="badge bg-success">{{ $schedule['paid_ahead_days'] }} day{{ $schedule['paid_ahead_days'] > 1 ? 's' : '' }} ahead</span>
+                <br>
+                @if(isset($schedule['overpaid_amount']))
+                <small class="text-muted">Overpaid by UGX {{ number_format($schedule['overpaid_amount']) }}</small>
+                @endif
+            </p>
+            @endif
+        </div>
     </div>
-</div>
 
-<details>
-    <summary class="text-muted">Show Missed Dates Only</summary>
-    <ul class="small text-danger">
-        @foreach($schedule['missed_dates'] as $day)
-            <li>{{ $day }}</li>
-        @endforeach
-    </ul>
-</details>
-
-
-
-    {{-- Discount History --}}
+    {{-- 🎁 Discount History --}}
     @if($purchase->discounts->count())
-    <div class="card mb-4">
-        <div class="card-header"><strong>Discount History</strong></div>
+    <div class="card mb-4 border-start border-success border-3">
+        <div class="card-header">
+            <i class="bi bi-tags me-2"></i> Discount History
+        </div>
         <div class="card-body p-0">
             <table class="table table-sm table-bordered mb-0">
                 <thead>
@@ -235,9 +211,23 @@
     </div>
     @endif
 
-    {{-- Apply Discount --}}
-    <a href="{{ route('admin.discounts.create', $purchase) }}" class="btn btn-outline-primary">
-        <i class="bi bi-percent"></i> Apply Discount
+    {{-- ➕ Apply Discount --}}
+    <a href="{{ route('admin.discounts.create', $purchase) }}" class="btn btn-outline-primary mt-3">
+        <i class="bi bi-percent me-1"></i> Apply Discount
     </a>
 </div>
+
+{{-- 🔍 Filter script --}}
+<script>
+    function filterPayments(input) {
+        const filter = input.value.toLowerCase();
+        const rows = document.querySelectorAll("#paymentTable tbody tr");
+        rows.forEach(row => {
+            const match = [...row.cells].some(cell =>
+                cell.textContent.toLowerCase().includes(filter)
+            );
+            row.style.display = match ? "" : "none";
+        });
+    }
+</script>
 @endsection

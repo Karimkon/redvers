@@ -3,119 +3,133 @@
 @section('title', 'Create Swap')
 
 @section('content')
-<h2>Create New Swap</h2>
+<div class="container-fluid">
+    <div class="bg-white p-4 p-md-5 rounded shadow-sm mb-4 animate__animated animate__fadeIn">
+        <h3 class="mb-4 fw-bold text-primary d-flex align-items-center">
+            <i class="bi bi-lightning-charge-fill me-2 text-warning"></i> Create New Swap
+        </h3>
 
-@if(session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
-@endif
+        @if(session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
 
-@if($errors->any())
-    <div class="alert alert-danger">
-        <ul class="mb-0">
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
+        @if($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <form method="POST" action="{{ route('admin.swaps.store') }}" id="swapForm">
+            @csrf
+            <div class="row g-3">
+                {{-- Rider --}}
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold"><i class="bi bi-person-circle me-1"></i> Rider</label>
+                    <select name="rider_id" id="riderSelect"
+                            class="form-select select2"
+                            required
+                            data-placeholder="Search rider by name or phone"
+                            style="width: 100%;">
+                        <option value="">-- Select Rider --</option>
+                        @foreach($riders as $rider)
+                            <option 
+                                value="{{ $rider->id }}"
+                                data-bike-id="{{ optional($rider->purchases->first())->motorcycleUnit->id ?? '' }}"
+                                data-bike-plate="{{ optional($rider->purchases->first())->motorcycleUnit->number_plate ?? '' }}"
+                                data-battery-id="{{ optional(\App\Models\Battery::where('current_rider_id', $rider->id)->where('status', 'in_use')->first())->id ?? '' }}"
+                                data-battery-serial="{{ optional(\App\Models\Battery::where('current_rider_id', $rider->id)->where('status', 'in_use')->first())->serial_number ?? '' }}"
+                            >
+                                {{ $rider->name }} ({{ $rider->phone }})
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Returned Battery --}}
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold"><i class="bi bi-arrow-counterclockwise me-1"></i> Returned Battery</label>
+                    <select name="battery_returned_id" class="form-select" id="batteryReturnedSelect">
+                        <option value="">Select Rider First</option>
+                    </select>
+                    <small class="text-muted">If the rider has no previous battery, leave this empty.</small>
+                </div>
+
+                {{-- Station --}}
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold"><i class="bi bi-geo-alt-fill me-1"></i> Station</label>
+                    <select name="station_id" class="form-select" id="stationSelect" required>
+                        <option value="">Select Station</option>
+                        @foreach($stations as $station)
+                            <option value="{{ $station->id }}">{{ $station->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Agent --}}
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold"><i class="bi bi-person-badge-fill me-1"></i> Agent (optional)</label>
+                    <select name="agent_id" class="form-select">
+                        <option value="">Select Agent</option>
+                        @foreach($agents as $agent)
+                            <option value="{{ $agent->id }}">{{ $agent->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Battery to Assign --}}
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold"><i class="bi bi-battery me-1"></i> Battery to Assign</label>
+                    <select name="battery_id" class="form-select" id="batterySelect" required>
+                        <option value="">Select Station First</option>
+                    </select>
+                    <small class="text-muted">Only batteries in stock or charging will be shown</small>
+                </div>
+
+                {{-- Motorcycle --}}
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold"><i class="bi bi-truck me-1"></i> Motorcycle (Auto-detected)</label>
+                    <input type="text" id="motorcycleDisplay" class="form-control bg-light" readonly>
+                    <input type="hidden" name="motorcycle_unit_id" id="motorcycleUnitId">
+                </div>
+
+                {{-- Battery Percentage --}}
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold"><i class="bi bi-battery-half me-1"></i> Battery Percentage</label>
+                    <input type="number" name="percentage_difference" id="battery" class="form-control" min="0" max="100" required>
+                    <small class="text-muted">Enter current battery percentage (0 to 100)</small>
+                </div>
+
+                {{-- Payable Amount --}}
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold"><i class="bi bi-cash-coin me-1"></i> Payable Amount (UGX)</label>
+                    <input type="text" id="payable_display" class="form-control bg-light" readonly>
+                    <input type="hidden" name="payable_amount" id="payable">
+                </div>
+
+                {{-- Payment Method --}}
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold"><i class="bi bi-credit-card me-1"></i> Payment Method</label>
+                    <select name="payment_method" class="form-select" id="paymentMethod">
+                        <option value="">None</option>
+                        <option value="mtn">MTN</option>
+                        <option value="airtel">Airtel</option>
+                        <option value="pesapal">Pesapal</option>
+                    </select>
+                </div>
+
+                <div class="col-12 text-end mt-3">
+                    <button class="btn btn-primary btn-lg shadow-sm">
+                        <i class="bi bi-arrow-right-circle me-1"></i> Submit Swap
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
-@endif
-
-<form method="POST" action="{{ route('admin.swaps.store') }}" id="swapForm">
-    @csrf
-
-    {{-- Rider --}}
-    <div class="mb-3">
-        <label class="form-label">Rider</label>
-        <select name="rider_id" class="form-select" id="riderSelect" required>
-            <option value="">Select Rider</option>
-            @foreach($riders as $rider)
-                @php
-                    $unit = optional($rider->purchases->first())->motorcycleUnit;
-                @endphp
-                <option 
-                    value="{{ $rider->id }}"
-                    data-bike-id="{{ $unit->id ?? '' }}"
-                    data-bike-plate="{{ $unit->number_plate ?? '' }}"
-                >
-                    {{ $rider->name }} ({{ $rider->phone }})
-                </option>
-            @endforeach
-        </select>
-    </div>
-
-    {{-- Returned Battery --}}
-    <div class="mb-3" id="returnedBatteryGroup">
-        <label class="form-label">Returned Battery</label>
-        <select name="battery_returned_id" class="form-select" id="batteryReturnedSelect">
-            <option value="">Select Rider First</option>
-        </select>
-        <small class="text-muted">If the rider has no previous battery, leave this empty.</small>
-    </div>
-
-    {{-- Station --}}
-    <div class="mb-3">
-        <label class="form-label">Station</label>
-        <select name="station_id" class="form-select" id="stationSelect" required>
-            <option value="">Select Station</option>
-            @foreach($stations as $station)
-                <option value="{{ $station->id }}">{{ $station->name }}</option>
-            @endforeach
-        </select>
-    </div>
-
-    {{-- Agent --}}
-    <div class="mb-3">
-        <label class="form-label">Agent (optional)</label>
-        <select name="agent_id" class="form-select">
-            <option value="">Select Agent</option>
-            @foreach($agents as $agent)
-                <option value="{{ $agent->id }}">{{ $agent->name }}</option>
-            @endforeach
-        </select>
-    </div>
-
-    {{-- Battery to Assign --}}
-    <div class="mb-3">
-        <label class="form-label">Battery to Assign</label>
-        <select name="battery_id" class="form-select" id="batterySelect" required>
-            <option value="">Select Station First</option>
-        </select>
-        <small class="text-muted">Only batteries in stock or charging will be shown</small>
-    </div>
-
-    {{-- Motorcycle --}}
-    <div class="mb-3">
-        <label class="form-label">Motorcycle (Auto-detected)</label>
-        <input type="text" id="motorcycleDisplay" class="form-control" readonly style="background: #f8f9fa;">
-        <input type="hidden" name="motorcycle_unit_id" id="motorcycleUnitId">
-    </div>
-
-    {{-- Battery Percentage --}}
-    <div class="mb-3">
-        <label class="form-label">Battery Percentage</label>
-        <input type="number" name="percentage_difference" id="battery" class="form-control" min="0" max="100" required>
-        <small class="text-muted">Enter current battery percentage (0 to 100)</small>
-    </div>
-
-    {{-- Payable Amount --}}
-    <div class="mb-3">
-        <label class="form-label">Payable Amount (UGX)</label>
-        <input type="text" id="payable_display" class="form-control" readonly>
-        <input type="hidden" name="payable_amount" id="payable">
-    </div>
-
-    {{-- Payment Method --}}
-    <div class="mb-3">
-        <label class="form-label">Payment Method</label>
-        <select name="payment_method" class="form-select" id="paymentMethod">
-            <option value="">None</option>
-            <option value="mtn">MTN</option>
-            <option value="airtel">Airtel</option>
-            <option value="pesapal">Pesapal</option>
-        </select>
-    </div>
-
-    <button class="btn btn-primary">Submit Swap</button>
-</form>
+</div>
 @endsection
 
 @push('scripts')
@@ -138,7 +152,49 @@
     const motorcycleDisplay = document.getElementById('motorcycleDisplay');
     const motorcycleUnitId = document.getElementById('motorcycleUnitId');
 
-    // 💰 Billing Logic
+    $(document).ready(function () {
+        $('#riderSelect').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: $('#riderSelect').data('placeholder'),
+            allowClear: true
+        });
+
+        $('#batterySelect').select2({ placeholder: "Select battery..." });
+
+        $('#riderSelect').on('change', function () {
+            const selected = this.options[this.selectedIndex];
+            $('#motorcycleDisplay').val(selected.getAttribute('data-bike-plate') || '❌ No motorcycle assigned');
+            $('#motorcycleUnitId').val(selected.getAttribute('data-bike-id') || '');
+
+            const batteryId = selected.getAttribute('data-battery-id');
+            const batterySerial = selected.getAttribute('data-battery-serial');
+
+            if (batteryId && batterySerial) {
+                $('#batteryReturnedSelect').html(`<option value="${batteryId}" selected>${batterySerial}</option>`);
+            } else {
+                $('#batteryReturnedSelect').html(`<option value="">No battery found</option>`);
+            }
+        });
+
+        $('#stationSelect').on('change', function () {
+            const stationId = this.value;
+            $('#batterySelect').html('<option>Loading...</option>');
+            fetch(`/admin/api/batteries-by-station/${stationId}`)
+                .then(res => res.json())
+                .then(data => {
+                    $('#batterySelect').html(
+                        data.length
+                            ? data.map(b => `<option value="${b.id}">${b.serial_number}</option>`).join('')
+                            : '<option value="">No batteries available</option>'
+                    ).trigger('change');
+                })
+                .catch(() => {
+                    $('#batterySelect').html('<option value="">Failed to load batteries</option>');
+                });
+        });
+    });
+
     batteryInput.addEventListener('input', () => {
         const val = parseFloat(batteryInput.value);
         if (!isNaN(val) && val >= 0 && val <= 100) {
@@ -152,57 +208,11 @@
         }
     });
 
-    // 🛵 Motorcycle via HTML <option data-*>
-    riderSelect.addEventListener('change', function () {
-        const selected = this.options[this.selectedIndex];
-        motorcycleDisplay.value = selected.getAttribute('data-bike-plate') || '❌ No motorcycle assigned';
-        motorcycleUnitId.value = selected.getAttribute('data-bike-id') || '';
-
-        // 🔋 Returned Battery still uses API
-        batteryReturnedSelect.innerHTML = '<option>Loading...</option>';
-        const riderId = this.value;
-        fetch(`/admin/api/rider-last-battery/${riderId}`)
-            .then(res => res.json())
-            .then(data => {
-                if (data && data.id) {
-                    batteryReturnedSelect.innerHTML = `<option selected value="${data.id}">${data.serial_number}</option>`;
-                } else {
-                    batteryReturnedSelect.innerHTML = `<option value="">No battery found (new rider)</option>`;
-                }
-            })
-            .catch(() => {
-                batteryReturnedSelect.innerHTML = `<option value="">Error loading battery</option>`;
-            });
-    });
-
-    // 🔋 Available Batteries from Station
-    stationSelect.addEventListener('change', function () {
-        const stationId = this.value;
-        batterySelect.innerHTML = '<option>Loading...</option>';
-        fetch(`/admin/api/batteries-by-station/${stationId}`)
-            .then(res => res.json())
-            .then(data => {
-                batterySelect.innerHTML = data.length
-                    ? data.map(b => `<option value="${b.id}">${b.serial_number}</option>`).join('')
-                    : '<option value="">No batteries available</option>';
-                $('#batterySelect').select2({ placeholder: "Select battery..." });
-            })
-            .catch(() => {
-                batterySelect.innerHTML = '<option value="">Failed to load batteries</option>';
-            });
-    });
-
-    // 🛑 Block if no motorcycle
     form.addEventListener('submit', function (e) {
         if (!motorcycleUnitId.value) {
             e.preventDefault();
             alert('⚠️ No motorcycle assigned to this rider.');
         }
-    });
-
-    // 🎨 Init Select2
-    $(document).ready(function () {
-        $('#batterySelect').select2({ placeholder: "Select battery..." });
     });
 </script>
 @endpush
