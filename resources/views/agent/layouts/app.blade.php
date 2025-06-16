@@ -180,6 +180,9 @@
             <a href="{{ route('agent.swap-history') }}" class="{{ request()->routeIs('agent.swap-history') ? 'active' : '' }}" onclick="closeSidebar()">
                 <i class="bi bi-clock-history me-2"></i> Swap History 
             </a>
+            <a href="{{ route('agent.promotions.index') }}" class="{{ request()->routeIs('agent.promotions.*') ? 'active' : '' }}" onclick="closeSidebar()">
+                <i class="bi bi-stars me-2"></i> Rider Promotions
+            </a>
             <a href="{{ route('agent.deliveries.index') }}" class="{{ request()->routeIs('agent.deliveries.*') ? 'active' : '' }}" onclick="closeSidebar()">
                 <i class="bi bi-truck-front-fill me-2"></i> My Battery Deliveries
             </a>

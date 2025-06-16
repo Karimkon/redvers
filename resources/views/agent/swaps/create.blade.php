@@ -71,14 +71,14 @@
 
         {{-- New Battery --}}
         <div class="mb-3">
-            <label for="battery_id" class="form-label">Available Battery</label>
-            <select class="form-select" name="battery_id" required>
-                <option value="">Select Battery</option>
-                @foreach($availableBatteries as $battery)
-                    <option value="{{ $battery->id }}">{{ $battery->serial_number }}</option>
-                @endforeach
-            </select>
-        </div>
+    <label for="battery_id" class="form-label">Available Battery</label>
+    <select class="form-select select2" name="battery_id" id="batterySelect" required>
+        <option value="">Select Battery</option>
+        @foreach($availableBatteries as $battery)
+            <option value="{{ $battery->id }}">{{ $battery->serial_number }}</option>
+        @endforeach
+    </select>
+</div>
 
         {{-- Percentage --}}
         <div class="mb-3">
@@ -133,6 +133,16 @@
             dropdownAutoWidth: true,
             minimumResultsForSearch: 0
         });
+
+        $('#batterySelect').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: 'Select Battery',
+            allowClear: true,
+            dropdownAutoWidth: true,
+            minimumResultsForSearch: 0 // enables search box even with few options
+        });
+
 
 
         // Battery percentage input logic

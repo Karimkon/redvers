@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Models\{Swap, Station, Payment, User, Battery, BatterySwap};
 use Illuminate\Support\Facades\Auth;
+use App\Models\SwapPromotion;
 
 class AgentSwapController extends Controller
 {
@@ -63,6 +64,14 @@ class AgentSwapController extends Controller
 
         $isFirstTime = Swap::where('rider_id', $request->rider_id)->count() === 0;
 
+        // Check if rider has active promotion
+        $activePromo = SwapPromotion::where('rider_id', $request->rider_id)
+            ->where('status', 'active')
+            ->where('starts_at', '<=', now())
+            ->where('ends_at', '>=', now())
+            ->latest()
+            ->first();
+
         if (!$isFirstTime && $request->filled('battery_returned_id')) {
             $lastSwap = Swap::where('rider_id', $request->rider_id)->latest()->first();
 
@@ -79,7 +88,11 @@ class AgentSwapController extends Controller
 
         $basePrice = config('billing.base_price', 15000);
         $missingPercentage = $isFirstTime ? 0 : 100 - $request->percentage_difference;
-        $payableAmount = ($missingPercentage / 100) * $basePrice;
+
+        $payableAmount = $activePromo
+            ? 0 // Promo active — only motorcycle fee paid earlier
+            : ($missingPercentage / 100) * $basePrice;
+
 
         if ($payableAmount <= 0) {
             // Free swap — create immediately

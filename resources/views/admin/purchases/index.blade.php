@@ -47,8 +47,8 @@
                     <th>Type</th>
                     <th>Deposit</th>
                     <th>Total</th>
-                    <th>Paid</th>
-                    <th>Remaining</th>
+                    <th>Paid (Inc. Discounts)</th>
+                    <th>Remaining Balance</th>
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
@@ -67,12 +67,18 @@
                         <td>{{ ucfirst($purchase->purchase_type) }}</td>
                         <td>{{ number_format($purchase->initial_deposit) }}</td>
                         <td>{{ number_format($purchase->total_price) }}</td>
-                        <td>{{ number_format($purchase->amount_paid) }}</td>
+                        @php
+                            $truePaid = $purchase->payments->sum('amount') + $purchase->discounts->sum('amount');
+                            $trueRemaining = max($purchase->total_price - $truePaid, 0);
+                        @endphp
+
+                        <td>{{ number_format($truePaid) }}</td>
                         <td>
                             <span class="text-danger fw-bold">
-                                {{ number_format($purchase->remaining_balance) }}
+                                {{ number_format($trueRemaining) }}
                             </span>
                         </td>
+
                         <td>
                             <span class="badge bg-{{ 
                                 $purchase->status == 'active' ? 'success' : 

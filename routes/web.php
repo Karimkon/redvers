@@ -37,6 +37,7 @@ use App\Http\Controllers\PesapalTokenTestController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\Admin\BatteryDeliveryController;
 use App\Http\Controllers\Agent\AgentBatteryDeliveryController;
+use App\Http\Controllers\Agent\SwapPromotionController;
 
 
 // Home
@@ -297,6 +298,17 @@ Route::middleware(['auth', 'role:agent'])->prefix('agent')->name('agent.')->grou
     Route::get('/chat/{user}', [ChatController::class, 'index'])->name('chat.index');
     Route::post('/chat/send', [ChatController::class, 'store'])->name('chat.send');
 
+    Route::prefix('promotions')->name('promotions.')->group(function () {
+    Route::get('/', [SwapPromotionController::class, 'index'])->name('index');
+    Route::get('/create', [SwapPromotionController::class, 'create'])->name('create');
+    Route::post('/store', [SwapPromotionController::class, 'store'])->name('store');
+    Route::get('/payment', [SwapPromotionController::class, 'redirectToPayment'])->name('payment');
+    // ✅ Add this for pesapal payment submission
+    Route::post('/pay/pesapal', [SwapPromotionController::class, 'payViaPesapal'])->name('pay.pesapal');
+    Route::get('/{promotion}/edit', [SwapPromotionController::class, 'edit'])->name('edit');
+    Route::put('/{promotion}', [SwapPromotionController::class, 'update'])->name('update');
+    Route::delete('/{promotion}', [SwapPromotionController::class, 'destroy'])->name('destroy');
+});
 
 });
 

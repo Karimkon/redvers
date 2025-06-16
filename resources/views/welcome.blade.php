@@ -93,12 +93,12 @@
 <div class="min-h-screen w-full overflow-x-hidden flex flex-col items-center justify-center px-4 sm:px-8 py-12">
     <div class="text-center max-w-3xl w-full">
         <div class="pulse-ring mb-5">
-            <img src="{{ asset('images/redvers.jpeg') }}" alt="Redvers Logo"
+            <img src="{{ asset('images/fevicon.png') }}" alt="Redvers Logo"
                  class="mx-auto w-20 sm:w-24 h-20 sm:h-24 rounded-full border-4 border-cyan-400 shadow-xl object-contain" />
         </div>
 
         <h1 class="text-3xl sm:text-5xl font-extrabold leading-tight drop-shadow-lg mb-3">
-            <span class="electric-icon">⚡</span> Redvers E-Mobility Suite System
+            <span class="electric-icon">⚡</span> Redvers Hub
         </h1>
 
         <p class="text-sm sm:text-lg text-white/70 dark:text-gray-800 mb-8 px-2">

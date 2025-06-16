@@ -144,31 +144,48 @@ public function getPaymentScheduleSummary()
      * Updated next due date logic that skips Sundays and respects paid days.
      */
     public function getNextExpectedPaymentDate(): ?string
-    {
-        $rate = $this->getDailyRateAttribute();
-        if (!$rate || $rate <= 0) return null;
+{
+    $rate = $this->getDailyRateAttribute();
+    if (!$rate || $rate <= 0) return null;
 
-        $start = $this->start_date->copy();
-        $totalPaid = $this->payments->sum('amount') + $this->discounts->sum('amount');
-        $daysPaid = (int) floor($totalPaid / $rate);
+    $today = now()->startOfDay();
 
-        $date = $start->copy();
-        $nonSundays = 0;
+    // ✅ Determine when to start generating expected dates
+    $firstPaymentDate = $this->payments()->min('payment_date');
+    $cursor = $firstPaymentDate
+        ? Carbon::parse($firstPaymentDate)->copy()->startOfDay()
+        : $this->start_date->copy()->startOfDay();
 
-        while ($nonSundays < $daysPaid) {
-        $date->addDay();
-        if (!$date->isSunday()) {
-            $nonSundays++;
+    // Generate expected non-Sunday payment dates
+    $expectedDates = collect();
+    while ($cursor <= $today) {
+        if (!$cursor->isSunday()) {
+            $expectedDates->push($cursor->toDateString());
+        }
+        $cursor->addDay();
+    }
+
+    // Get unique paid dates
+    $paidDates = $this->payments
+        ->pluck('payment_date')
+        ->map(fn($d) => Carbon::parse($d)->toDateString())
+        ->unique();
+
+    // Return first expected date that is unpaid
+    foreach ($expectedDates as $date) {
+        if (!$paidDates->contains($date)) {
+            return $date;
         }
     }
 
-        $date->addDay();
-        while ($date->isSunday()) {
-            $date->addDay();
-        }
-
-        return $date->toDateString();
+    // All up to today is paid → return next valid (non-Sunday) day
+    $next = $today->copy()->addDay();
+    while ($next->isSunday()) {
+        $next->addDay();
     }
+
+    return $next->toDateString();
+}
 
     public function getAdjustedOverdueSummary()
     {

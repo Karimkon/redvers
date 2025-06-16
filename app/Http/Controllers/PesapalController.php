@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Models\Payment;
-use App\Services\PesapalService;
+use App\Services\PesapalService;        
 
 class PesapalController extends Controller
 {
@@ -64,8 +64,21 @@ class PesapalController extends Controller
             $data = session('pending_swap_data');
             $reference = session('pending_reference');
 
+            $promoId = session('pending_promo_id');
+            $reference = session('pending_promo_reference');
+
+            if ($promoId && $transactionStatus == 'COMPLETED') {
+                SwapPromotion::where('id', $promoId)->update([
+                    'status' => 'active',
+                    'payment_reference' => $response['orderTrackingId'], // optional
+                ]);
+            }
+
+
             // ✅ Clean session immediately to avoid stale state
             session()->forget(['pending_swap_data', 'pending_reference']);
+            session()->forget(['pending_promo_id', 'pending_promo_reference']);
+
 
             if (!$data || !$reference) {
                 return redirect()->route('agent.swaps.index')->with('error', 'Session expired. Please try again.');
