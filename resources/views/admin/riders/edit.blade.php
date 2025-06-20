@@ -34,7 +34,7 @@
             <label for="profile_photo" class="form-label">Profile Picture</label>
             <input type="file" class="form-control" id="profile_photo" name="profile_photo">
             @if($rider->profile_photo)
-                <img src="{{ asset('storage/' . $rider->profile_photo) }}" class="img-thumbnail mt-2" style="height: 120px;">
+                <img src="{{ asset($rider->profile_photo) }}" class="img-thumbnail mt-2" style="height: 120px;">
             @endif
         </div>
 
@@ -42,7 +42,7 @@
             <label for="id_front" class="form-label">National ID Front</label>
             <input type="file" class="form-control" id="id_front" name="id_front">
             @if($rider->id_front)
-                <img src="{{ asset('storage/' . $rider->id_front) }}" class="img-thumbnail mt-2" style="height: 120px;">
+                <img src="{{ asset($rider->id_front) }}" class="img-thumbnail mt-2" style="height: 120px;">
             @endif
         </div>
 
@@ -50,7 +50,7 @@
             <label for="id_back" class="form-label">National ID Back</label>
             <input type="file" class="form-control" id="id_back" name="id_back">
             @if($rider->id_back)
-                <img src="{{ asset('storage/' . $rider->id_back) }}" class="img-thumbnail mt-2" style="height: 120px;">
+                <img src="{{ asset($rider->id_back) }}" class="img-thumbnail mt-2" style="height: 120px;">
             @endif
         </div>
 

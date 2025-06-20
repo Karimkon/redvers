@@ -51,7 +51,7 @@
 
                 <dt class="col-sm-3 fw-semibold">Related Swap</dt>
                 <dd class="col-sm-9">
-                    <a href="{{ route('admin.swaps.show', $payment->swap_id) }}" class="text-decoration-underline">
+                    <a href="{{ url('/admin/swaps/' . $payment->swap_id) }}" class="text-decoration-underline">
                         View Swap #{{ $payment->swap_id }}
                     </a>
                 </dd>

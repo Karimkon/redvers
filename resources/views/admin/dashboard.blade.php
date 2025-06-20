@@ -7,7 +7,7 @@
 
     {{-- Animated Logo --}}
     <div class="text-center mb-4">
-        <img src="{{ asset('images/fevicon.png') }}"
+        <img src="{{ asset('images/favicon.png') }}"
              alt="Redvers Logo"
              style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid #dee2e6; animation: pulseLogo 2s infinite;"
              class="shadow">

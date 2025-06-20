@@ -68,9 +68,11 @@
                         <td>{{ number_format($purchase->initial_deposit) }}</td>
                         <td>{{ number_format($purchase->total_price) }}</td>
                         @php
-                            $truePaid = $purchase->payments->sum('amount') + $purchase->discounts->sum('amount');
+                            $initialDeposit = $purchase->initial_deposit ?? 0;
+                            $truePaid = $initialDeposit + $purchase->payments->sum('amount') + $purchase->discounts->sum('amount');
                             $trueRemaining = max($purchase->total_price - $truePaid, 0);
                         @endphp
+
 
                         <td>{{ number_format($truePaid) }}</td>
                         <td>

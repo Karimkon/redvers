@@ -13,7 +13,7 @@
         };
     </script>
 
-    <link rel="icon" href="{{ asset('images/fevicon.png') }}" type="image/png" />
+    <link rel="icon" href="{{ asset('images/favicon.png') }}" type="image/png" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
 
     <style>
@@ -93,7 +93,7 @@
 <div class="min-h-screen w-full overflow-x-hidden flex flex-col items-center justify-center px-4 sm:px-8 py-12">
     <div class="text-center max-w-3xl w-full">
         <div class="pulse-ring mb-5">
-            <img src="{{ asset('images/fevicon.png') }}" alt="Redvers Logo"
+            <img src="{{ asset('images/favicon.png') }}" alt="Redvers Logo"
                  class="mx-auto w-20 sm:w-24 h-20 sm:h-24 rounded-full border-4 border-cyan-400 shadow-xl object-contain" />
         </div>
 

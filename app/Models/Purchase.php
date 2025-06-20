@@ -72,52 +72,75 @@ public function getPaymentScheduleSummary()
         ];
     }
 
-    // 🗓️ Step 1: Build expected dates (excluding Sundays)
+    // 1️⃣ Build all expected dates from start to today (excluding Sundays)
     $expectedDates = collect();
     $cursor = $startDate->copy();
     while ($cursor <= $today) {
-        if ($cursor->dayOfWeek !== 0) {
+        if (!$cursor->isSunday()) {
             $expectedDates->push($cursor->toDateString());
         }
         $cursor->addDay();
     }
 
-    // 🧾 Step 2: Get actual payment dates (ignoring duplicates)
+    // 2️⃣ Total amount paid (cash + discounts)
+    $totalPaidAmount = $this->payments->sum('amount') + $this->discounts->sum('amount');
+    $daysCoveredByAmount = floor($totalPaidAmount / $dailyRate);
+
+    // 3️⃣ Expected dates fully covered by amount
+    $coveredDates = $expectedDates->take($daysCoveredByAmount);
+
+    // 4️⃣ Get actual paid dates
     $paidDates = $this->payments
         ->pluck('payment_date')
         ->map(fn($d) => \Carbon\Carbon::parse($d)->toDateString())
         ->unique();
 
-    // 💰 Step 3: Include discount value in "virtual paid amount"
-    $actualPaidAmount = $this->payments->sum('amount') + $this->discounts->sum('amount');
-    $expectedAmount = $expectedDates->count() * $dailyRate;
-    $overpaid = max(0, $actualPaidAmount - $expectedAmount);
-    $remainingExpectedAmount = max(0, $expectedAmount - $actualPaidAmount);
-    $paidAhead = $overpaid > 0 ? floor($overpaid / $dailyRate) : 0;
+    // 5️⃣ Combine covered + paid = fully cleared
+    $fullyPaidDates = $coveredDates->merge($paidDates)->unique();
 
-    // 🔍 Step 4: Identify missed dates and trim by how many are really unpaid
-    $rawMissedDates = $expectedDates->diff($paidDates);
+    // 6️⃣ Remaining expected (unpaid) dates
+    $unpaidDates = $expectedDates->diff($fullyPaidDates)->values();
+
+    // 7️⃣ Missed count (if any unpaid amount remains)
+    $remainingExpectedAmount = max(0, ($expectedDates->count() * $dailyRate) - $totalPaidAmount);
     $missedCount = ceil($remainingExpectedAmount / $dailyRate);
-    $missedDates = $rawMissedDates
+
+    // 8️⃣ Final missed dates (formatted nicely)
+    $missedDates = $unpaidDates
         ->take($missedCount)
-        ->map(fn($d) => \Carbon\Carbon::parse($d)->translatedFormat('l, F jS, Y'))
-        ->values();
-    
-    
+        ->map(fn($d) => \Carbon\Carbon::parse($d)->translatedFormat('l, F jS, Y'));
+
+    // 9️⃣ Overpaid logic
+    $overpaidAmount = max(0, $totalPaidAmount - ($expectedDates->count() * $dailyRate));
+    $paidAhead = $overpaidAmount > 0 ? floor($overpaidAmount / $dailyRate) : 0;
+
+    // 🔟 Next due date = first unpaid (non-Sunday) date
+    $nextDueDate = $unpaidDates->first();
+
+    if (!$nextDueDate) {
+        // All expected dates are covered → find next available non-Sunday
+        $next = $today->copy()->addDay();
+        while ($next->isSunday()) {
+            $next->addDay();
+        }
+        $nextDueDate = $next->toDateString();
+    }
+
     return [
         'expected_days' => $expectedDates->count(),
         'actual_payments' => $paidDates->count(),
         'missed_payments' => $missedCount,
         'missed_dates' => $missedDates,
         'paid_ahead_days' => $paidAhead,
-        'overpaid_amount' => $overpaid,
+        'overpaid_amount' => $overpaidAmount,
         'remaining_expected_amount' => $remainingExpectedAmount,
-        'next_due_date' => $this->getNextExpectedPaymentDate(),
+        'next_due_date' => $nextDueDate,
         'expected_dates' => $expectedDates
             ->map(fn($d) => \Carbon\Carbon::parse($d)->translatedFormat('l, F jS, Y'))
             ->toArray(),
     ];
 }
+
 
 
     /**

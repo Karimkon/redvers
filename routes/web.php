@@ -55,8 +55,6 @@ Route::get('/pesapal/auth', [\App\Http\Controllers\PesapalController::class, 'au
 Route::match(['GET', 'POST'], '/pesapal/callback', [PesapalController::class, 'handleCallback'])->name('pesapal.callback');
 
 
-Route::get('/pesapal/test-submit', [PesapalController::class, 'testSubmitOrder'])->name('pesapal.test');
-
 Route::post('/pesapal/ipn', [PesapalController::class, 'handleIPN'])->name('pesapal.ipn');
 
 

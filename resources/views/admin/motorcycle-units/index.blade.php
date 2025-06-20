@@ -5,7 +5,9 @@
 @section('content')
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="fw-bold">🚲 Motorcycle Units</h4>
+        <h3 class="fw-bold text-primary mb-0 d-flex align-items-center">
+            <img src="{{ asset('images/motorcycle-icon.png') }}" alt="Motorcycle" width="28" class="me-2"> Redvers Motorcycle Units
+        </h3>
         <a href="{{ route('admin.motorcycle-units.create') }}" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> Add New Unit
         </a>

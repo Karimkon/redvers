@@ -11,7 +11,7 @@
         {{-- Profile Photo --}}
         <div class="col-md-4 text-center">
             @if($rider->profile_photo)
-                <img src="{{ asset('storage/' . $rider->profile_photo) }}"
+                <img src="{{ asset($rider->profile_photo) }}"
                      alt="Profile Picture"
                      class="img-thumbnail rounded-circle shadow mb-3"
                      style="width: 180px; height: 180px; object-fit: cover;">
@@ -36,7 +36,7 @@
                 <div class="col-md-6 text-center">
                     <h6 class="fw-bold text-muted">National ID Front:</h6>
                     @if($rider->id_front)
-                        <img src="{{ asset('storage/' . $rider->id_front) }}"
+                        <img src="{{ asset($rider->id_front) }}"
                              alt="ID Front"
                              class="img-fluid rounded shadow-sm border"
                              style="max-width: 100%; height: 240px; object-fit: cover;">
@@ -49,7 +49,7 @@
                 <div class="col-md-6 text-center">
                     <h6 class="fw-bold text-muted">National ID Back:</h6>
                     @if($rider->id_back)
-                        <img src="{{ asset('storage/' . $rider->id_back) }}"
+                        <img src="{{ asset($rider->id_back) }}"
                              alt="ID Back"
                              class="img-fluid rounded shadow-sm border"
                              style="max-width: 100%; height: 240px; object-fit: cover;">
