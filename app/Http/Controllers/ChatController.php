@@ -19,15 +19,25 @@ class ChatController extends Controller
 
     public function index(User $user)
     {
+        // ✅ Mark all messages from this user as read
+        Message::where('sender_id', $user->id)
+            ->where('receiver_id', Auth::id())
+            ->where('is_read', 0)
+            ->update(['is_read' => 1]);
+
         $messages = Message::where(function ($q) use ($user) {
-            $q->where('sender_id', Auth::id())->where('receiver_id', $user->id);
+            $q->where('sender_id', Auth::id())
+                ->where('receiver_id', $user->id);
         })->orWhere(function ($q) use ($user) {
-            $q->where('sender_id', $user->id)->where('receiver_id', Auth::id());
+            $q->where('sender_id', $user->id)
+                ->where('receiver_id', Auth::id());
         })->orderBy('created_at')->get();
 
         $role = Auth::user()->role;
+
         return view("{$role}.chat.show", compact('messages', 'user'));
     }
+
 
     public function store(Request $request)
     {

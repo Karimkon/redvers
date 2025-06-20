@@ -10,16 +10,24 @@ use Illuminate\Http\Request;
 
 class AgentBatteryDeliveryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $agentId = Auth::id();
-        $deliveries = BatteryDelivery::with('battery', 'station')
-            ->where('delivered_to_agent_id', $agentId)
-            ->latest()
-            ->get();
+        $showAll = $request->query('show') === 'all';
 
-        return view('agent.deliveries.index', compact('deliveries'));
+        $query = BatteryDelivery::with('battery', 'station')
+            ->where('delivered_to_agent_id', $agentId)
+            ->latest();
+
+        if (!$showAll) {
+            $query->limit(5);
+        }
+
+        $deliveries = $query->get();
+
+        return view('agent.deliveries.index', compact('deliveries', 'showAll'));
     }
+
 
     public function receive(BatteryDelivery $delivery)
     {

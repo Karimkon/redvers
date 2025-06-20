@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Battery;
 use App\Models\Swap;
 use App\Models\BatterySwap;
+use App\Http\Controllers\Agent\AgentSwapController;
 
 class PesapalController extends Controller
 {
@@ -39,87 +40,28 @@ class PesapalController extends Controller
      * Step 5: Handle the callback after payment
      */
 
-        public function handleCallback(Request $request)
+   public function handleCallback(Request $request)
     {
         try {
+            $data = session('pending_swap_data');
             $reference = session('pending_reference');
-            $swapData = session('pending_swap_data');
             $amount = session('pending_amount');
 
-            if (!$reference || !$swapData) {
-                \Log::error('Pesapal callback: Missing session data.');
-                return redirect()->route('agent.swaps.index')->with('error', 'Session expired. Please try again.');
+            if (!$data || !$reference || !$amount) {
+                return redirect()->route('agent.swaps.index')->with('error', 'Missing payment session data.');
             }
 
-            $token = app(PesapalService::class)->getAccessToken();
+            $battery = \App\Models\Battery::findOrFail($data['battery_id']);
+            $requestData = new \Illuminate\Http\Request($data);
 
-            $statusResponse = Http::withToken($token)
-                ->get(config('pesapal.base_url') . '/api/Transactions/GetTransactionStatus', [
-                    'orderTrackingId' => $request->get('OrderTrackingId'),
-                ]);
-
-            if (!$statusResponse->successful() || $statusResponse['payment_status'] !== 'COMPLETED') {
-                return redirect()->route('agent.swaps.index')->with('error', 'Payment failed or not confirmed.');
-            }
-
-            // Wrap in DB transaction
-            DB::transaction(function () use ($swapData, $amount, $reference) {
-                $battery = Battery::findOrFail($swapData['battery_id']);
-
-                $swap = Swap::create([
-                    'rider_id' => $swapData['rider_id'],
-                    'motorcycle_unit_id' => $swapData['motorcycle_unit_id'],
-                    'station_id' => $swapData['station_id'],
-                    'agent_id' => auth()->id(),
-                    'battery_id' => $battery->id,
-                    'battery_returned_id' => $swapData['battery_returned_id'],
-                    'percentage_difference' => $swapData['percentage_difference'],
-                    'payable_amount' => $amount,
-                    'payment_method' => 'pesapal',
-                    'swapped_at' => now(),
-                ]);
-
-                BatterySwap::create([
-                    'battery_id' => $battery->id,
-                    'swap_id' => $swap->id,
-                    'from_station_id' => $swapData['station_id'],
-                    'to_station_id' => $swapData['station_id'],
-                    'swapped_at' => now(),
-                ]);
-
-                $battery->update([
-                    'status' => 'in_use',
-                    'current_station_id' => null,
-                    'current_rider_id' => $swapData['rider_id'],
-                ]);
-
-                if (!empty($swapData['battery_returned_id'])) {
-                    Battery::where('id', $swapData['battery_returned_id'])->update([
-                        'status' => 'charging',
-                        'current_station_id' => $swapData['station_id'],
-                        'current_rider_id' => null,
-                    ]);
-                }
-
-                Payment::create([
-                    'swap_id' => $swap->id,
-                    'amount' => $amount,
-                    'method' => 'pesapal',
-                    'status' => 'completed',
-                    'reference' => $reference,
-                    'initiated_by' => 'agent',
-                ]);
-            });
-
-            session()->forget(['pending_swap_data', 'pending_reference', 'pending_amount']);
-
-            return redirect()->route('agent.swaps.index')->with('success', 'Payment successful and swap created.');
-
+            $agentSwapController = new AgentSwapController;
+            return $agentSwapController->finalizeSwap($requestData, $battery, $amount, 'pesapal', 'completed');
         } catch (\Exception $e) {
             \Log::error('Pesapal Callback Error: ' . $e->getMessage());
-            return redirect()->route('agent.swaps.index')->with('error', 'Unexpected error during payment confirmation.');
+            return redirect()->route('agent.swaps.index')->with('error', 'Payment confirmed but swap could not be finalized.');
         }
     }
+
 
 
         public function handleIPN(Request $request)

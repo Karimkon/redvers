@@ -34,5 +34,8 @@ class Battery extends Model
     }
 
 
-
+    public function swapsReturned()
+    {
+        return $this->hasMany(Swap::class, 'battery_returned_id');
+    }
 }

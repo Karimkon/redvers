@@ -53,7 +53,10 @@ class DashboardController extends Controller
         $ridersCount = User::where('role', 'rider')->count();
         $agentsCount = User::where('role', 'agent')->count();
         $stationsCount = Station::count();
-        $swapsCount = Swap::count();
+        $swapsCount = Swap::whereHas('payment', function ($q) {
+            $q->where('status', 'completed');
+        })->count();
+
         $paymentsCount = Payment::count();
 
         // Charts data

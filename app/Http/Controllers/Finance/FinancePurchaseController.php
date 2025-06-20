@@ -35,39 +35,58 @@ class FinancePurchaseController extends Controller
         return view('finance.purchases.index', compact('purchases'));
     }
 
-    public function show(Purchase $purchase)
+
+    public function store(Request $request, Purchase $purchase)
     {
-        $purchase->load(['user', 'motorcycle', 'payments', 'discounts']);
+        $request->validate([
+            'payment_date' => 'required|date',
+            'amount' => 'required|numeric|min:1',
+            'type' => 'required|in:daily,weekly,lump_sum',
+            'note' => 'nullable|string|max:255',
+        ]);
 
-        // ✅ Detect missed payments (daily expected)
-        if ($purchase->purchase_type === 'hire') {
-            $expectedDates = CarbonPeriod::create($purchase->start_date, now());
+        // Store payment
+        MotorcyclePayment::create([
+            'purchase_id' => $purchase->id,
+            'payment_date' => $request->payment_date,
+            'amount' => $request->amount,
+            'type' => $request->type,
+            'note' => $request->note,
+        ]);
 
-            foreach ($expectedDates as $date) {
-                $alreadyPaid = $purchase->payments->contains('payment_date', $date->format('Y-m-d'));
+        // Update purchase record
+        $purchase->amount_paid += $request->amount;
+        $purchase->remaining_balance -= $request->amount;
 
-                if (!$alreadyPaid) {
-                    MissedPayment::firstOrCreate([
-                        'purchase_id' => $purchase->id,
-                        'missed_date' => $date->format('Y-m-d'),
-                    ]);
-                }
+        if ($purchase->remaining_balance <= 0) {
+            $purchase->remaining_balance = 0;
+            $purchase->status = 'cleared';
+        } else {
+            if (method_exists($purchase, 'determineStatusBasedOnMissedDays')) {
+                $purchase->status = $purchase->determineStatusBasedOnMissedDays();
+            } else {
+                $purchase->status = 'active';
             }
         }
 
-        $missed = MissedPayment::where('purchase_id', $purchase->id)->orderByDesc('missed_date')->get();
+        $purchase->save();
 
-        $schedule = [
-            'expected_days' => $purchase->purchase_type === 'hire' ? Carbon::parse($purchase->start_date)->diffInDays(now()) + 1 : 1,
-            'actual_payments' => $purchase->payments->count(),
-            'missed_payments' => $missed->count(),
-            'missed_dates' => $missed->pluck('missed_date'),
-            'next_due_date' => $purchase->payments->last()
-                ? Carbon::parse($purchase->payments->last()->payment_date)->addDay()->format('Y-m-d')
-                : Carbon::parse($purchase->start_date)->format('Y-m-d'),
-        ];
-
-        return view('finance.purchases.show', compact('purchase', 'schedule'));
+        return back()->with('success', 'Payment recorded successfully by Finance.');
     }
+    
+    public function show(Purchase $purchase)
+{
+    $purchase->load(['user', 'motorcycle', 'payments', 'discounts']);
+
+    // ✅ Use existing model method for full schedule
+    $schedule = $purchase->getPaymentScheduleSummary();
+
+    // ✅ Calculate true amount paid manually in controller
+    $trueAmountPaid = $purchase->initial_deposit + $purchase->payments->sum('amount') + $purchase->discounts->sum('amount');
+    $totalDiscount = $purchase->discounts->sum('amount');
+
+    return view('finance.purchases.show', compact('purchase', 'schedule', 'trueAmountPaid', 'totalDiscount'));
+}
+
 
 }

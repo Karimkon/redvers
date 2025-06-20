@@ -95,44 +95,7 @@ class AgentSwapController extends Controller
 
 
         if ($payableAmount <= 0) {
-            // Free swap — create immediately
-            $swap = Swap::create([
-                'rider_id' => $request->rider_id,
-                'motorcycle_unit_id' => $request->motorcycle_unit_id,
-                'station_id' => $request->station_id,
-                'agent_id' => auth()->id(),
-                'battery_id' => $battery->id,
-                'battery_returned_id' => $request->battery_returned_id,
-                'percentage_difference' => $request->percentage_difference,
-                'payable_amount' => 0,
-                'payment_method' => null,
-                'swapped_at' => now(),
-            ]);
-
-            BatterySwap::create([
-                'battery_id' => $battery->id,
-                'swap_id' => $swap->id,
-                'from_station_id' => $request->station_id,
-                'to_station_id' => $request->station_id,
-                'swapped_at' => now(),
-            ]);
-
-            $battery->update([
-                'status' => 'in_use',
-                'current_station_id' => null,
-                'current_rider_id' => $request->rider_id,
-            ]);
-
-            if ($request->filled('battery_returned_id')) {
-                Battery::where('id', $request->battery_returned_id)->update([
-                    'status' => 'charging',
-                    'current_station_id' => $request->station_id,
-                    'current_rider_id' => null,
-                ]);
-            }
-
-            return redirect()->route('agent.swaps.index')
-                ->with('success', 'Swap created successfully (no payment required).');
+            return $this->finalizeSwap($request, $battery, 0, null, 'completed');
         }
 
         // Store in session for delayed save
@@ -169,67 +132,78 @@ class AgentSwapController extends Controller
                     ]
                 ]);
 
-                if ($response->successful()) {
-                    return redirect()->away($response['redirect_url']);
-                } else {
-                    return back()->withErrors(['pesapal' => 'Failed to initiate Pesapal payment.'])->withInput();
-                }
+                return redirect()->away($response['redirect_url']);
             } catch (\Exception $e) {
                 \Log::error('Pesapal Error: ' . $e->getMessage());
                 return back()->withErrors(['pesapal' => 'Error: ' . $e->getMessage()])->withInput();
             }
         }
 
-        // Optional: For MTN or Airtel (still create immediately)
-        $reference = 'SWAP-' . uniqid();
-        $swap = Swap::create([
-            'rider_id' => $request->rider_id,
-            'motorcycle_unit_id' => $request->motorcycle_unit_id,
-            'station_id' => $request->station_id,
-            'agent_id' => auth()->id(),
-            'battery_id' => $battery->id,
-            'battery_returned_id' => $request->battery_returned_id,
-            'percentage_difference' => $request->percentage_difference,
-            'payable_amount' => $payableAmount,
-            'payment_method' => $request->payment_method,
-            'swapped_at' => now(),
-        ]);
-
-        BatterySwap::create([
-            'battery_id' => $battery->id,
-            'swap_id' => $swap->id,
-            'from_station_id' => $request->station_id,
-            'to_station_id' => $request->station_id,
-            'swapped_at' => now(),
-        ]);
-
-        $battery->update([
-            'status' => 'in_use',
-            'current_station_id' => null,
-            'current_rider_id' => $request->rider_id,
-        ]);
-
-        if ($request->filled('battery_returned_id')) {
-            Battery::where('id', $request->battery_returned_id)->update([
-                'status' => 'charging',
-                'current_station_id' => $request->station_id,
-                'current_rider_id' => null,
-            ]);
-        }
-
-        Payment::create([
-            'swap_id' => $swap->id,
-            'amount' => $payableAmount,
-            'method' => $request->payment_method,
-            'status' => 'pending',
-            'reference' => $reference,
-            'initiated_by' => 'agent',
-        ]);
-
-        return redirect()->route('agent.swaps.index')->with('success', 'Swap created and payment pending.');
+        return $this->finalizeSwap($request, $battery, $payableAmount, $request->payment_method, 'pending');
     }
 
 
+     public function finalizeSwap($request, $battery, $amount, $method = null, $status = 'completed')
+    {
+        $reference = 'SWAP-' . uniqid();
+
+        DB::beginTransaction();
+
+        try {
+            $swap = Swap::create([
+                'rider_id' => $request->rider_id,
+                'motorcycle_unit_id' => $request->motorcycle_unit_id,
+                'station_id' => $request->station_id,
+                'agent_id' => auth()->id(),
+                'battery_id' => $battery->id,
+                'battery_returned_id' => $request->battery_returned_id,
+                'percentage_difference' => $request->percentage_difference,
+                'payable_amount' => $amount,
+                'payment_method' => $method,
+                'swapped_at' => now(),
+            ]);
+
+            BatterySwap::create([
+                'battery_id' => $battery->id,
+                'swap_id' => $swap->id,
+                'from_station_id' => $request->station_id,
+                'to_station_id' => $request->station_id,
+                'swapped_at' => now(),
+            ]);
+
+            $battery->update([
+                'status' => 'in_use',
+                'current_station_id' => null,
+                'current_rider_id' => $request->rider_id,
+            ]);
+
+            if ($request->filled('battery_returned_id')) {
+                Battery::where('id', $request->battery_returned_id)->update([
+                    'status' => 'charging',
+                    'current_station_id' => $request->station_id,
+                    'current_rider_id' => null,
+                ]);
+            }
+
+            if ($amount > 0) {
+                Payment::create([
+                    'swap_id' => $swap->id,
+                    'amount' => $amount,
+                    'method' => $method,
+                    'status' => $status,
+                    'reference' => $reference,
+                    'initiated_by' => 'agent',
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->route('agent.swaps.index')->with('success', 'Swap created successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Swap Finalization Error: ' . $e->getMessage());
+            return back()->with('error', 'Failed to finalize swap.')->withInput();
+        }
+    }
 
 
     public function show($id)

@@ -176,9 +176,30 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/accept-returns', [BatteryDeliveryController::class, 'acceptReturns'])->name('acceptReturns');
     Route::get('/return-history', [BatteryDeliveryController::class, 'returnHistory'])->name('history');
 
-
     });
 
+    Route::get('/notifications/unread', function () {
+        $userId = auth()->id();
+
+        $unreadMessages = \App\Models\Message::where('receiver_id', $userId)
+            ->where('is_read', 0)
+            ->latest()
+            ->take(5)
+            ->with('sender:id,name')
+            ->get();
+
+        return response()->json([
+            'count' => $unreadMessages->count(),
+            'messages' => $unreadMessages->map(function ($msg) {
+                return [
+                    'sender' => $msg->sender->name,
+                    'text' => \Str::limit($msg->message, 30),
+                    'user_id' => $msg->sender->id,   // ✅ Add this
+                    'id' => $msg->id   
+                ];
+            }),
+        ]);
+    })->name('notifications');
 
 
     /** -----------------------------------
@@ -351,6 +372,9 @@ Route::middleware(['auth', 'role:finance'])->prefix('finance')->name('finance.')
     Route::get('/chat/{user}', [ChatController::class, 'index'])->name('chat.index');
     Route::post('/chat/send', [ChatController::class, 'store'])->name('chat.send');
 
+    Route::get('/purchases', [FinancePurchaseController::class, 'index'])->name('purchases.index');
+    Route::get('/purchases/{purchase}', [FinancePurchaseController::class, 'show'])->name('purchases.show');
+    Route::post('/purchases/{purchase}/payments', [MotorcyclePaymentController::class, 'store'])->name('motorcycle-payments.store');
 });
 
 

@@ -2,8 +2,10 @@
 
 @section('content')
 <div class="container-fluid px-3 px-md-5">
-    <h4 class="mb-4">📋 All Rider Purchases</h4>
-
+   <h3 class="fw-bold text-primary mb-0 d-flex align-items-center">
+            <img src="{{ asset('images/motorcycle-icon.png') }}" alt="Motorcycle" width="28" class="me-2">Redvers Motorcycle Purchases 
+    </h3>
+    <br>
     {{-- 🔍 Search --}}
     <form method="GET" class="row gy-2 gx-3 align-items-center mb-4">
         <div class="col-12 col-md-6 col-lg-4">
