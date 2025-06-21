@@ -137,15 +137,32 @@ class PesapalController extends Controller
             ]);
 
 
-            // Log 12,000 UGX motorcycle payment
-            \App\Models\MotorcyclePayment::create([
-                'user_id' => $promotion->rider_id,
-                'amount' => 12000,
-                'status' => 'paid',
-                'date' => now()->toDateString(),
-                'method' => 'promo',
-                'reference' => $reference,
-            ]);
+            $purchase = \App\Models\Purchase::where('user_id', $promotion->rider_id)
+                ->where('status', 'active')
+                ->latest()
+                ->first();
+
+            if ($purchase) {
+                $alreadyPaid = \App\Models\MotorcyclePayment::where('user_id', $promotion->rider_id)
+                    ->whereDate('date', now()->toDateString())
+                    ->exists();
+
+                if (!$alreadyPaid) {
+                    \App\Models\MotorcyclePayment::create([
+                        'purchase_id' => $purchase->id,
+                        'user_id' => $promotion->rider_id,
+                        'amount' => 12000,
+                        'status' => 'paid',
+                        'date' => now()->toDateString(),
+                        'method' => 'promo',
+                        'reference' => $reference,
+                    ]);
+                } else {
+                    Log::info("🟡 Rider {$promotion->rider_id} already paid UGX 12,000 today via promotion. Skipping duplicate payment.");
+                }
+            }
+
+
 
             return redirect()->route('agent.promotions.index')->with('success', 'Promotion activated and daily fee paid.');
         } catch (\Exception $e) {

@@ -117,7 +117,20 @@ class RiderController extends Controller
 
     public function destroy(User $rider)
     {
+        // Step 1: Delete related swap promotions
+        $rider->swapPromotions()->delete();
+
+        // Step 2: Delete attached images from storage
+        foreach (['profile_photo', 'id_front', 'id_back'] as $field) {
+            if ($rider->$field && Storage::disk('public')->exists(str_replace('storage/', '', $rider->$field))) {
+                Storage::disk('public')->delete(str_replace('storage/', '', $rider->$field));
+            }
+        }
+
+        // Step 3: Delete the user
         $rider->delete();
+
         return redirect()->route('admin.riders.index')->with('success', 'Rider deleted successfully.');
     }
+
 }

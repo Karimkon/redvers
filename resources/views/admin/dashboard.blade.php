@@ -42,6 +42,9 @@
     <div class="alert alert-success d-flex justify-content-center align-items-center fs-5 fw-bold rounded-pill">
         💰 Total Revenue: UGX {{ number_format($totalRevenue) }}
     </div>
+    <div class="alert alert-info d-flex justify-content-center align-items-center fs-6 fw-semibold rounded-pill">
+        Breakdown: UGX {{ number_format($totalPayments) }} from swaps + UGX {{ number_format($totalPromotions) }} from promotions
+    </div>
 
     {{-- Quick Stats --}}
     <div class="row justify-content-center mb-4">

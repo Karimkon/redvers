@@ -55,6 +55,12 @@ class User extends Authenticatable
         );
     }
 
+    public function swapPromotions()
+    {
+        return $this->hasMany(SwapPromotion::class, 'rider_id');
+    }
+
+
 
 }
 

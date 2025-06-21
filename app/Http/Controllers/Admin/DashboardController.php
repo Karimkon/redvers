@@ -9,7 +9,8 @@ use App\Models\Swap;
 use App\Models\Payment;
 use App\Models\Battery;
 use Illuminate\Http\Request;
-
+use App\Models\MotorcyclePayment;
+use App\Models\SwapPromotion;
 
 class DashboardController extends Controller
 {
@@ -47,7 +48,59 @@ class DashboardController extends Controller
             $query->whereBetween('created_at', [$startDate, $endDate]);
         }
 
-        $totalRevenue = $query->sum('amount');
+            // Sum payments
+    $totalPayments = $query->sum('amount');
+
+    // Get promotions from motorcycle_payments where method = 'promo'
+$paymentPromos = MotorcyclePayment::where('method', 'promo');
+
+if ($period) {
+    switch ($period) {
+        case 'today':
+            $paymentPromos->whereDate('created_at', today());
+            break;
+        case 'week':
+            $paymentPromos->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+            break;
+        case 'month':
+            $paymentPromos->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year);
+            break;
+        case 'year':
+            $paymentPromos->whereYear('created_at', now()->year);
+            break;
+    }
+} elseif ($startDate && $endDate) {
+    $paymentPromos->whereBetween('created_at', [$startDate, $endDate]);
+}
+
+// Also include promotions from swap_promotions with status 'paid'
+$swapPromos = SwapPromotion::where('status', 'paid');
+
+if ($period) {
+    switch ($period) {
+        case 'today':
+            $swapPromos->whereDate('created_at', today());
+            break;
+        case 'week':
+            $swapPromos->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+            break;
+        case 'month':
+            $swapPromos->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year);
+            break;
+        case 'year':
+            $swapPromos->whereYear('created_at', now()->year);
+            break;
+    }
+} elseif ($startDate && $endDate) {
+    $swapPromos->whereBetween('created_at', [$startDate, $endDate]);
+}
+
+// Combine both sources
+$totalPromotions = ($paymentPromos->count() * 25000) + ($swapPromos->count() * 25000);
+    
+    // Final total revenue
+    $totalRevenue = $totalPayments + $totalPromotions;
+
 
         // ✅ Use unified users table with role filtering
         $ridersCount = User::where('role', 'rider')->count();
@@ -116,7 +169,7 @@ class DashboardController extends Controller
         return view('admin.dashboard', compact(
             'ridersCount', 'stationsCount', 'swapsCount', 'agentsCount', 'paymentsCount',
             'swapStats', 'paymentStats', 'revenueByStation', 'weeklyAverages', 'topStation',
-            'totalRevenue', 'startDate', 'endDate', 'period', 'batteryStatusCounts'
+            'totalRevenue', 'totalPayments', 'totalPromotions', 'startDate', 'endDate', 'period', 'batteryStatusCounts'
         ));
     }
 }
