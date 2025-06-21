@@ -43,4 +43,23 @@ class MotorcyclePaymentController extends Controller
 
         return back()->with('success', 'Payment recorded successfully.');
     }
+
+    public function destroy(Purchase $purchase, MotorcyclePayment $payment)
+    {
+        $purchase->amount_paid -= $payment->amount;
+        $purchase->remaining_balance += $payment->amount;
+
+        if ($purchase->remaining_balance <= 0) {
+            $purchase->remaining_balance = 0;
+            $purchase->status = 'cleared';
+        } else {
+            $purchase->status = $purchase->determineStatusBasedOnMissedDays();
+        }
+
+        $purchase->save();
+        $payment->delete();
+
+        return back()->with('success', 'Payment deleted successfully.');
+    }
+
 }

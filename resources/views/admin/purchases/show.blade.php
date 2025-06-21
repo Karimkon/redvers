@@ -108,6 +108,7 @@
                         <th>Amount</th>
                         <th>Type</th>
                         <th>Note</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -117,6 +118,14 @@
                             <td>UGX {{ number_format($payment->amount) }}</td>
                             <td>{{ ucfirst($payment->type) }}</td>
                             <td>{{ $payment->note ?? '-' }}</td>
+                            <td class="text-end">
+                                <form action="{{ route('admin.motorcycle-payments.destroy', [$purchase->id, $payment->id]) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this payment?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </td>
+
                         </tr>
                     @endforeach
                 </tbody>

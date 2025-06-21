@@ -54,6 +54,8 @@ Route::get('/pesapal/auth', [\App\Http\Controllers\PesapalController::class, 'au
 
 Route::match(['GET', 'POST'], '/pesapal/callback', [PesapalController::class, 'handleCallback'])->name('pesapal.callback');
 
+Route::match(['GET', 'POST'], '/pesapal/promo-callback', [PesapalController::class, 'handlePromotionCallback'])->name('pesapal.promo.callback');
+
 
 Route::post('/pesapal/ipn', [PesapalController::class, 'handleIPN'])->name('pesapal.ipn');
 
@@ -153,6 +155,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('purchases', MotorcyclePurchaseController::class);
     Route::post('/purchases/{purchase}/motorcycle-payments', [MotorcyclePaymentController::class, 'store'])
         ->name('motorcycle-payments.store');
+    Route::delete('/purchases/{purchase}/motorcycle-payments/{payment}', [MotorcyclePaymentController::class, 'destroy'])
+    ->name('motorcycle-payments.destroy');
+
 
     // Discounts
     Route::get('/purchases/{purchase}/discounts/create', [DiscountController::class, 'create'])->name('discounts.create');

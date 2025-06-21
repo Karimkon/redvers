@@ -81,7 +81,7 @@ class SwapPromotionController extends Controller
             "currency" => "UGX",
             "amount" => $promotion->amount,
             "description" => "Unlimited Swap Promotion",
-            "callback_url" => route('pesapal.callback'),
+            "callback_url" => route('pesapal.promo.callback'),
             "notification_id" => "34f2ce63-9c4c-430d-adb8-dbba55243d85",
             "billing_address" => [
                 "email_address" => $rider->email,

@@ -46,7 +46,6 @@
                     <th>Number Plate</th>
                     <th>Type</th>
                     <th>Deposit</th>
-                    <th>Total</th>
                     <th>Paid (Inc. Discounts)</th>
                     <th>Remaining Balance</th>
                     <th>Status</th>
@@ -66,7 +65,6 @@
                         </td>
                         <td>{{ ucfirst($purchase->purchase_type) }}</td>
                         <td>{{ number_format($purchase->initial_deposit) }}</td>
-                        <td>{{ number_format($purchase->total_price) }}</td>
                         @php
                             $initialDeposit = $purchase->initial_deposit ?? 0;
                             $truePaid = $initialDeposit + $purchase->payments->sum('amount') + $purchase->discounts->sum('amount');
@@ -97,6 +95,12 @@
                                 <a href="{{ route('admin.purchases.edit', $purchase->id) }}" class="btn btn-outline-warning" title="Edit">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
+                                <form action="{{ route('admin.purchases.destroy', $purchase->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this purchase?');" style="display:inline-block">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></button>
+                                </form>
+
                             </div>
                         </td>
                     </tr>

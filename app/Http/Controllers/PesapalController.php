@@ -117,6 +117,43 @@ class PesapalController extends Controller
         }
     }
 
+    public function handlePromotionCallback(Request $request)
+    {
+        try {
+            $promoId = session('pending_promo_id');
+            $reference = session('pending_promo_reference');
+
+            if (!$promoId || !$reference) {
+                return redirect()->route('agent.promotions.index')->with('error', 'Missing promo session.');
+            }
+
+            $promotion = \App\Models\SwapPromotion::with('rider')->findOrFail($promoId);
+
+            // Update promo status
+            $promotion->update([
+                'status' => 'active',
+                'starts_at' => now(),
+                'ends_at' => now()->addDay(), // exactly 24 hours from now
+            ]);
+
+
+            // Log 12,000 UGX motorcycle payment
+            \App\Models\MotorcyclePayment::create([
+                'user_id' => $promotion->rider_id,
+                'amount' => 12000,
+                'status' => 'paid',
+                'date' => now()->toDateString(),
+                'method' => 'promo',
+                'reference' => $reference,
+            ]);
+
+            return redirect()->route('agent.promotions.index')->with('success', 'Promotion activated and daily fee paid.');
+        } catch (\Exception $e) {
+            \Log::error('Promo Callback Error: ' . $e->getMessage());
+            return redirect()->route('agent.promotions.index')->with('error', 'Something went wrong in promotion callback.');
+        }
+    }
+
 
 
 }
