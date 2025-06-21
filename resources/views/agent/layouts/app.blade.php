@@ -180,6 +180,9 @@
             <a href="{{ route('agent.swap-history') }}" class="{{ request()->routeIs('agent.swap-history') ? 'active' : '' }}" onclick="closeSidebar()">
                 <i class="bi bi-clock-history me-2"></i> Swap History 
             </a>
+            <a href="{{ route('agent.daily-payments.create') }}" class="{{ request()->routeIs('agent.daily-payment') ? 'active' : '' }}">
+                <i class="bi bi-wallet2 me-2"></i> Rider Daily Payment
+            </a>
             <a href="{{ route('agent.promotions.index') }}" class="{{ request()->routeIs('agent.promotions.*') ? 'active' : '' }}" onclick="closeSidebar()">
                 <i class="bi bi-stars me-2"></i> Rider Promotions
             </a>

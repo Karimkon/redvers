@@ -38,6 +38,7 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\Admin\BatteryDeliveryController;
 use App\Http\Controllers\Agent\AgentBatteryDeliveryController;
 use App\Http\Controllers\Agent\SwapPromotionController;
+use App\Http\Controllers\Agent\AgentMotorcycleDailyPaymentController;
 
 
 // Home
@@ -55,6 +56,8 @@ Route::get('/pesapal/auth', [\App\Http\Controllers\PesapalController::class, 'au
 Route::match(['GET', 'POST'], '/pesapal/callback', [PesapalController::class, 'handleCallback'])->name('pesapal.callback');
 
 Route::match(['GET', 'POST'], '/pesapal/promo-callback', [PesapalController::class, 'handlePromotionCallback'])->name('pesapal.promo.callback');
+
+Route::match(['GET', 'POST'], '/pesapal/callback/daily', [PesapalController::class, 'handleDailyPaymentCallback'])->name('pesapal.callback.daily');
 
 
 Route::post('/pesapal/ipn', [PesapalController::class, 'handleIPN'])->name('pesapal.ipn');
@@ -316,7 +319,7 @@ Route::middleware(['auth', 'role:agent'])->prefix('agent')->name('agent.')->grou
     }
 
     return response()->json(null);
-});
+    });
 
     Route::get('/chat', [ChatController::class, 'users'])->name('chat.users');
     Route::get('/chat/{user}', [ChatController::class, 'index'])->name('chat.index');
@@ -334,6 +337,8 @@ Route::middleware(['auth', 'role:agent'])->prefix('agent')->name('agent.')->grou
     Route::delete('/{promotion}', [SwapPromotionController::class, 'destroy'])->name('destroy');
 });
 
+    Route::get('/daily-payments/create', [AgentMotorcycleDailyPaymentController::class, 'create'])->name('daily-payments.create');
+    Route::post('/daily-payments/store', [AgentMotorcycleDailyPaymentController::class, 'store'])->name('daily-payments.store');
 });
 
 Route::middleware(['auth', 'role:rider'])->prefix('rider')->name('rider.')->group(function () {

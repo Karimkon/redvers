@@ -171,6 +171,37 @@ class PesapalController extends Controller
         }
     }
 
+    public function handleDailyPaymentCallback(Request $request)
+    {
+        $data = session('pending_daily_payment');
+
+        if (!$data) {
+            return abort(400, 'Missing session data');
+        }
+
+        $status = app(PesapalService::class)->getPaymentStatus($data['reference']);
+
+        if (strtolower($status) === 'completed') {
+            MotorcyclePayment::create([
+                'purchase_id' => $data['purchase_id'],
+                'user_id' => $data['rider_id'],
+                'payment_date' => now()->toDateString(),
+                'amount' => $data['amount'], // ✅ Save exact amount chosen
+                'method' => 'pesapal',
+                'type' => 'daily',
+                'note' => 'Agent Initiated',
+                'reference' => $data['reference'],
+                'status' => 'paid',
+            ]);
+
+            session()->forget('pending_daily_payment');
+
+            return redirect()->route('agent.dashboard')->with('success', 'Daily payment of UGX ' . number_format($data['amount']) . ' recorded successfully.');
+        }
+
+        return redirect()->route('agent.dashboard')->with('error', 'Payment not completed.');
+    }
+
 
 
 }
