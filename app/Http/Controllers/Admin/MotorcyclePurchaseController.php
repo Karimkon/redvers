@@ -27,7 +27,8 @@ class MotorcyclePurchaseController extends Controller
         });
     }
 
-    $purchases = $query->get();
+    $purchases = $query->paginate(10)->appends($request->only('search'));
+
 
     return view('admin.purchases.index', compact('purchases'));
 }

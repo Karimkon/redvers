@@ -47,7 +47,7 @@
                 <dd class="col-sm-9">{{ ucfirst($payment->initiated_by ?? 'admin') }}</dd>
 
                 <dt class="col-sm-3 fw-semibold">Created At</dt>
-                <dd class="col-sm-9">{{ $payment->created_at->format('d M Y H:i') }}</dd>
+                <dd class="col-sm-9">{{ $payment->created_at->timezone('Africa/Kampala')->format('d M Y H:i') }}</dd>
 
                 <dt class="col-sm-3 fw-semibold">Related Swap</dt>
                 <dd class="col-sm-9">

@@ -50,7 +50,7 @@
                     <td>{{ ucfirst($payment->status) }}</td>
                     <td>{{ $payment->reference }}</td>
                     <td>{{ ucfirst($payment->initiated_by ?? 'admin') }}</td>
-                    <td>{{ \Carbon\Carbon::parse($payment->created_at)->format('d M Y') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($payment->created_at)->timezone('Africa/Kampala')->format('d M Y H:i') }}</td>
                 </tr>
             @endforeach
         </tbody>

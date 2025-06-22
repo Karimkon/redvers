@@ -13,13 +13,26 @@ use Illuminate\Support\Facades\Http;
 
 class SwapPromotionController extends Controller
 {
-    public function index()
+   public function index()
     {
-        $promotions = SwapPromotion::with(['rider'])->where('agent_id', auth()->id())
-            ->latest()->paginate(10);
+        $promotions = \App\Models\SwapPromotion::with('rider')
+            ->where('agent_id', auth()->id())
+            ->latest()
+            ->paginate(10);
+            
+            // use ->getCollection()->map(...) to mutate paginated items
+            $promotions->getCollection()->transform(function ($promotion) {
+                if ($promotion->status === 'active' && now()->gt($promotion->ends_at)) {
+                    $promotion->status = 'expired';
+                } elseif ($promotion->status === 'pending' && now()->between($promotion->starts_at, $promotion->ends_at)) {
+                    $promotion->status = 'active';
+                }
+                return $promotion;
+            });
 
         return view('agent.promotions.index', compact('promotions'));
     }
+
 
     public function create()
     {

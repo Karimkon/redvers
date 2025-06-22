@@ -13,15 +13,16 @@ class MotorcycleUnitController extends Controller
 {
     public function index()
     {
-        $units = MotorcycleUnit::with('motorcycle')->latest()->get();
+        $units = MotorcycleUnit::with('motorcycle')->latest()->paginate(10);
         // Load assigned riders (if any)
-        foreach ($units as $unit) {
-            $unit->assigned_purchase = Purchase::with('user')
+        $units->getCollection()->transform(function ($unit) {
+        $unit->assigned_purchase = Purchase::with('user')
                 ->where('motorcycle_unit_id', $unit->id)
                 ->where('status', 'active')
                 ->latest()
                 ->first();
-        }
+            return $unit;
+        });
         return view('admin.motorcycle-units.index', compact('units'));
     }
 

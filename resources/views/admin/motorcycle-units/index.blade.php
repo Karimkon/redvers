@@ -18,9 +18,11 @@
     @endif
 
     {{-- Search Bar --}}
-    <div class="mb-3">
-        <input type="text" class="form-control shadow-sm" id="unitSearchInput" placeholder="🔍 Search by number plate, type, status, rider...">
-    </div>
+    <form method="GET" id="searchForm" class="mb-3">
+    <input type="text" name="search" value="{{ request('search') }}"
+           class="form-control shadow-sm" placeholder="🔍 Search by number plate..." id="unitSearchInput">
+</form>
+
 
     <div class="table-responsive bg-white rounded shadow-sm">
         <table class="table table-hover align-middle mb-0" id="unitTable">
@@ -85,18 +87,20 @@
     </div>
 </div>
 
+<div class="mt-3 d-flex justify-content-center">
+    {{ $units->links('pagination::bootstrap-5') }}
+</div>
+
 {{-- Instant Filter Script --}}
 @push('scripts')
 <script>
     document.getElementById("unitSearchInput").addEventListener("input", function () {
-        let input = this.value.toLowerCase();
-        let rows = document.querySelectorAll("#unitTable tbody tr");
-
-        rows.forEach(row => {
-            let text = row.textContent.toLowerCase();
-            row.style.display = text.includes(input) ? "" : "none";
-        });
+        clearTimeout(this.delayTimer);
+        this.delayTimer = setTimeout(function () {
+            document.getElementById("searchForm").submit();
+        }, 400); // Wait 400ms after typing stops
     });
 </script>
 @endpush
+
 @endsection

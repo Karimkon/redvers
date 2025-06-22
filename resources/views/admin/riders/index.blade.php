@@ -66,7 +66,11 @@
     </div>
 </div>
 
-<div class="mt-3">
-    {{ $riders->links() }}
+<div class="mt-3 d-flex justify-content-center">
+    <nav>
+        <ul class="pagination pagination-sm">
+            {{ $riders->onEachSide(1)->links('pagination::bootstrap-5') }}
+        </ul>
+    </nav>
 </div>
 @endsection

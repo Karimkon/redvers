@@ -9,11 +9,25 @@ use Illuminate\Http\Request;
 
 class PaymentController extends Controller
 {
-    public function index()
-    {
-        $payments = Payment::with('swap.rider')->latest()->paginate(10);
-        return view('admin.payments.index', compact('payments'));
-    }
+        public function index(Request $request)
+        {
+            $query = Payment::with('swap.rider')->latest();
+
+            if ($search = $request->get('search')) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('reference', 'like', "%{$search}%")
+                    ->orWhere('method', 'like', "%{$search}%")
+                    ->orWhere('amount', 'like', "%{$search}%")
+                    ->orWhereHas('swap.rider', function ($riderQuery) use ($search) {
+                        $riderQuery->where('name', 'like', "%{$search}%");
+                    });
+                });
+            }
+
+            $payments = $query->paginate(10)->appends($request->only('search'));
+
+            return view('admin.payments.index', compact('payments'));
+        }
 
     public function show(Payment $payment)
     {

@@ -92,7 +92,12 @@
     </div>
 </div>
 
-<div class="mt-3">
-    {{ $batteries->links() }}
+<div class="mt-3 d-flex justify-content-center">
+    <nav>
+        <ul class="pagination pagination-sm">
+            {{ $batteries->onEachSide(1)->links('pagination::bootstrap-5') }}
+        </ul>
+    </nav>
 </div>
+
 @endsection

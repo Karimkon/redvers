@@ -7,7 +7,7 @@
     {{-- Heading --}}
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-2">
         <h3 class="fw-bold text-primary mb-0">
-            <i class="bi bi-cash-coin me-2"></i> Payment Records
+            <i class="bi bi-cash-coin me-2"></i> Swaps Payment Records
         </h3>
     </div>
 
@@ -20,9 +20,12 @@
     @endif
 
     {{-- 🔍 Search --}}
-    <div class="mb-4">
-        <input type="text" id="paymentSearch" class="form-control shadow-sm" placeholder="Search by rider, method, reference, amount...">
-    </div>
+    <form method="GET" action="{{ route('admin.payments.index') }}" id="paymentSearchForm" class="mb-4">
+        <input type="text" name="search" value="{{ request('search') }}" id="paymentSearch"
+            class="form-control shadow-sm"
+            placeholder="Search by rider, method, reference, amount...">
+    </form>
+
 
     {{-- 💳 Payment Table --}}
     <div class="card shadow-sm border-0">
@@ -57,7 +60,7 @@
                                     </span>
                                 </td>
                                 <td><code>{{ $payment->reference }}</code></td>
-                                <td>{{ $payment->created_at->format('d M Y, H:i') }}</td>
+                                <td>{{ $payment->created_at->timezone('Africa/Kampala')->format('d M Y H:i') }}</td>
                                 <td>
                                     <a href="{{ route('admin.payments.show', $payment->id) }}" class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-eye"></i>
@@ -76,22 +79,22 @@
             </div>
         </div>
     </div>
+    <div class="mt-4 d-flex justify-content-center">
+    {{ $payments->links('pagination::bootstrap-5') }}
+</div>
+
 </div>
 @endsection
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const searchInput = document.getElementById('paymentSearch');
-        const rows = document.querySelectorAll('#paymentsTable tbody tr');
-
-        searchInput.addEventListener('input', function () {
-            const search = this.value.toLowerCase();
-            rows.forEach(row => {
-                const text = row.innerText.toLowerCase();
-                row.style.display = text.includes(search) ? '' : 'none';
-            });
-        });
+    const input = document.getElementById("paymentSearch");
+    input.addEventListener("input", function () {
+        clearTimeout(this.timer);
+        this.timer = setTimeout(() => {
+            document.getElementById("paymentSearchForm").submit();
+        }, 400);
     });
 </script>
 @endpush
+
