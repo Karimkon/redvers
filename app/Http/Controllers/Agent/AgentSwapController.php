@@ -27,7 +27,7 @@ class AgentSwapController extends Controller
     {
          $riders = \App\Models\User::where('role', 'rider')
         ->with(['purchases' => function ($query) {
-            $query->where('status', 'active')->latest();
+            $query->whereIn('status', ['active', 'completed'])->latest();
         }, 'purchases.motorcycleUnit']) // eager-load the motorcycle unit
         ->get();
 
@@ -72,17 +72,15 @@ class AgentSwapController extends Controller
             ->latest()
             ->first();
 
-        if (!$isFirstTime && $request->filled('battery_returned_id')) {
-            $lastSwap = Swap::where('rider_id', $request->rider_id)->latest()->first();
+        $currentBattery = Battery::where('current_rider_id', $request->rider_id)
+            ->where('status', 'in_use')
+            ->first();
 
-            if (
-                $lastSwap &&
-                $lastSwap->percentage_difference < 100 &&
-                (int) $request->battery_returned_id !== (int) $lastSwap->battery_id
-            ) {
-                return back()->withErrors([
-                    'battery_returned_id' => 'Returned battery does not match the last one assigned to this rider.',
-                ])->withInput();
+            if (!$isFirstTime && $request->filled('battery_returned_id')) {
+                if ($currentBattery && (int) $request->battery_returned_id !== (int) $currentBattery->id) {
+                    return back()->withErrors([
+                        'battery_returned_id' => 'Returned battery does not match the last one currently assigned to this rider.',
+                    ])->withInput();
             }
         }
 
@@ -111,6 +109,8 @@ class AgentSwapController extends Controller
                     'pending_amount' => $payableAmount,
                 ]);
 
+                session()->save(); // ✅ Force session write
+
                 $response = Http::withToken($token)->post(config('pesapal.base_url') . '/api/Transactions/SubmitOrderRequest', [
                     "id" => Str::uuid()->toString(),
                     "currency" => "UGX",
@@ -118,6 +118,7 @@ class AgentSwapController extends Controller
                     "description" => "Battery Swap Payment",
                     "callback_url" => route('pesapal.callback'),
                     "notification_id" => "34f2ce63-9c4c-430d-adb8-dbba55243d85",
+                    "merchant_reference"=> $reference, 
                     "billing_address" => [
                         "email_address" => $rider->email,
                         "phone_number" => $rider->phone,

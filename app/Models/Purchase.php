@@ -54,6 +54,20 @@ class Purchase extends Model
 
 public function getPaymentScheduleSummary()
 {
+    if ($this->status === 'completed') {
+        return [
+            'expected_days' => 0,
+            'actual_payments' => 0,
+            'missed_payments' => 0,
+            'missed_dates' => collect(),
+            'paid_ahead_days' => 0,
+            'overpaid_amount' => 0,
+            'remaining_expected_amount' => 0,
+            'next_due_date' => null,
+            'expected_dates' => [],
+        ];
+    }
+    
     $startDate = $this->start_date ?? $this->created_at->copy()->startOfDay();
     $today = now()->startOfDay();
     $dailyRate = $this->motorcycle->daily_payment ?? 0;

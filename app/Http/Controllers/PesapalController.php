@@ -42,17 +42,26 @@ class PesapalController extends Controller
 
    public function handleCallback(Request $request)
     {
+        \Log::info('✅ Pesapal Callback Triggered.', [
+            'data' => session('pending_swap_data'),
+            'reference' => session('pending_reference'),
+            'amount' => session('pending_amount')
+        ]);
+
         try {
             $data = session('pending_swap_data');
             $reference = session('pending_reference');
             $amount = session('pending_amount');
 
             if (!$data || !$reference || !$amount) {
+                \Log::warning('❌ Missing session data during Pesapal callback.');
                 return redirect()->route('agent.swaps.index')->with('error', 'Missing payment session data.');
             }
 
-            $battery = \App\Models\Battery::findOrFail($data['battery_id']);
-            $requestData = new \Illuminate\Http\Request($data);
+            $battery = Battery::findOrFail($data['battery_id']);
+
+            // Wrap array into a Request object for compatibility
+            $requestData = new Request($data);
 
             $agentSwapController = new AgentSwapController;
             return $agentSwapController->finalizeSwap($requestData, $battery, $amount, 'pesapal', 'completed');
@@ -61,6 +70,7 @@ class PesapalController extends Controller
             return redirect()->route('agent.swaps.index')->with('error', 'Payment confirmed but swap could not be finalized.');
         }
     }
+
 
 
 
