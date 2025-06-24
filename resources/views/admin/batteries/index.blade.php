@@ -132,8 +132,12 @@
             </div>
 
             {{-- Pagination --}}
-            <div class="d-flex justify-content-center mt-3">
-                {{ $batteries->withQueryString()->links() }}
+            <div class="mt-3 d-flex justify-content-center">
+                <nav>
+                    <ul class="pagination pagination-sm">
+                        {{ $batteries->onEachSide(1)->links('pagination::bootstrap-5') }}
+                    </ul>
+                </nav>
             </div>
         @else
             <div class="text-center py-4">

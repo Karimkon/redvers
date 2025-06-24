@@ -46,8 +46,8 @@
                         @forelse($promotions as $promo)
                             <tr class="text-center">
                                 <td class="text-start">{{ $promo->rider->name }}</td>
-                                <td>{{ \Carbon\Carbon::parse($promo->starts_at)->format('d M Y, H:i') }}</td>
-                                <td>{{ \Carbon\Carbon::parse($promo->ends_at)->format('d M Y, H:i') }}</td>
+                                <td>{{ \Carbon\Carbon::parse($promo->starts_at)->timezone('Africa/Kampala')->format('d M Y, H:i') }}</td>
+                                <td>{{ \Carbon\Carbon::parse($promo->ends_at)->timezone('Africa/Kampala')->format('d M Y, H:i') }}</td>
                                 <td>
                                     <span class="badge bg-{{ 
                                         $promo->status === 'active' ? 'success' : 

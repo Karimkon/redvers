@@ -12,6 +12,12 @@ class SwapPromotion extends Model
         'payment_reference', 'status',
     ];
 
+    protected $casts = [
+        'starts_at' => 'datetime',
+        'ends_at' => 'datetime',
+        'amount' => 'decimal:2',
+    ];
+    
     public function rider()
     {
         return $this->belongsTo(User::class, 'rider_id');
