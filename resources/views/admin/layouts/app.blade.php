@@ -117,6 +117,32 @@
             transform-origin: top center;
         }
 
+        .accordion-button {
+            background-color: #1f2937;
+            color: #f8f9fa;
+            box-shadow: none;
+        }
+
+        .accordion-button:not(.collapsed) {
+            background-color: #0d6efd;
+            color: white;
+        }
+
+        .accordion-body a {
+            display: block;
+            padding: 10px 20px;
+            color: #9ca3af;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .accordion-body a:hover,
+        .accordion-body a.active {
+            background-color: #374151;
+            color: white;
+        }
+
+
         @keyframes shake {
             0% { transform: rotate(0); }
             15% { transform: rotate(10deg); }
@@ -220,6 +246,35 @@
         <a href="{{ route('admin.motorcycle-units.index') }}" class="{{ request()->routeIs('admin.motorcycle-units.*') ? 'active' : '' }}">
             <i class="bi bi-hash me-2"></i> Motorcycle Units
         </a>
+
+        <div class="accordion" id="adminModules">
+    <!-- Inventory Module Group -->
+    <div class="accordion-item bg-transparent border-0">
+        <h2 class="accordion-header">
+            <button class="accordion-button bg-dark text-white collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#inventoryCollapse" aria-expanded="false" aria-controls="inventoryCollapse">
+                <i class="bi bi-boxes me-2"></i> Inventory Module
+            </button>
+        </h2>
+        <div id="inventoryCollapse" class="accordion-collapse collapse {{ request()->is('admin/inventory*') || request()->is('admin/shops*') || request()->is('admin/spares*') || request()->is('admin/low-stock-alerts*') ? 'show' : '' }}">
+            <div class="accordion-body p-0">
+                <a href="{{ route('admin.shops.index') }}" class="ps-4 {{ request()->routeIs('admin.shops.*') ? 'active' : '' }}">
+                    <i class="bi bi-shop-window me-2"></i> Shops
+                </a>
+                <a href="{{ route('admin.inventory.index') }}" class="ps-4 {{ request()->routeIs('admin.inventory.*') ? 'active' : '' }}">
+                    <i class="bi bi-person-workspace me-2"></i> Inventory Operators
+                </a>
+                <a href="{{ route('admin.spares.dashboard') }}" class="ps-4 {{ request()->routeIs('admin.spares.*') ? 'active' : '' }}">
+                    <i class="bi bi-tools me-2"></i> Spare Dashboard
+                </a>
+                <a href="{{ route('admin.low-stock-alerts.index') }}" class="ps-4 {{ request()->routeIs('admin.low-stock-alerts.*') ? 'active' : '' }}">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> Low Stock Alerts
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
         <a href="{{ route('admin.chat') }}" class="{{ request()->routeIs('admin.chat.*') ? 'active' : '' }}">
             <i class="bi bi-chat-dots me-2"></i> Chat
         </a>

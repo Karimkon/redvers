@@ -39,7 +39,14 @@ use App\Http\Controllers\Admin\BatteryDeliveryController;
 use App\Http\Controllers\Agent\AgentBatteryDeliveryController;
 use App\Http\Controllers\Agent\SwapPromotionController;
 use App\Http\Controllers\Agent\AgentMotorcycleDailyPaymentController;
-
+use App\Http\Controllers\Inventory\PartController;
+use App\Http\Controllers\Inventory\StockEntryController;
+use App\Http\Controllers\Inventory\SaleController;
+use App\Http\Controllers\Admin\SpareShopDashboardController;
+use App\Http\Controllers\Admin\LowStockAlertController;
+use App\Http\Controllers\Admin\ShopAnalyticsController;
+use \App\Http\Controllers\Admin\InventoryOperatorController;
+use \App\Http\Controllers\Admin\ShopController;
 
 // Home
 Route::get('/', fn () => view('welcome'));
@@ -50,6 +57,8 @@ Route::get('/admin/login', fn () => view('auth.admin-login'))->name('admin.login
 Route::get('/agent/login', fn () => view('auth.agent-login'))->name('agent.login');
 Route::get('/rider/login', fn () => view('auth.rider-login'))->name('rider.login');
 Route::get('/finance/login', fn () => view('auth.finance-login'))->name('finance.login');
+Route::get('/inventory/login', fn () => view('auth.inventory-login'))->name('inventory.login');
+
 
 Route::get('/pesapal/auth', [\App\Http\Controllers\PesapalController::class, 'authenticate'])->name('pesapal.auth');
 
@@ -124,6 +133,21 @@ Route::post('/finance/login', function (Request $request) {
     return redirect()->route('finance.login')->with('error', 'Only finance staff can login here.');
 })->name('finance.login.submit');
 
+// Inventory login submit
+Route::post('/inventory/login', function (\Illuminate\Http\Request $request) {
+    $credentials = $request->validate([
+        'email' => ['required', 'email'],
+        'password' => ['required'],
+    ]);
+
+    if (Auth::attempt($credentials, $request->boolean('remember')) && Auth::user()->role === 'inventory') {
+        $request->session()->regenerate();
+        return redirect()->intended(route('inventory.dashboard'));
+    }
+
+    Auth::logout();
+    return redirect()->route('inventory.login')->with('error', 'Only inventory users can login here.');
+})->name('inventory.login.submit');
 
 // Logout (shared)
 Route::post('/logout', function (Request $request) {
@@ -160,6 +184,20 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
         ->name('motorcycle-payments.store');
     Route::delete('/purchases/{purchase}/motorcycle-payments/{payment}', [MotorcyclePaymentController::class, 'destroy'])
     ->name('motorcycle-payments.destroy');
+
+    //Spare Shops
+    Route::get('/spares/dashboard', [SpareShopDashboardController::class, 'index'])->name('spares.dashboard');
+    Route::get('low-stock-alerts', [LowStockAlertController::class, 'index'])->name('low-stock-alerts.index');
+    Route::post('low-stock-alerts/{alert}/resolve', [LowStockAlertController::class, 'resolve'])->name('low_stock_alerts.resolve');
+
+    // Shop Specific
+    Route::get('shops', [ShopAnalyticsController::class, 'index'])->name('shops.index');
+    Route::get('/shops/{shop}/analytics', [ShopAnalyticsController::class, 'show'])->name('shops.analytics');
+
+    //Inventory Operators
+    Route::resource('inventory', InventoryOperatorController::class)->names('inventory');
+    // Shop CRUD routes
+    Route::resource('shops', ShopController::class)->names('shops');
 
 
     // Discounts
@@ -387,6 +425,27 @@ Route::middleware(['auth', 'role:finance'])->prefix('finance')->name('finance.')
     Route::post('/purchases/{purchase}/payments', [MotorcyclePaymentController::class, 'store'])->name('motorcycle-payments.store');
 });
 
+Route::middleware(['auth', 'role:inventory'])->prefix('inventory')->name('inventory.')->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\Inventory\InventoryDashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/profile', function () {
+        return view('inventory.profile'); // Create this Blade view if needed
+    })->name('profile');
+
+    Route::get('/api/part/{id}/price', function ($id) {
+        $part = \App\Models\Part::findOrFail($id);
+        return response()->json(['price' => $part->price]);
+    })->middleware(['auth', 'role:inventory']);
+
+
+    // Placeholder routes (coming next)
+    Route::resource('parts', PartController::class);
+    Route::resource('stock-entries', StockEntryController::class);
+    Route::resource('sales', SaleController::class);
+    
+
+});
+
 
 // Profile & Pesapal
 Route::middleware('auth')->group(function () {
@@ -394,7 +453,6 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
-Route::match(['post', 'get'], '/pesapal/ipn', [PesapalController::class, 'handleIPN'])->name('pesapal.ipn');
 
 
 

@@ -60,6 +60,11 @@ class User extends Authenticatable
         return $this->hasMany(SwapPromotion::class, 'rider_id');
     }
 
+    public function shop()
+    {
+        return $this->hasOne(Shop::class, 'user_id');
+    }
+
 
 
 }

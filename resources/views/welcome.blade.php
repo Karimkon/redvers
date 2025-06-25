@@ -113,6 +113,9 @@
         </div>
 
         <div class="mt-6 text-xs sm:text-sm text-gray-300 dark:text-gray-700">
+    <a href="/inventory/login" class="bg-orange-600 hover:bg-orange-700 px-3 py-2 sm:px-5 sm:py-3 rounded-xl shadow-lg text-center font-semibold transition-all duration-300">Inventory</a>
+            <br>
+            <br>
             <a href="https://redversemobility.com" target="_blank" class="inline-flex items-center gap-2 text-cyan-400 hover:text-white dark:text-blue-600 dark:hover:text-black transition">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 sm:w-5 sm:h-5 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
