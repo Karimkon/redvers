@@ -190,7 +190,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/spares/dashboard', [SpareShopDashboardController::class, 'index'])->name('spares.dashboard');
     Route::get('low-stock-alerts', [LowStockAlertController::class, 'index'])->name('low-stock-alerts.index');
     Route::post('low-stock-alerts/{alert}/resolve', [LowStockAlertController::class, 'resolve'])->name('low_stock_alerts.resolve');
-    Route::get('parts', [AdminPartController::class, 'index'])->name('parts.index');
+    Route::resource('parts', AdminPartController::class)->names('parts');
     Route::get('/shops/{shop}/profit-details', [ShopAnalyticsController::class, 'profitDetails'])->name('shops.profit.details');
 
 
@@ -437,17 +437,22 @@ Route::middleware(['auth', 'role:inventory'])->prefix('inventory')->name('invent
         return view('inventory.profile'); // Create this Blade view if needed
     })->name('profile');
 
-    Route::get('/api/part/{id}/price', function ($id) {
-        $part = \App\Models\Part::findOrFail($id);
-        return response()->json(['price' => $part->price]);
-    })->middleware(['auth', 'role:inventory']);
-
-
     // Placeholder routes (coming next)
     Route::resource('parts', PartController::class);
     Route::resource('stock-entries', StockEntryController::class);
     Route::resource('sales', SaleController::class);
-    
+
+    //Parts price lookup
+     Route::get('/api/lookup', function (Request $request) {
+        $query = $request->get('q');
+        $shop = Auth::user()->shop;
+
+        return $shop->parts()
+            ->where('name', 'like', "%{$query}%")
+            ->limit(10)
+            ->get(['id', 'name', 'stock', 'price']);
+    })->name('api.lookup'); // ✅ this gives us inventory.api.lookup
+        
 
 });
 

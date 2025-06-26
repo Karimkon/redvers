@@ -257,14 +257,17 @@
         </h2>
         <div id="inventoryCollapse" class="accordion-collapse collapse {{ request()->is('admin/inventory*') || request()->is('admin/shops*') || request()->is('admin/spares*') || request()->is('admin/low-stock-alerts*') ? 'show' : '' }}">
             <div class="accordion-body p-0">
+                <a href="{{ route('admin.spares.dashboard') }}" class="ps-4 {{ request()->routeIs('admin.spares.*') ? 'active' : '' }}">
+                    <i class="bi bi-tools me-2"></i> Spare Dashboard
+                </a>
                 <a href="{{ route('admin.shops.index') }}" class="ps-4 {{ request()->routeIs('admin.shops.*') ? 'active' : '' }}">
                     <i class="bi bi-shop-window me-2"></i> Shops
                 </a>
+                <a href="{{ route('admin.parts.index') }}" class="{{ request()->routeIs('admin.parts.*') ? 'active' : '' }}">
+                    <i class="bi bi-gear me-2"></i> All Parts
+                </a>
                 <a href="{{ route('admin.inventory.index') }}" class="ps-4 {{ request()->routeIs('admin.inventory.*') ? 'active' : '' }}">
                     <i class="bi bi-person-workspace me-2"></i> Inventory Operators
-                </a>
-                <a href="{{ route('admin.spares.dashboard') }}" class="ps-4 {{ request()->routeIs('admin.spares.*') ? 'active' : '' }}">
-                    <i class="bi bi-tools me-2"></i> Spare Dashboard
                 </a>
                 <a href="{{ route('admin.low-stock-alerts.index') }}" class="ps-4 {{ request()->routeIs('admin.low-stock-alerts.*') ? 'active' : '' }}">
                     <i class="bi bi-exclamation-triangle-fill me-2"></i> Low Stock Alerts

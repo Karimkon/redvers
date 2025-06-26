@@ -14,8 +14,8 @@
             <tr>
                 <th>Part</th>
                 <th>Qty</th>
+                <th>Buying Price</th>
                 <th>Selling Price</th>
-                <th>Cost Price</th>
                 <th>Total Price</th>
                 <th>Profit</th>
                 <th>Customer</th>
@@ -27,8 +27,8 @@
             <tr>
                 <td>{{ $sale->part->name ?? '-' }}</td>
                 <td>{{ $sale->quantity }}</td>
-                <td>{{ number_format($sale->selling_price) }}</td>
                 <td>{{ number_format($sale->cost_price) }}</td>
+                <td>{{ number_format($sale->selling_price) }}</td>
                 <td>UGX {{ number_format($sale->total_price) }}</td>
                 <td class="fw-bold text-success">UGX {{ number_format($sale->profit) }}</td>
                 <td>{{ $sale->customer_name ?? '-' }}</td>

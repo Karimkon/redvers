@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Part;
 use App\Models\Shop;
 
-class PartController extends Controller
+class AdminPartController extends Controller
 {
         public function index(Request $request)
     {
@@ -34,7 +34,6 @@ class PartController extends Controller
         $request->validate([
             'shop_id' => 'required|exists:shops,id',
             'name' => 'required|string|max:255',
-            'part_number' => 'nullable|string|max:255',
             'category' => 'nullable|string|max:255',
             'brand' => 'nullable|string|max:255',
             'price' => 'required|numeric|min:0',
@@ -58,7 +57,6 @@ class PartController extends Controller
         $request->validate([
             'shop_id' => 'required|exists:shops,id',
             'name' => 'required|string|max:255',
-            'part_number' => 'nullable|string|max:255',
             'category' => 'nullable|string|max:255',
             'brand' => 'nullable|string|max:255',
             'price' => 'required|numeric|min:0',

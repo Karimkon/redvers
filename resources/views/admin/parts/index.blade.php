@@ -32,8 +32,6 @@
                 <tr>
                     <th>Shop</th>
                     <th>Name</th>
-                    <th>Part #</th>
-                    <th>Category</th>
                     <th>Brand</th>
                     <th>Stock</th>
                     <th>Buy (UGX)</th>
@@ -46,8 +44,6 @@
                     <tr>
                         <td><span class="badge bg-dark">{{ $part->shop->name }}</span></td>
                         <td>{{ $part->name }}</td>
-                        <td>{{ $part->part_number }}</td>
-                        <td>{{ $part->category }}</td>
                         <td>{{ $part->brand }}</td>
                         <td>{{ $part->stock }}</td>
                         <td>{{ number_format($part->cost_price) }}</td>

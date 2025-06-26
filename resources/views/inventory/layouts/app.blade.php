@@ -194,11 +194,39 @@
     <div class="d-flex justify-content-end mb-3">
         <a href="{{ route('inventory.profile') }}">
             <img src="{{ Auth::user()->profile_photo_url ?? asset('images/default-avatar.png') }}"
-                 alt="Profile" class="rounded-circle" width="40" height="40" style="object-fit: cover;">
+                alt="Profile" class="rounded-circle" width="40" height="40" style="object-fit: cover;">
         </a>
+
+        <!-- 🔍 Quick Lookup Button -->
+        <button class="btn btn-outline-primary ms-3" data-bs-toggle="modal" data-bs-target="#lookupModal">
+            <i class="bi bi-search me-1"></i> Quick Lookup
+        </button>
     </div>
 
+
     @yield('content')
+ <!-- 🔍 Server-side Lookup Modal (No JS) -->
+<!-- 🔍 Quick Lookup Modal -->
+<div class="modal fade" id="lookupModal" tabindex="-1" aria-labelledby="lookupModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="lookupModalLabel">🔍 Quick Part Lookup</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <input type="text" class="form-control mb-3" id="partSearchInput" placeholder="Search parts by name...">
+        <ul class="list-group" id="partList">
+          <li class="list-group-item text-muted text-center">Start typing to search parts...</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
 </main>
 
 <!-- Scripts -->
@@ -214,10 +242,62 @@
     }
 </script>
 
+
+
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
+<script>
+$(document).ready(function () {
+    const $input = $('#partSearchInput');
+    const $list = $('#partList');
+
+    // Fetch and render parts
+    function fetchParts(query = '') {
+        $.ajax({
+            url: '{{ route("inventory.api.lookup") }}',
+            method: 'GET',
+            data: { q: query },
+            success: function (parts) {
+                if (parts.length === 0) {
+                    $list.html('<li class="list-group-item text-center text-muted">No parts found.</li>');
+                    return;
+                }
+
+                const items = parts.map(part => `
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${part.name}</strong><br>
+                            <small class="text-muted">Stock: ${part.stock}</small>
+                        </div>
+                        <span class="badge bg-success">UGX ${Number(part.price).toLocaleString()}</span>
+                    </li>
+                `).join('');
+                $list.html(items);
+            },
+            error: function () {
+                $list.html('<li class="list-group-item text-danger text-center">Error fetching parts.</li>');
+            }
+        });
+    }
+
+    // Initial fetch when modal opens
+    $('#lookupModal').on('shown.bs.modal', function () {
+        fetchParts(); // 👈 show default 10 parts
+        $input.val('').focus(); // clear and focus
+    });
+
+    // Search as user types
+    let debounce;
+    $input.on('input', function () {
+        const query = $(this).val().trim();
+        clearTimeout(debounce);
+        debounce = setTimeout(() => fetchParts(query), 300);
+    });
+});
+</script>
 @stack('scripts')
 </body>
 </html>

@@ -55,13 +55,9 @@
 
 @push('scripts')
 <script>
+    const partsData = @json($parts->mapWithKeys(fn($part) => [$part->id => $part->price]));
+
     document.addEventListener('DOMContentLoaded', () => {
-        // Initialize Select2
-        $('#part_id').select2({
-            placeholder: 'Search and select a part',
-            width: '100%'
-        });
-        const partSelect = document.getElementById('part_id');
         const priceInput = document.getElementById('selling_price');
         const quantityInput = document.getElementById('quantity');
         const totalPriceInput = document.getElementById('total_price');
@@ -69,18 +65,23 @@
         function updateTotal() {
             const price = parseFloat(priceInput.value) || 0;
             const qty = parseInt(quantityInput.value) || 0;
-            totalPriceInput.value = (price * qty).toLocaleString('en-UG', { maximumFractionDigits: 2 });
+            totalPriceInput.value = (price * qty).toLocaleString('en-UG', {
+                maximumFractionDigits: 2
+            });
         }
 
-        partSelect.addEventListener('change', function () {
-            const partId = this.value;
-            if (partId) {
-                fetch(`/inventory/api/part/${partId}/price`)
-                    .then(res => res.json())
-                    .then(data => {
-                        priceInput.value = data.price ?? '';
-                        updateTotal();
-                    });
+        // Initialize Select2
+        const $partSelect = $('#part_id').select2({
+            placeholder: 'Search and select a part',
+            width: '100%'
+        });
+
+        // Auto-fill price based on selected part
+        $partSelect.on('change', function () {
+            const partId = $(this).val();
+            if (partsData[partId]) {
+                priceInput.value = partsData[partId];
+                updateTotal();
             }
         });
 
@@ -89,3 +90,4 @@
     });
 </script>
 @endpush
+

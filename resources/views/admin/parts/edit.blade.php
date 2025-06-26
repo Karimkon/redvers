@@ -27,16 +27,6 @@
             </div>
 
             <div class="col-md-6">
-                <label class="form-label">Part Number</label>
-                <input type="text" name="part_number" class="form-control" value="{{ $part->part_number }}">
-            </div>
-
-            <div class="col-md-6">
-                <label class="form-label">Category</label>
-                <input type="text" name="category" class="form-control" value="{{ $part->category }}">
-            </div>
-
-            <div class="col-md-6">
                 <label class="form-label">Brand</label>
                 <input type="text" name="brand" class="form-control" value="{{ $part->brand }}">
             </div>

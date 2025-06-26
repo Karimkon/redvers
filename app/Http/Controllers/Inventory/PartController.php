@@ -26,7 +26,6 @@ class PartController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'part_number' => 'nullable|string|max:255',
             'category' => 'nullable|string|max:255',
             'brand' => 'nullable|string|max:255',
             'price' => 'required|numeric|min:0',
@@ -57,7 +56,6 @@ class PartController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'part_number' => 'nullable|string|max:255',
             'category' => 'nullable|string|max:255',
             'brand' => 'nullable|string|max:255',
             'price' => 'required|numeric|min:0',

@@ -25,16 +25,6 @@
             </div>
 
             <div class="col-md-6">
-                <label class="form-label">Part Number</label>
-                <input name="part_number" class="form-control">
-            </div>
-
-            <div class="col-md-6">
-                <label class="form-label">Category</label>
-                <input name="category" class="form-control">
-            </div>
-
-            <div class="col-md-6">
                 <label class="form-label">Brand</label>
                 <input name="brand" class="form-control">
             </div>
