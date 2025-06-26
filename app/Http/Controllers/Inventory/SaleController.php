@@ -46,6 +46,7 @@ class SaleController extends Controller
             'part_id' => $request->part_id,
             'quantity' => $request->quantity,
             'selling_price' => $request->selling_price,
+            'cost_price' => $part->cost_price,
             'total_price' => $request->quantity * $request->selling_price,
             'customer_name' => $request->customer_name,
             'sold_at' => $request->sold_at,

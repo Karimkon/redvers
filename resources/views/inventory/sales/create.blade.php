@@ -11,7 +11,7 @@
         <div class="row g-3">
             <div class="col-md-6">
                 <label class="form-label">Part</label>
-                <select name="part_id" id="part_id" class="form-select" required>
+                <select name="part_id" id="part_id" class="form-select select2" required>
                     <option value="" disabled selected>-- Select Part --</option>
                     @foreach($parts as $part)
                         <option value="{{ $part->id }}">{{ $part->name }} (In Stock: {{ $part->stock }})</option>
@@ -56,6 +56,11 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', () => {
+        // Initialize Select2
+        $('#part_id').select2({
+            placeholder: 'Search and select a part',
+            width: '100%'
+        });
         const partSelect = document.getElementById('part_id');
         const priceInput = document.getElementById('selling_price');
         const quantityInput = document.getElementById('quantity');

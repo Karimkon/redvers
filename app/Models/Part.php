@@ -12,6 +12,7 @@ class Part extends Model
         'part_number',
         'category',
         'brand',
+        'cost_price',
         'stock',
         'price',
     ];

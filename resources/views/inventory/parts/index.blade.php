@@ -25,6 +25,7 @@
                     <th>Category</th>
                     <th>Brand</th>
                     <th>Stock</th>
+                    <th>Cost / Buying Price (UGX)</th>
                     <th>Price (UGX)</th>
                     <th>Actions</th>
                 </tr>
@@ -37,6 +38,7 @@
                         <td>{{ $part->category }}</td>
                         <td>{{ $part->brand }}</td>
                         <td>{{ $part->stock }}</td>
+                        <td>{{ number_format($part->cost_price) }}</td>
                         <td>{{ number_format($part->price) }}</td>
                         <td>
                             <a href="{{ route('inventory.parts.edit', $part) }}" class="btn btn-sm btn-warning">Edit</a>

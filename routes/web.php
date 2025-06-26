@@ -47,6 +47,7 @@ use App\Http\Controllers\Admin\LowStockAlertController;
 use App\Http\Controllers\Admin\ShopAnalyticsController;
 use \App\Http\Controllers\Admin\InventoryOperatorController;
 use \App\Http\Controllers\Admin\ShopController;
+use \App\Http\Controllers\Admin\AdminPartController;
 
 // Home
 Route::get('/', fn () => view('welcome'));
@@ -189,6 +190,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/spares/dashboard', [SpareShopDashboardController::class, 'index'])->name('spares.dashboard');
     Route::get('low-stock-alerts', [LowStockAlertController::class, 'index'])->name('low-stock-alerts.index');
     Route::post('low-stock-alerts/{alert}/resolve', [LowStockAlertController::class, 'resolve'])->name('low_stock_alerts.resolve');
+    Route::get('parts', [AdminPartController::class, 'index'])->name('parts.index');
+    Route::get('/shops/{shop}/profit-details', [ShopAnalyticsController::class, 'profitDetails'])->name('shops.profit.details');
+
+
 
     // Shop Specific
     Route::get('shops', [ShopAnalyticsController::class, 'index'])->name('shops.index');

@@ -31,6 +31,7 @@ class PartController extends Controller
             'brand' => 'nullable|string|max:255',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
+            'cost_price' => 'required|numeric|min:0',
         ]);
 
         Auth::user()->shop->parts()->create($request->all());
@@ -61,6 +62,7 @@ class PartController extends Controller
             'brand' => 'nullable|string|max:255',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
+            'cost_price' => 'required|numeric|min:0',
         ]);
 
         $part->update($request->all());

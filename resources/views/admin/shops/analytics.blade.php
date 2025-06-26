@@ -73,6 +73,23 @@
                 </div>
             </div>
         </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 bg-dark-subtle text-dark">
+                <div class="card-body">
+                    <h6 class="fw-semibold">Profit</h6>
+                    <h4 class="fw-bold">UGX {{ number_format($totalProfit) }}</h4>
+                    <small class="text-muted">Total profit earned</small>
+                    <div class="mt-2 text-end">
+                        <a href="{{ route('admin.shops.profit.details', ['shop' => $shop->id, 'from' => $from, 'to' => $to]) }}" class="btn btn-outline-dark btn-sm">
+                            View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
     </div>
 
     {{-- 📈 Charts --}}

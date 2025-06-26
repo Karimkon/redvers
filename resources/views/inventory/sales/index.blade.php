@@ -25,7 +25,7 @@
                 <tr>
                     <th>Part</th>
                     <th>Quantity</th>
-                    <th>Price (UGX)</th>
+                    <th>Selling Price (UGX)</th>
                     <th>Total Price</th>
                     <th>Customer</th>
                     <th>Date</th>

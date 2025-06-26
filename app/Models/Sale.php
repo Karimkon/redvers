@@ -11,6 +11,7 @@ class Sale extends Model
         'quantity',
         'selling_price',
         'total_price',
+        'cost_price',
         'customer_name',
         'sold_at',
     ];
@@ -19,4 +20,9 @@ class Sale extends Model
     {
         return $this->belongsTo(Part::class);
     }
+    public function getProfitAttribute()
+    {
+        return ($this->selling_price - $this->cost_price) * $this->quantity;
+    }
+
 }

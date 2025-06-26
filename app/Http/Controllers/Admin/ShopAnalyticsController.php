@@ -41,6 +41,18 @@ class ShopAnalyticsController extends Controller
             ->whereBetween('sold_at', [$from, $to])
             ->sum(\DB::raw('quantity * selling_price'));
 
+        // ✅ Total Profit Calculation
+        $sales = \App\Models\Sale::with('part')
+            ->whereHas('part', fn ($q) => $q->where('shop_id', $shop->id))
+            ->whereBetween('sold_at', [$from, $to])
+            ->get();
+
+        $totalProfit = $sales->sum(fn($sale) => $sale->profit);
+
+
+
+
+
         // ✅ Unresolved low stock alerts
         $lowStockCount = LowStockAlert::where('shop_id', $shop->id)
             ->where('resolved', false)
@@ -87,9 +99,26 @@ class ShopAnalyticsController extends Controller
         $stockData = $labels->map(fn($day) => $stockStats[$day] ?? 0);
 
         return view('admin.shops.analytics', compact(
-            'shop', 'totalSales', 'totalReceived', 'lowStockCount', 'totalRevenue',
+            'shop', 'totalSales', 'totalReceived', 'lowStockCount', 'totalRevenue', 'totalProfit',
             'from', 'to', 'labels', 'salesData', 'stockData',
             'topPartLabels', 'topPartCounts'
         ));
     }
+
+    public function profitDetails(Request $request, Shop $shop)
+    {
+        $from = $request->input('from', now()->startOfMonth()->toDateString());
+        $to   = $request->input('to', now()->endOfMonth()->toDateString());
+
+        $sales = \App\Models\Sale::with('part')
+            ->whereHas('part', fn ($q) => $q->where('shop_id', $shop->id))
+            ->whereBetween('sold_at', [$from, $to])
+            ->latest()
+            ->paginate(20);
+
+        $totalProfit = $sales->sum(fn($sale) => $sale->profit);
+
+        return view('admin.shops.profit-details', compact('sales', 'shop', 'from', 'to', 'totalProfit'));
+    }
+
 }

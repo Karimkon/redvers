@@ -26,8 +26,12 @@
                 <label class="form-label">Brand</label>
                 <input type="text" name="brand" class="form-control">
             </div>
+             <div class="col-md-6">
+                <label class="form-label">Buying Price (UGX)</label>
+                <input type="number" name="cost_price" class="form-control" required>
+            </div>
             <div class="col-md-6">
-                <label class="form-label">Price (UGX)</label>
+                <label class="form-label">Selling Price (UGX)</label>
                 <input type="number" name="price" class="form-control" required>
             </div>
             <div class="col-md-6">
