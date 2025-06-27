@@ -55,6 +55,7 @@ class AgentSwapController extends Controller
             'battery_returned_id' => 'nullable|exists:batteries,id',
             'percentage_difference' => 'required|numeric|min:0|max:100',
             'payment_method' => 'nullable|in:mtn,airtel,pesapal',
+            'base_price' => 'required|in:15000,20000',
         ]);
 
         $battery = Battery::where('id', $request->battery_id)
@@ -84,7 +85,7 @@ class AgentSwapController extends Controller
             }
         }
 
-        $basePrice = config('billing.base_price', 15000);
+        $basePrice = (int) $request->base_price;
         $missingPercentage = $isFirstTime ? 0 : 100 - $request->percentage_difference;
 
         $payableAmount = $activePromo

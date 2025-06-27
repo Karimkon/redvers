@@ -79,6 +79,16 @@
             </select>
         </div>
 
+        {{-- 💰 Battery Price Option --}}
+        <div class="mb-3">
+            <label for="base_price" class="form-label">Select Battery Price Tier</label>
+            <select name="base_price" id="base_price" class="form-select" required>
+                <option value="15000">Standard UGX 15,000</option>
+                <option value="20000">Premium UGX 20,000</option>
+            </select>
+        </div>
+
+
         {{-- 🔢 Battery Percentage --}}
         <div class="mb-3">
             <label for="percentage_difference" class="form-label">Battery Percentage Returned</label>
@@ -137,9 +147,11 @@
         // 💡 Calculate Amount
         batteryInput.on('input', function () {
             const value = parseFloat($(this).val());
+            const selectedBasePrice = parseFloat($('#base_price').val()); // 🆕 fetch selected price
+
             if (!isNaN(value) && value >= 0 && value <= 100) {
                 const missing = 100 - value;
-                const amount = (missing / 100) * basePrice;
+                const amount = (missing / 100) * selectedBasePrice;
                 payableInput.val(amount.toFixed(2));
                 payableDisplay.val(amount.toLocaleString('en-UG', {
                     style: 'currency',
@@ -150,6 +162,12 @@
                 payableDisplay.val('');
             }
         });
+
+        // 🆕 Recalculate if base price dropdown changes
+        $('#base_price').on('change', function () {
+            batteryInput.trigger('input');
+        });
+
 
         // 🧠 Auto-fill Motorcycle & Returned Battery
         riderSelect.on('change', function () {

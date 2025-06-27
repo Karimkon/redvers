@@ -17,24 +17,22 @@ class BatteryController extends Controller
         $stations = Station::all();
 
         $batteries = Battery::with('currentStation', 'currentRider')
-            ->when($stationId, fn($query) => $query->where('current_station_id', $stationId))
-            ->when($search, fn($query) => $query->where('serial_number', 'like', "%{$search}%"))
-            ->latest()
-            ->paginate(10);
+        ->when($stationId, fn($query) => $query->where('current_station_id', $stationId))
+        ->when($search, function ($query) use ($search) {
+            $query->where(function ($q) use ($search) {
+                // Search serial number
+                $q->where('serial_number', 'like', "%{$search}%")
+                  ->orWhereHas('currentRider', function ($riderQuery) use ($search) {
+                      $riderQuery->where('name', 'like', "%{$search}%")
+                                 ->orWhere('phone', 'like', "%{$search}%");
+                  });
+            });
+        })
+        ->latest()
+        ->paginate(10);
 
-        // Debug: Check if relationships are loaded correctly
-        if (config('app.debug')) {
-            foreach ($batteries as $battery) {
-                \Log::info("Battery {$battery->serial_number}:", [
-                    'current_rider_id' => $battery->current_rider_id,
-                    'has_current_rider' => $battery->currentRider ? 'yes' : 'no',
-                    'rider_name' => $battery->currentRider?->name ?? 'null',
-                ]);
-            }
-        }
-
-        return view('admin.batteries.index', compact('batteries', 'stations', 'stationId', 'search'));
-    }
+    return view('admin.batteries.index', compact('batteries', 'stations', 'stationId', 'search'));
+}
 
     public function create()
     {

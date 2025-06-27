@@ -15,7 +15,7 @@
     <div class="card-body">
         <form method="GET" action="{{ route('admin.batteries.index') }}" class="row g-3">
             <div class="col-md-4">
-                <label class="form-label">Search Serial Number</label>
+                <label class="form-label">Search Serial / Rider Name / Rider Phone</label>
                 <input type="text" name="search" class="form-control" value="{{ $search }}" placeholder="Enter serial number">
             </div>
             <div class="col-md-4">
