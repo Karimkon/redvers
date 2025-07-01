@@ -652,7 +652,8 @@ document.addEventListener('DOMContentLoaded', () => {
                  return;
              }
              const items = parts.map(p => `
-                <li class="list-group-item d-flex justify-content-between align-items-start">
+            <li class="list-group-item p-0">
+                <a href="${p.edit_url}" class="d-flex justify-content-between align-items-start text-decoration-none p-3" style="color:inherit;">
                     <div class="me-2">
                         <strong>${escapeHtml(p.name)}</strong><br>
                         <small class="text-muted">
@@ -662,10 +663,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="badge bg-success mt-1">
                         UGX ${Number(p.price).toLocaleString()}
                     </span>
-                </li>
-                `).join('');
+                </a>
+            </li>
+            `).join('');
 
              $list.html(items);
+             $('#partList a').on('click', () => $('#partLookupModal').modal('hide'));
+
          })
          .fail(() => {
              $list.html(

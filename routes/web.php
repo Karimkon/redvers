@@ -337,6 +337,7 @@ Route::get('/api/lookup', function (\Illuminate\Http\Request $request) {
                 'stock' => $p->stock,
                 'price' => $p->price,
                 'shop'  => $p->shop->name ?? '—',
+                'edit_url' => route('admin.parts.edit', ['part' => $p->id]),
             ];
         });
 })->name('api.lookup');
