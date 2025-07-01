@@ -408,6 +408,9 @@
                             <a href="{{ route('admin.agents.index') }}" class="{{ request()->routeIs('admin.agents.*') ? 'active' : '' }}">
                                 <i class="bi bi-person-badge-fill me-2"></i> Agents
                             </a>
+                            <a href="{{ route('admin.inventory.index') }}" class="{{ request()->routeIs('admin.inventory.*') ? 'active' : '' }}">
+                                <i class="bi bi-person-workspace me-2"></i> Inventory Operators
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -473,9 +476,6 @@
                             </a>
                             <a href="{{ route('admin.parts.index') }}" class="{{ request()->routeIs('admin.parts.*') ? 'active' : '' }}">
                                 <i class="bi bi-gear me-2"></i> All Parts
-                            </a>
-                            <a href="{{ route('admin.inventory.index') }}" class="{{ request()->routeIs('admin.inventory.*') ? 'active' : '' }}">
-                                <i class="bi bi-person-workspace me-2"></i> Inventory Operators
                             </a>
                             <a href="{{ route('admin.low-stock-alerts.index') }}" class="{{ request()->routeIs('admin.low-stock-alerts.*') ? 'active' : '' }}">
                                 <i class="bi bi-exclamation-triangle-fill me-2"></i> Low Stock Alerts

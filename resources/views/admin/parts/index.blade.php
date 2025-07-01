@@ -77,8 +77,13 @@
         </table>
     </div>
 
-    <div class="mt-3">
-        {{ $parts->withQueryString()->links() }}
-    </div>
+    {{-- Pagination --}}
+    <div class="mt-3 d-flex justify-content-center">
+        <nav>
+            <ul class="pagination pagination-sm">
+                {{ $parts->onEachSide(1)->links('pagination::bootstrap-5') }}
+            </ul>
+        </nav>
+    </div>  
 </div>
 @endsection

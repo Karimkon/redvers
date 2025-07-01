@@ -3,12 +3,31 @@
 @section('title', 'Riders')
 
 @section('content')
-<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-2">
-    <h2 class="mb-0">All Riders</h2>
+<div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-3">
+    {{-- Search Form --}}
+    <form id="riderSearchForm" method="GET" class="d-flex align-items-center flex-grow-1">
+        <input type="text"
+               name="q"
+               value="{{ request('q') }}"
+               id="riderSearchInput"
+               class="form-control form-control-sm me-2"
+               placeholder="Search name, phone or email…"
+               autocomplete="off">
+
+        @if(request()->has('q') && request('q') !== '')
+            <a href="{{ route('admin.riders.index') }}" class="btn btn-sm btn-outline-secondary">
+                Clear
+            </a>
+        @endif
+    </form>
+
+    {{-- Add Rider Button --}}
     <a href="{{ route('admin.riders.create') }}" class="btn btn-primary">
         <i class="bi bi-plus-lg me-1"></i> Add Rider
     </a>
 </div>
+
+
 
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -74,3 +93,17 @@
     </nav>
 </div>
 @endsection
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const input = document.getElementById('riderSearchInput');
+    let debounce;
+    input.addEventListener('input', () => {
+        clearTimeout(debounce);
+        debounce = setTimeout(() => {
+            document.getElementById('riderSearchForm').submit();
+        }, 500);   // adjust delay to taste
+    });
+});
+</script>
+@endpush

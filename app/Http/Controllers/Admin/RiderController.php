@@ -9,9 +9,20 @@ use Illuminate\Support\Facades\Storage;
 
 class RiderController extends Controller
 {
-    public function index()
+    public function index(Request $request)           // ⬅ add Request
     {
-        $riders = User::where('role', 'rider')->paginate(10);
+        $riders = User::where('role', 'rider')
+            ->when($request->filled('q'), function ($q) use ($request) {
+                $search = $request->q;
+                $q->where(function ($qry) use ($search) {
+                    $qry->where('name',  'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
+            ->paginate(10)
+            ->withQueryString();   // keep ?q=… during pagination links
+
         return view('admin.riders.index', compact('riders'));
     }
 
