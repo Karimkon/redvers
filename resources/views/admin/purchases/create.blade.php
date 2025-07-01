@@ -40,17 +40,18 @@
     </div>
 
     {{-- Motorcycle Unit --}}
-    <div class="mb-3">
-        <label class="form-label">Motorcycle Number Plate</label>
-        <select name="motorcycle_unit_id" class="form-control" required>
-            <option value="">-- Select Unit --</option>
-            @foreach($availableUnits as $unit)
-                <option value="{{ $unit->id }}">
-                    {{ $unit->number_plate }} ({{ ucfirst($unit->motorcycle->type) }})
-                </option>
-            @endforeach
-        </select>
-    </div>
+<div class="mb-3">
+    <label class="form-label">Motorcycle Number Plate</label>
+    <select name="motorcycle_unit_id" class="form-control select2" required>  {{-- add select2 class here --}}
+        <option value="">-- Select Unit --</option>
+        @foreach($availableUnits as $unit)
+            <option value="{{ $unit->id }}">
+                {{ $unit->number_plate }} ({{ ucfirst($unit->motorcycle->type) }})
+            </option>
+        @endforeach
+    </select>
+</div>
+
 
 
         <div class="mb-3">

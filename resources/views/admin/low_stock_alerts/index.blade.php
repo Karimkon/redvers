@@ -69,10 +69,14 @@
         </div>
     </div>
 
-    {{-- 📄 Pagination --}}
-    <div class="mt-4">
-        {{ $alerts->links() }}
-    </div>
+     {{-- Pagination --}}
+            <div class="mt-3 d-flex justify-content-center">
+                <nav>
+                    <ul class="pagination pagination-sm">
+                        {{ $alerts->onEachSide(1)->links('pagination::bootstrap-5') }}
+                    </ul>
+                </nav>
+            </div>
 
 </div>
 @endsection

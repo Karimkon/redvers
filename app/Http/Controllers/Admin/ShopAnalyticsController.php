@@ -54,9 +54,12 @@ class ShopAnalyticsController extends Controller
 
 
         // ✅ Unresolved low stock alerts
-        $lowStockCount = LowStockAlert::where('shop_id', $shop->id)
-            ->where('resolved', false)
-            ->count();
+        $lowStockAlerts = LowStockAlert::with(['part:id,name,stock', 'shop:id,name'])
+        ->where('shop_id', $shop->id)
+        ->where('resolved', false)
+        ->get();
+
+        $lowStockCount = $lowStockAlerts->count();
 
         // ✅ Top 10 bestselling parts
         $topParts = Sale::whereHas('part', fn ($q) => $q->where('shop_id', $shop->id))
@@ -100,7 +103,7 @@ class ShopAnalyticsController extends Controller
 
         return view('admin.shops.analytics', compact(
             'shop', 'totalSales', 'totalReceived', 'lowStockCount', 'totalRevenue', 'totalProfit',
-            'from', 'to', 'labels', 'salesData', 'stockData',
+            'from', 'to', 'labels', 'salesData', 'stockData', 'lowStockAlerts',
             'topPartLabels', 'topPartCounts'
         ));
     }
