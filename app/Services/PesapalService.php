@@ -90,6 +90,25 @@ class PesapalService
         throw new \Exception('Failed to retrieve access token from Pesapal.');
     }
 
+    public function getPaymentStatus($orderTrackingId, $orderMerchantReference)
+{
+    $token = $this->getAccessToken();
+
+    $response = Http::withToken($token)->get(
+        config('pesapal.base_url') . '/api/Transactions/GetTransactionStatus',
+        [
+            'orderTrackingId' => $orderTrackingId,
+            'orderMerchantReference' => $orderMerchantReference,
+        ]
+    );
+
+    if ($response->successful()) {
+        return $response->json()['payment_status_description'] ?? 'unknown';
+    }
+
+    throw new \Exception('Unable to fetch payment status: ' . $response->body());
+}
+
 
 
 }

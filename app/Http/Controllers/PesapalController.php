@@ -240,7 +240,7 @@ class PesapalController extends Controller
             return abort(400, 'Missing session data');
         }
 
-        $status = app(PesapalService::class)->getPaymentStatus($data['reference']);
+        $status = app(PesapalService::class)->getPaymentStatus($data['tracking_id'], $data['reference']);
 
         if (strtolower($status) === 'completed') {
             MotorcyclePayment::create([

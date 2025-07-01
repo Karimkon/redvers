@@ -205,7 +205,6 @@
 
 
     @yield('content')
- <!-- 🔍 Server-side Lookup Modal (No JS) -->
 <!-- 🔍 Quick Lookup Modal -->
 <div class="modal fade" id="lookupModal" tabindex="-1" aria-labelledby="lookupModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-scrollable">

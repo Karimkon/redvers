@@ -95,50 +95,55 @@
 
     {{-- 📜 Payment History --}}
     @if($purchase->payments->count())
-    <div class="card mb-4 border-start border-primary border-3">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <i class="bi bi-list-ul me-2"></i> Payment History
-            <input type="text" class="form-control form-control-sm w-25" placeholder="Search..." onkeyup="filterPayments(this)">
-        </div>
-        <div class="card-body p-0">
-            <table class="table table-striped table-sm mb-0" id="paymentTable">
-                <thead class="table-light">
-                    <tr>
-                        <th>Date</th>
-                        <th>Amount</th>
-                        <th>Type</th>
-                        <th>Note</th>
-                        <th>Actions</th>
+<div class="card mb-4 border-start border-primary border-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <i class="bi bi-list-ul me-2"></i> Payment History
+        <input type="text" class="form-control form-control-sm w-25" placeholder="Search..." onkeyup="filterPayments(this)">
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-striped table-sm mb-0" id="paymentTable">
+            <thead class="table-light">
+                <tr>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Type</th>
+                    <th>Note</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($purchase->payments as $index => $payment)
+                    <tr class="{{ $index >= 5 ? 'd-none extra-payment' : '' }}">
+                        <td>{{ $payment->payment_date }}</td>
+                        <td>UGX {{ number_format($payment->amount) }}</td>
+                        <td>{{ ucfirst($payment->type) }}</td>
+                        <td>{{ $payment->note ?? '-' }}</td>
+                        <td class="text-end">
+                            <form action="{{ route('admin.motorcycle-payments.destroy', [$purchase->id, $payment->id]) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this payment?');">
+                                @csrf
+                                @method('DELETE')
+                                <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    @foreach($purchase->payments as $payment)
-                        <tr>
-                            <td>{{ $payment->payment_date }}</td>
-                            <td>UGX {{ number_format($payment->amount) }}</td>
-                            <td>{{ ucfirst($payment->type) }}</td>
-                            <td>{{ $payment->note ?? '-' }}</td>
-                            <td class="text-end">
-                                <form action="{{ route('admin.motorcycle-payments.destroy', [$purchase->id, $payment->id]) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this payment?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
-                                </form>
-                            </td>
-
-                        </tr>
-                    @endforeach
-                </tbody>
-                <tfoot>
-                    <tr class="table-light">
-                        <th colspan="3" class="text-end">Total Paid (Including Discounts):</th>
-                        <th>UGX {{ number_format($purchase->payments->sum('amount') + $purchase->discounts->sum('amount')) }}</th>
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
+                @endforeach
+            </tbody>
+            <tfoot>
+                <tr class="table-light">
+                    <th colspan="3" class="text-end">Total Paid (Including Discounts):</th>
+                    <th>UGX {{ number_format($purchase->payments->sum('amount') + $purchase->discounts->sum('amount')) }}</th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    @if($purchase->payments->count() > 5)
+    <div class="card-footer text-center">
+        <button class="btn btn-outline-primary btn-sm" onclick="togglePayments()">View More</button>
     </div>
     @endif
+</div>
+@endif
+
 
     {{-- 📅 Payment Schedule --}}
     <div class="card mb-4 border-start border-info border-3">
@@ -237,6 +242,13 @@
             );
             row.style.display = match ? "" : "none";
         });
+    }
+
+    function togglePayments() {
+        const extras = document.querySelectorAll('.extra-payment');
+        const btn = event.target;
+        extras.forEach(row => row.classList.toggle('d-none'));
+        btn.textContent = btn.textContent.includes('More') ? 'View Less' : 'View More';
     }
 </script>
 @endsection

@@ -118,15 +118,15 @@ public function create()
     }
 
 
-public function show(Purchase $purchase)
-{
-    $purchase->loadMissing(['discounts', 'payments', 'motorcycle']);
-    $schedule = $purchase->getPaymentScheduleSummary();
-    $totalDiscount = $purchase->discounts->sum('amount');
-    $trueAmountPaid = $purchase->payments->sum('amount');
+    public function show(Purchase $purchase)
+    {
+        $purchase->loadMissing(['discounts', 'payments', 'motorcycle', 'user']);
+        $schedule = $purchase->getPaymentScheduleSummary();
+        $totalDiscount = $purchase->discounts->sum('amount');
+        $trueAmountPaid = $purchase->payments->sum('amount');
 
-    return view('admin.purchases.show', compact('purchase', 'schedule', 'trueAmountPaid', 'totalDiscount'));
-}
+        return view('admin.purchases.show', compact('purchase', 'schedule', 'trueAmountPaid', 'totalDiscount'));
+    }
 
 
 

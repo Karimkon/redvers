@@ -34,7 +34,11 @@ class AgentMotorcycleDailyPaymentController extends Controller
     ]);
 
     $rider = User::findOrFail($request->rider_id);
-    $purchase = Purchase::findOrFail($request->purchase_id);
+    $purchase = Purchase::where('user_id', $rider->id)
+    ->where('status', 'active')
+    ->latest()
+    ->firstOrFail();
+
     $amount = $request->input('amount', 12000); // fallback if not set
     $reference = 'DAILY-PESAPAL-' . uniqid();
 

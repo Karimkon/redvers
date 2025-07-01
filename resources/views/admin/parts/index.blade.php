@@ -6,11 +6,23 @@
 <div class="container-fluid px-3 py-4">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="fw-bold mb-0 text-primary">All Spare Parts</h4>
-        <a href="{{ route('admin.parts.create') }}" class="btn btn-success">
-            <i class="bi bi-plus-circle me-1"></i> Add New Part
-        </a>
+    <h4 class="fw-bold mb-0 text-primary">All Spare Parts</h4>
+
+    {{-- right‑hand action buttons --}}
+    <div class="d-flex gap-2">
+        <!-- 🔍 Quick Lookup trigger -->
+            <button class="btn btn-outline-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#partLookupModal">
+                <i class="bi bi-search me-1"></i> Quick Lookup
+            </button>
+
+            <a href="{{ route('admin.parts.create') }}" class="btn btn-success">
+                <i class="bi bi-plus-circle me-1"></i> Add New Part
+            </a>
+        </div>
     </div>
+
 
     <form method="GET" class="row g-3 mb-4">
         <div class="col-md-4">

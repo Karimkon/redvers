@@ -85,7 +85,8 @@ class AgentSwapController extends Controller
             }
         }
 
-        $basePrice = (int) $request->base_price;
+        $basePrice = (int) $request->input('base_price');
+
         $missingPercentage = $isFirstTime ? 0 : 100 - $request->percentage_difference;
 
         $payableAmount = $activePromo
@@ -110,8 +111,6 @@ class AgentSwapController extends Controller
                     'pending_amount' => $payableAmount,
                 ]);
 
-                session()->save(); // ✅ Force session write
-
                 $response = Http::withToken($token)->post(config('pesapal.base_url') . '/api/Transactions/SubmitOrderRequest', [
                     "id" => Str::uuid()->toString(),
                     "currency" => "UGX",
@@ -133,6 +132,22 @@ class AgentSwapController extends Controller
                         "country_code" => "UG"
                     ]
                 ]);
+
+                    // ✅ NOW extract and save orderTrackingId from response
+                    $orderTrackingId = $response['order_tracking_id'] ?? null;
+
+                    if (!$orderTrackingId) {
+                        throw new \Exception('Missing orderTrackingId in Pesapal response.');
+                    }
+
+                    session([
+                        'pending_swap_data' => $request->all(),
+                        'pending_reference' => $reference,
+                        'pending_amount' => $payableAmount,
+                        'pending_tracking_id' => $orderTrackingId, // ✅ Save it here!
+                    ]);
+
+                    session()->save();
 
                 return redirect()->away($response['redirect_url']);
             } catch (\Exception $e) {

@@ -321,6 +321,28 @@ Route::get('/admin/api/rider-motorcycle/{rider}', function ($riderId) {
             ->get();
     })->name('api.batteries.by.station');
 
+    // 🔍 Parts quick‑lookup (admin)
+Route::get('/api/lookup', function (\Illuminate\Http\Request $request) {
+    $q = $request->get('q', '');
+
+    return \App\Models\Part::with('shop:id,name')           // eager‑load shop
+        ->where('name', 'like', "%{$q}%")
+        ->select('id', 'shop_id', 'name', 'stock', 'price') // include shop_id
+        ->limit(10)
+        ->get()
+        ->map(function ($p) {                               // flatten for JS ease
+            return [
+                'id'    => $p->id,
+                'name'  => $p->name,
+                'stock' => $p->stock,
+                'price' => $p->price,
+                'shop'  => $p->shop->name ?? '—',
+            ];
+        });
+})->name('api.lookup');
+
+
+
     Route::get('/chat', function () {
     $users = \App\Models\User::where('id', '!=', auth()->id())->get();
     return view('admin.chat.users', compact('users'));
