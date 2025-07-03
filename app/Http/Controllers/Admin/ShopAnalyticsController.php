@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Shop;
 use App\Models\Sale;
+use App\Models\Part;
 use App\Models\StockEntry;
 use App\Models\LowStockAlert;
 use Illuminate\Http\Request;
@@ -35,6 +36,28 @@ class ShopAnalyticsController extends Controller
         $totalReceived = StockEntry::whereHas('part', fn ($q) => $q->where('shop_id', $shop->id))
             ->whereBetween('received_at', [$from, $to])
             ->sum('quantity');
+
+         $investmentType = $request->input('investment_type', 'lifetime'); // default to lifetime
+
+    if ($investmentType === 'inventory') {
+        // current unsold inventory value
+        $totalInvested = Part::where('shop_id', $shop->id)
+            ->selectRaw('SUM(stock * cost_price) AS invested')
+            ->value('invested') ?? 0;
+    } else {
+        // lifetime = cost of sold items + cost of remaining stock
+        $soldCost = Sale::join('parts', 'parts.id', '=', 'sales.part_id')
+            ->where('parts.shop_id', $shop->id)
+            ->selectRaw('SUM(sales.quantity * parts.cost_price) AS sold_cost')
+            ->value('sold_cost') ?? 0;
+
+        $unsoldValue = Part::where('shop_id', $shop->id)
+            ->selectRaw('SUM(stock * cost_price) AS stock_value')
+            ->value('stock_value') ?? 0;
+
+        $totalInvested = $soldCost + $unsoldValue;
+    }
+
 
         // ✅ Total revenue
         $totalRevenue = Sale::whereHas('part', fn ($q) => $q->where('shop_id', $shop->id))
@@ -104,7 +127,7 @@ class ShopAnalyticsController extends Controller
         return view('admin.shops.analytics', compact(
             'shop', 'totalSales', 'totalReceived', 'lowStockCount', 'totalRevenue', 'totalProfit',
             'from', 'to', 'labels', 'salesData', 'stockData', 'lowStockAlerts',
-            'topPartLabels', 'topPartCounts'
+            'topPartLabels', 'topPartCounts', 'totalInvested', 'investmentType'
         ));
     }
 
@@ -113,15 +136,25 @@ class ShopAnalyticsController extends Controller
         $from = $request->input('from', now()->startOfMonth()->toDateString());
         $to   = $request->input('to', now()->endOfMonth()->toDateString());
 
+        // Paginated list of individual sales
         $sales = \App\Models\Sale::with('part')
             ->whereHas('part', fn ($q) => $q->where('shop_id', $shop->id))
             ->whereBetween('sold_at', [$from, $to])
             ->latest()
             ->paginate(20);
 
-        $totalProfit = $sales->sum(fn($sale) => $sale->profit);
+        $totalCost = Sale::whereHas('part', fn ($q) => $q->where('shop_id', $shop->id))
+            ->whereBetween('sold_at', [$from, $to])
+            ->selectRaw('SUM(cost_price * quantity) AS total_cost')
+            ->value('total_cost') ?? 0;
 
-        return view('admin.shops.profit-details', compact('sales', 'shop', 'from', 'to', 'totalProfit'));
+        // Accurate total profit for the whole period
+        $totalProfit = Sale::whereHas('part', fn ($q) => $q->where('shop_id', $shop->id))
+            ->whereBetween('sold_at', [$from, $to])
+            ->selectRaw('SUM((selling_price - cost_price) * quantity) AS total_profit')
+            ->value('total_profit') ?? 0;   // guard against null
+
+        return view('admin.shops.profit-details', compact('sales', 'shop', 'from', 'to', 'totalProfit', 'totalCost'));
     }
 
 }
