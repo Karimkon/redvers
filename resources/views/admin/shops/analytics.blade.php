@@ -170,6 +170,30 @@
                 </div>
             </div>
         </div>
+        <div class="col-xl-2 col-md-4 col-6">
+    <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="text-muted small">Expected Revenue</span>
+                    <h3 class="mt-2 mb-0 fw-bold">UGX {{ number_format($expectedRevenue) }}</h3>
+                </div>
+                <span class="badge bg-secondary bg-opacity-10 text-secondary p-2">
+                    <i class="bi bi-cash-coin fs-5"></i>
+                </span>
+            </div>
+            <div class="d-flex justify-content-between align-items-end mt-2">
+                <p class="small text-muted mb-0">If all stock is sold</p>
+                <a href="{{ route('admin.shops.expected.revenue', ['shop' => $shop->id]) }}"
+                class="btn btn-link btn-sm p-0 text-decoration-none">
+                    Details <i class="bi bi-arrow-right-short"></i>
+                </a>
+
+            </div>
+        </div>
+    </div>
+</div>
+
     </div>
 
     {{-- 📈 Charts Section --}}
@@ -183,8 +207,8 @@
                             <i class="bi bi-gear me-1"></i> Options
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="chartDropdown">
-                            <li><a class="dropdown-item" href="#">Export Data</a></li>
-                            <li><a class="dropdown-item" href="#">Print Chart</a></li>
+                            <li><a class="dropdown-item" href="#" id="exportData">Export Data</a></li>
+                            <li><a class="dropdown-item" href="#" id="printChart">Print Chart</a></li>
                         </ul>
                     </div>
                 </div>
@@ -409,5 +433,36 @@
             }
         }
     });
+
+    document.getElementById('exportData').addEventListener('click', function (e) {
+    e.preventDefault();
+    const url = "{{ route('admin.shops.analytics.exportSummary', [
+        'shop' => $shop->id,
+        'from' => $from,
+        'to'   => $to,
+        'investment_type' => request('investment_type', 'lifetime')
+    ]) }}";
+    window.location = url;          // triggers download of summary CSV
+});
+
+
+// ------- Print Chart --------
+document.getElementById('printChart').addEventListener('click', function (e) {
+    e.preventDefault();
+    const canvas = document.getElementById('combinedChart');
+    const dataUrl = canvas.toDataURL('image/png');
+
+    const win = window.open('', '_blank', 'width=900,height=600');
+    win.document.write(`
+        <html><head><title>Print Chart</title></head>
+        <body style="margin:0">
+            <img src="${dataUrl}" style="width:100%">
+            <script>
+                window.onload = function () { window.print(); window.onafterprint = window.close; }
+            <\/script>
+        </body></html>
+    `);
+    win.document.close();
+});
 </script>
 @endpush

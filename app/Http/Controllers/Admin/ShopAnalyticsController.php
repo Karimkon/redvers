@@ -10,6 +10,9 @@ use App\Models\StockEntry;
 use App\Models\LowStockAlert;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Support\Facades\DB;
+
 
 class ShopAnalyticsController extends Controller
 {
@@ -63,6 +66,11 @@ class ShopAnalyticsController extends Controller
         $totalRevenue = Sale::whereHas('part', fn ($q) => $q->where('shop_id', $shop->id))
             ->whereBetween('sold_at', [$from, $to])
             ->sum(\DB::raw('quantity * selling_price'));
+
+        // 💰 Expected revenue = stock still on shelf × current selling price
+        $expectedRevenue = Part::where('shop_id', $shop->id)
+            ->selectRaw('SUM(stock * price) AS expected')
+            ->value('expected') ?? 0;
 
         // ✅ Total Profit Calculation
         $sales = \App\Models\Sale::with('part')
@@ -127,7 +135,7 @@ class ShopAnalyticsController extends Controller
         return view('admin.shops.analytics', compact(
             'shop', 'totalSales', 'totalReceived', 'lowStockCount', 'totalRevenue', 'totalProfit',
             'from', 'to', 'labels', 'salesData', 'stockData', 'lowStockAlerts',
-            'topPartLabels', 'topPartCounts', 'totalInvested', 'investmentType'
+            'topPartLabels', 'topPartCounts', 'totalInvested', 'investmentType', 'expectedRevenue'
         ));
     }
 
@@ -156,5 +164,107 @@ class ShopAnalyticsController extends Controller
 
         return view('admin.shops.profit-details', compact('sales', 'shop', 'from', 'to', 'totalProfit', 'totalCost'));
     }
+
+    public function expectedRevenueDetails(Request $request, Shop $shop)
+    {
+        // List every part for this shop (paginated)
+        $parts = Part::where('shop_id', $shop->id)
+            ->select('*')
+            ->orderBy('name')
+            ->paginate(20);
+
+        // Sum of (stock × price)
+        $totalExpected = Part::where('shop_id', $shop->id)
+            ->selectRaw('SUM(stock * price) AS expected')
+            ->value('expected') ?? 0;
+
+        return view('admin.shops.expected-revenue', compact('shop', 'parts', 'totalExpected'));
+    }
+
+  public function exportSummaryCsv(Request $request, Shop $shop): StreamedResponse
+{
+    $from = $request->input('from', now()->startOfMonth()->toDateString());
+    $to   = $request->input('to', now()->endOfMonth()->toDateString());
+    $investmentType = $request->input('investment_type', 'lifetime');
+
+    // Gather all totals same as in your show() method
+
+    $totalSales = Sale::whereHas('part', fn ($q) => $q->where('shop_id', $shop->id))
+        ->whereBetween('sold_at', [$from, $to])
+        ->sum('quantity');
+
+    $totalReceived = StockEntry::whereHas('part', fn ($q) => $q->where('shop_id', $shop->id))
+        ->whereBetween('received_at', [$from, $to])
+        ->sum('quantity');
+
+    $lowStockCount = LowStockAlert::where('shop_id', $shop->id)
+        ->where('resolved', false)
+        ->count();
+
+    if ($investmentType === 'inventory') {
+        $totalInvested = Part::where('shop_id', $shop->id)
+            ->selectRaw('SUM(stock * cost_price) AS invested')
+            ->value('invested') ?? 0;
+    } else {
+        $soldCost = Sale::join('parts', 'parts.id', '=', 'sales.part_id')
+            ->where('parts.shop_id', $shop->id)
+            ->selectRaw('SUM(sales.quantity * parts.cost_price) AS sold_cost')
+            ->value('sold_cost') ?? 0;
+
+        $unsoldValue = Part::where('shop_id', $shop->id)
+            ->selectRaw('SUM(stock * cost_price) AS stock_value')
+            ->value('stock_value') ?? 0;
+
+        $totalInvested = $soldCost + $unsoldValue;
+    }
+
+    $totalRevenue = Sale::whereHas('part', fn ($q) => $q->where('shop_id', $shop->id))
+        ->whereBetween('sold_at', [$from, $to])
+        ->sum(DB::raw('quantity * selling_price'));
+
+    $expectedRevenue = Part::where('shop_id', $shop->id)
+        ->selectRaw('SUM(stock * price) AS expected')
+        ->value('expected') ?? 0;
+
+    $totalProfit = Sale::whereHas('part', fn ($q) => $q->where('shop_id', $shop->id))
+        ->whereBetween('sold_at', [$from, $to])
+        ->selectRaw('SUM((selling_price - cost_price) * quantity) AS total_profit')
+        ->value('total_profit') ?? 0;
+
+    $csvHeader = [
+        'Shop ID',
+        'Shop Name',
+        'From Date',
+        'To Date',
+        'Parts Sold',
+        'Parts Received',
+        'Low Stock Alerts',
+        'Investment (UGX)',
+        'Revenue (UGX)',
+        'Expected Revenue (UGX)',
+        'Profit (UGX)'
+    ];
+
+    $csvData = [
+        $shop->id,
+        $shop->name,
+        $from,
+        $to,
+        $totalSales,
+        $totalReceived,
+        $lowStockCount,
+        $totalInvested,
+        $totalRevenue,
+        $expectedRevenue,
+        $totalProfit,
+    ];
+
+    return response()->streamDownload(function () use ($csvHeader, $csvData) {
+        $out = fopen('php://output', 'w');
+        fputcsv($out, $csvHeader);
+        fputcsv($out, $csvData);
+        fclose($out);
+    }, "shop_summary_{$shop->id}_{$from}_to_{$to}.csv");
+}
 
 }

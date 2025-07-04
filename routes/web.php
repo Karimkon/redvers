@@ -193,7 +193,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('parts', AdminPartController::class)->names('parts');
     Route::get('/shops/{shop}/profit-details', [ShopAnalyticsController::class, 'profitDetails'])->name('shops.profit.details');
 
-
+    Route::get('/shops/{shop}/expected-revenue',[ShopAnalyticsController::class, 'expectedRevenueDetails'])->name('shops.expected.revenue');
+    // ── NEW: CSV export of chart data
+    Route::get('shops/{shop}/analytics/export-summary', [ShopAnalyticsController::class, 'exportSummaryCsv'])->name('shops.analytics.exportSummary');
 
     // Shop Specific
     Route::get('shops', [ShopAnalyticsController::class, 'index'])->name('shops.index');
