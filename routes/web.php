@@ -48,6 +48,7 @@ use App\Http\Controllers\Admin\ShopAnalyticsController;
 use \App\Http\Controllers\Admin\InventoryOperatorController;
 use \App\Http\Controllers\Admin\ShopController;
 use \App\Http\Controllers\Admin\AdminPartController;
+use \App\Http\Controllers\Admin\FinanceController;
 
 // Home
 Route::get('/', fn () => view('welcome'));
@@ -176,6 +177,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('swaps', SwapController::class);
     Route::resource('payments', PaymentController::class);
     Route::resource('motorcycle-units', MotorcycleUnitController::class);
+    Route::resource('finance', FinanceController::class);
+
 
     /** -----------------------------------
      * 🔹 Motorcycle Purchase System

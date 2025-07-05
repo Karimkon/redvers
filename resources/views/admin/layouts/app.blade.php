@@ -411,6 +411,9 @@
                             <a href="{{ route('admin.inventory.index') }}" class="{{ request()->routeIs('admin.inventory.*') ? 'active' : '' }}">
                                 <i class="bi bi-person-workspace me-2"></i> Inventory Operators
                             </a>
+                            <a href="{{ route('admin.finance.index') }}" class="{{ request()->routeIs('admin.finance.*') ? 'active' : '' }}">
+                                <i class="bi bi-cash-stack me-2"></i> Finance Staff
+                            </a>
                         </div>
                     </div>
                 </div>

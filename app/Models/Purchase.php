@@ -163,7 +163,7 @@ public function getPaymentScheduleSummary()
     public function determineStatusBasedOnMissedDays(): string
     {
         $missed = $this->getPaymentScheduleSummary()['missed_payments'] ?? 0;
-        return $missed >= 8 ? 'defaulted' : 'active';
+        return $missed >= 25 ? 'defaulted' : 'active';
     }
 
 

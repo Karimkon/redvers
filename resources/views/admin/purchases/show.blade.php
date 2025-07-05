@@ -47,7 +47,7 @@
 
             @if($purchase->user->profile_photo)
             <div class="text-end">
-                <img src="{{ asset('storage/' . $purchase->user->profile_photo) }}"
+                <img src="{{ asset($purchase->user->profile_photo) }}"
                      alt="Profile Photo"
                      class="rounded-circle shadow border border-primary"
                      style="width: 120px; height: 120px; object-fit: cover;">
