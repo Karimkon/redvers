@@ -98,6 +98,35 @@ class AgentSwapController extends Controller
             return $this->finalizeSwap($request, $battery, 0, null, 'completed');
         }
 
+        if ($request->payment_method === 'wallet') {
+            $rider = User::findOrFail($request->rider_id);
+            $wallet = $rider->wallet;
+
+            if (!$wallet || $wallet->balance < $payableAmount) {
+                return back()->withErrors(['payment_method' => 'Insufficient wallet balance'])->withInput();
+            }
+
+            DB::transaction(function() use ($wallet, $payableAmount, $request, $battery) {
+                // Deduct from wallet
+                $wallet->decrement('balance', $payableAmount);
+
+                // Log wallet transaction
+                WalletTransaction::create([
+                    'user_id' => $wallet->user_id,
+                    'amount' => $payableAmount,
+                    'type' => 'debit',
+                    'reason' => 'Battery swap payment',
+                    'description' => 'Payment for battery swap via wallet',
+                    'reference' => 'SWAP-WALLET-' . uniqid(),
+                ]);
+
+                // Finalize swap as completed
+                $this->finalizeSwap($request, $battery, $payableAmount, 'wallet', 'completed');
+            });
+
+            return redirect()->route('agent.swaps.index')->with('success', 'Swap created and paid from wallet.');
+        }
+
         // Store in session for delayed save
         if ($request->payment_method === 'pesapal') {
             try {

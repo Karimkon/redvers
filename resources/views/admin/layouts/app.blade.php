@@ -462,6 +462,30 @@
                     </div>
                 </div>
 
+                <!-- Wallet Module -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#walletModuleCollapse"
+                                aria-expanded="false" aria-controls="walletModuleCollapse">
+                            <i class="bi bi-wallet2 me-2"></i> Wallet Module
+                        </button>
+                    </h2>
+                    <div id="walletModuleCollapse"
+                        class="accordion-collapse collapse {{ request()->is('admin/wallets*') ? 'show' : '' }}">
+                        <div class="accordion-body">
+
+                            <!-- Wallet list (index) -->
+                            <a href="{{ route('admin.wallets.index') }}"
+                            class="{{ request()->routeIs('admin.wallets.index') ? 'active' : '' }}">
+                                <i class="bi bi-wallet me-2"></i> Wallets
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+
+
                 <!-- Inventory Module -->
                 <div class="accordion-item">
                     <h2 class="accordion-header">

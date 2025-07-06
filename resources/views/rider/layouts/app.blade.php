@@ -161,6 +161,12 @@
     <a href="{{ route('rider.payments.index') }}" class="{{ request()->routeIs('rider.payments.*') ? 'active' : '' }}" onclick="closeSidebar()">
         <i class="bi bi-cash-coin me-2"></i> My Payments
     </a>
+    <a href="{{ route('rider.wallet.index') }}" class="{{ request()->routeIs('rider.wallet.*') ? 'active' : '' }}" onclick="closeSidebar()">
+    <i class="bi bi-wallet2 me-2"></i> Wallet
+    </a>
+    <a href="{{ route('rider.wallet.topup.form') }}" class="{{ request()->routeIs('rider.wallet.topup.form') ? 'active' : '' }}" onclick="closeSidebar()">
+        <i class="bi bi-cash-stack me-2"></i> Top Up Wallet
+    </a>
     <a href="{{ route('rider.stations') }}" class="{{ request()->routeIs('rider.stations') ? 'active' : '' }}" onclick="closeSidebar()">
         <i class="bi bi-geo-alt-fill me-2"></i> Nearby Stations
     </a>

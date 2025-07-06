@@ -66,6 +66,16 @@ class User extends Authenticatable
     }
 
 
+    public function wallet()
+    { 
+        return $this->hasOne(Wallet::class); 
+    }
+    
+    public function walletLogs()
+    { 
+        return $this->hasMany(WalletTransaction::class); 
+    }
+
 
 }
 

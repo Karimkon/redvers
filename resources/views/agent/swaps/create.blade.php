@@ -108,6 +108,7 @@
             <label class="form-label">Payment Method</label>
             <select name="payment_method" class="form-select">
                 <option value="">None</option>
+                <option value="wallet">Wallet Balance</option>
                 <option value="mtn">MTN MoMo</option>
                 <option value="airtel">Airtel Money</option>
                 <option value="pesapal">Pesapal</option>

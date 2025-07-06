@@ -49,6 +49,8 @@ use \App\Http\Controllers\Admin\InventoryOperatorController;
 use \App\Http\Controllers\Admin\ShopController;
 use \App\Http\Controllers\Admin\AdminPartController;
 use \App\Http\Controllers\Admin\FinanceController;
+use \App\Http\Controllers\Admin\AdminWalletController;
+use \App\Http\Controllers\Rider\RiderWalletController;
 
 // Home
 Route::get('/', fn () => view('welcome'));
@@ -358,6 +360,16 @@ Route::get('/chat/{user}', [ChatController::class, 'index'])->name('chat.index')
 Route::post('/chat/send', [ChatController::class, 'store'])->name('chat.send');
 
 
+    /** -----------------------------------
+     * 🔹 Wallet Management Routes
+     * ---------------------------------- */
+    Route::prefix('wallets')->name('wallets.')->group(function () {
+    Route::get('/',               [AdminWalletController::class,'index'])->name('index');          // list wallets
+    Route::get('/{user}/top-up',  [AdminWalletController::class,'topUpForm'])->name('topup');      // show form
+    Route::post('/{user}/top-up', [AdminWalletController::class,'topUpStore'])->name('topup.store'); // process
+    Route::get('/{user}',         [AdminWalletController::class,'show'])->name('show');            // ledger
+});
+
 
 });
 
@@ -427,10 +439,18 @@ Route::middleware(['auth', 'role:rider'])->prefix('rider')->name('rider.')->grou
     Route::get('/chat', function () {
     $users = \App\Models\User::where('id', '!=', auth()->id())->get();
     return view('rider.chat.users', compact('users'));
-})->name('chat');
+    })->name('chat');
 
     Route::get('/chat/{user}', [ChatController::class, 'index'])->name('chat.index');
     Route::post('/chat/send', [ChatController::class, 'store'])->name('chat.send');
+
+    //Wallet
+    Route::prefix('wallet')->name('wallet.')->group(function () {
+        Route::get('/', [RiderWalletController::class, 'index'])->name('index'); // /rider/wallet
+        Route::get('/topup', [RiderWalletController::class, 'topUpForm'])->name('topup.form'); // /rider/wallet/topup
+        Route::post('/topup', [RiderWalletController::class, 'initiateTopUp'])->name('topup.initiate');
+        Route::get('/pesapal/callback', [RiderWalletController::class, 'pesapalCallback'])->name('pesapal.callback');
+    });
 
 });
 
