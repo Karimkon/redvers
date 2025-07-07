@@ -120,6 +120,7 @@ class RiderWalletController extends Controller
             'type'        => 'credit',
             'description' => strtoupper($method) . ' manual top‑up',
             'reference'   => $ref,
+            'reason'      => 'wallet_topup'
         ]);
     });
 
@@ -128,15 +129,21 @@ class RiderWalletController extends Controller
 }
 
 
-    public function pesapalCallback(Request $request)
+   public function pesapalCallback(Request $request)
 {
-    // use the SAME keys you stored
+    // Get session data
     $reference  = session('pending_wallet_topup_reference');
     $trackingId = session('pending_wallet_topup_tracking_id');
     $amount     = session('pending_wallet_topup_amount');
     $user       = Auth::user();
 
     if (!$reference || !$trackingId || !$amount) {
+        \Log::error('Missing payment session data', [
+            'reference' => $reference,
+            'trackingId' => $trackingId,
+            'amount' => $amount,
+            'user_id' => $user->id ?? 'not_logged_in'
+        ]);
         return to_route('rider.wallet.index')
                ->with('error', 'Missing payment session data.');
     }
@@ -149,11 +156,41 @@ class RiderWalletController extends Controller
             ['orderTrackingId' => $trackingId]
         );
 
-        if (strtolower($resp['payment_status_description'] ?? '') !== 'completed') {
-            return to_route('rider.wallet.index')
-                   ->with('error', 'Payment not completed.');
+        // Check if the API call was successful
+        if (!$resp->successful()) {
+            \Log::error('Pesapal API call failed', [
+                'status' => $resp->status(),
+                'body' => $resp->body(),
+                'tracking_id' => $trackingId
+            ]);
+            throw new \Exception('Failed to verify payment status');
         }
 
+        $data = $resp->json();
+        \Log::info('Pesapal status check response', $data);
+
+        // Check payment status - be more flexible with status checking
+        $paymentStatus = strtolower($data['payment_status_description'] ?? '');
+        
+        if ($paymentStatus !== 'completed') {
+            \Log::warning('Payment not completed', [
+                'status' => $paymentStatus,
+                'tracking_id' => $trackingId,
+                'reference' => $reference
+            ]);
+            return to_route('rider.wallet.index')
+                   ->with('error', 'Payment not completed. Status: ' . $paymentStatus);
+        }
+
+        // Check if this transaction was already processed
+        $existingTransaction = WalletTransaction::where('reference', $reference)->first();
+        if ($existingTransaction) {
+            \Log::info('Transaction already processed', ['reference' => $reference]);
+            return to_route('rider.wallet.index')
+                   ->with('success', 'Wallet already topped up.');
+        }
+
+        // Process the payment
         DB::transaction(function () use ($user, $amount, $reference) {
             $wallet = $user->wallet()->firstOrCreate([], ['balance' => 0]);
             $wallet->increment('balance', $amount);
@@ -164,23 +201,35 @@ class RiderWalletController extends Controller
                 'type'        => 'credit',
                 'description' => 'Pesapal wallet top‑up',
                 'reference'   => $reference,
+                'reason'      => 'wallet_topup',
             ]);
         });
 
-        // clear the session keys we just used
+        // Clear session data
         session()->forget([
             'pending_wallet_topup_reference',
             'pending_wallet_topup_tracking_id',
             'pending_wallet_topup_amount',
         ]);
 
+        \Log::info('Wallet topped up successfully', [
+            'user_id' => $user->id,
+            'amount' => $amount,
+            'reference' => $reference
+        ]);
+
         return to_route('rider.wallet.index')
-               ->with('success', 'Wallet topped up successfully.');
+               ->with('success', 'Wallet topped up successfully with UGX ' . number_format($amount));
 
     } catch (\Throwable $e) {
-        \Log::error('Pesapal callback error: '.$e->getMessage());
+        \Log::error('Pesapal callback error', [
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+            'tracking_id' => $trackingId,
+            'reference' => $reference
+        ]);
         return to_route('rider.wallet.index')
-               ->with('error', 'Payment verification failed.');
+               ->with('error', 'Payment verification failed: ' . $e->getMessage());
     }
 }
 

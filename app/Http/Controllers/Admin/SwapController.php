@@ -167,6 +167,55 @@ class SwapController extends Controller
             return redirect()->back()->withErrors(['error' => 'Swap failed: ' . $e->getMessage()]);
         }
     }
+    
+    public function edit($id)
+    {
+        $swap = Swap::with(['riderUser', 'station', 'agentUser', 'batteryIssued', 'returnedBattery'])->findOrFail($id);
+        $availableReturnedBatteries = \App\Models\Battery::whereIn('status', ['charging', 'in_stock'])->get();
+
+    
+        $riders = User::where('role', 'rider')
+            ->with(['purchases' => function ($query) {
+                $query->whereIn('status', ['active', 'completed'])->latest();
+            }, 'purchases.motorcycleUnit'])
+            ->orderBy('name')
+            ->get();
+    
+        $agents = User::where('role', 'agent')->orderBy('name')->get();
+        $stations = Station::all();
+    
+        return view('admin.swaps.edit', compact('swap', 'riders', 'agents', 'stations', 'availableReturnedBatteries'));
+    }
+
+    public function update(Request $request, $id)
+{
+    $request->validate([
+        'rider_id' => 'required|exists:users,id',
+        'motorcycle_unit_id' => 'required|exists:motorcycle_units,id',
+        'station_id' => 'required|exists:stations,id',
+        'battery_id' => 'required|exists:batteries,id',
+        'agent_id' => 'nullable|exists:users,id',
+        'percentage_difference' => 'required|numeric|min:0|max:100',
+        'payment_method' => 'nullable|in:mtn,airtel,pesapal',
+        'battery_returned_id' => 'nullable|exists:batteries,id',
+    ]);
+
+    $swap = Swap::findOrFail($id);
+    $swap->update([
+        'rider_id' => $request->rider_id,
+        'motorcycle_unit_id' => $request->motorcycle_unit_id,
+        'station_id' => $request->station_id,
+        'agent_id' => $request->agent_id,
+        'battery_id' => $request->battery_id,
+        'battery_returned_id' => $request->battery_returned_id,
+        'percentage_difference' => $request->percentage_difference,
+        'payable_amount' => $request->payable_amount,
+        'payment_method' => $request->payment_method,
+    ]);
+
+    return redirect()->route('admin.swaps.show', $swap->id)->with('success', 'Swap updated successfully.');
+}
+
 
     public function show($id)
     {

@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use App\Models\{Swap, Station, Payment, User, Battery, BatterySwap};
 use Illuminate\Support\Facades\Auth;
 use App\Models\SwapPromotion;
+use App\Models\WalletTransaction;
 
 class AgentSwapController extends Controller
 {
@@ -54,7 +55,7 @@ class AgentSwapController extends Controller
             'battery_id' => 'required|exists:batteries,id',
             'battery_returned_id' => 'nullable|exists:batteries,id',
             'percentage_difference' => 'required|numeric|min:0|max:100',
-            'payment_method' => 'nullable|in:mtn,airtel,pesapal',
+            'payment_method' => 'nullable|in:mtn,airtel,pesapal,wallet',
             'base_price' => 'required|in:15000,20000',
         ]);
 
