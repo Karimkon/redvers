@@ -22,12 +22,13 @@
                 <tbody>
                     @forelse($logs as $log)
                         <tr>
-                            <td>{{ $log->created_at->format('d-M-Y H:i') }}</td>
+                            <td>{{ $log->created_at->format('l, d-M-Y h:i A') }}</td>
                             <td>{{ ucfirst(str_replace('_',' ', $log->reason)) }}</td>
                             <td>{{ $log->reference ?? '—' }}</td>
-                            <td class="text-end {{ $log->amount < 0 ? 'text-danger' : 'text-success' }}">
-                                {{ $log->amount < 0 ? '-' : '+' }}{{ number_format(abs($log->amount)) }}
+                            <td class="text-end {{ $log->type === 'credit' ? 'text-success' : 'text-danger' }}">
+                                {{ $log->type === 'credit' ? '+' : '-' }}{{ number_format($log->amount, 0) }}
                             </td>
+
                         </tr>
                     @empty
                         <tr>

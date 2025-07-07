@@ -452,6 +452,9 @@ Route::middleware(['auth', 'role:rider'])->prefix('rider')->name('rider.')->grou
         Route::get('/pesapal/callback', [RiderWalletController::class, 'pesapalCallback'])->name('pesapal.callback');
     });
 
+    Route::get('/schedule', [\App\Http\Controllers\Rider\PaymentScheduleController::class, 'index'])->name('schedule');
+
+
 });
 
 

@@ -23,12 +23,11 @@
             <div class="fs-3 fw-bold">{{ $totalSwaps }}</div>
             <div class="small"><i class="bi bi-arrow-repeat me-1"></i>Total Swaps</div>
         </div>
-        <div class="bg-success text-white p-3 rounded text-center flex-fill shadow-sm" style="min-width: 120px;">
+        <!-- <div class="bg-success text-white p-3 rounded text-center flex-fill shadow-sm" style="min-width: 120px;">
             <div class="fs-3 fw-bold">UGX {{ number_format($totalRevenue) }}</div>
             <div class="small"><i class="bi bi-cash-stack me-1"></i>Total Paid</div>
-        </div>
+        </div> -->
     </div>
-
     <!-- Current Battery Info -->
     <div class="alert alert-info text-center fw-bold">
          Current Battery:
@@ -39,6 +38,31 @@
     @endif
     </div>
 
+    
+    @if($scheduleSummary)
+<div class="card shadow-sm mb-4 border-start border-warning border-4">
+    <div class="card-body">
+        <h5 class="mb-3"><i class="bi bi-calendar-x me-2 text-warning"></i> Payment Summary</h5>
+        <p><strong>Expected Payments:</strong> {{ $scheduleSummary['expected_days'] }}</p>
+        <p><strong>Paid:</strong> {{ $scheduleSummary['actual_payments'] }}</p>
+        <p>
+            <strong>Missed:</strong>
+            <span class="badge bg-{{ $scheduleSummary['missed_payments'] > 0 ? 'danger' : 'success' }}">
+                {{ $scheduleSummary['missed_payments'] }}
+            </span>
+        </p>
+        <p>
+            <strong>Next Due:</strong>
+            <span class="badge bg-info text-dark">
+                {{ \Carbon\Carbon::parse($scheduleSummary['next_due_date'])->translatedFormat('l, M jS') }}
+            </span>
+        </p>
+        <a href="{{ route('rider.schedule') }}" class="btn btn-sm btn-outline-primary mt-2">
+            <i class="bi bi-list-check me-1"></i> View Full Schedule
+        </a>
+    </div>
+</div>
+@endif
 
     <!-- Chart -->
     <div class="bg-white rounded shadow p-4">

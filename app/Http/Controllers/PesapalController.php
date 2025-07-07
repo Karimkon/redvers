@@ -12,7 +12,6 @@ use App\Models\Battery;
 use App\Models\Swap;
 use App\Models\BatterySwap;
 use App\Http\Controllers\Agent\AgentSwapController;
-use Carbon\Carbon;
 
 class PesapalController extends Controller
 {
@@ -37,7 +36,7 @@ class PesapalController extends Controller
         }
     }
 
-    /**
+    /**handlePromotionCallback
      * Step 5: Handle the callback after payment
      */
 
@@ -71,7 +70,6 @@ class PesapalController extends Controller
             return redirect()->route('agent.swaps.index')->with('error', 'Payment confirmed but swap could not be finalized.');
         }
     }
-
 
 
 
@@ -129,139 +127,106 @@ class PesapalController extends Controller
     }
 
     public function handlePromotionCallback(Request $request)
-    {
-        \Log::info('🎯 Promotion callback started', [
-            'promo_id' => session('pending_promo_id'),
-            'reference' => session('pending_promo_reference'),
-            'timezone' => config('app.timezone'),
-            'current_time' => now()->toDateTimeString(),
-        ]);
+{
+    $promoId = session('pending_promo_id');
+    $reference = session('pending_promo_reference');
 
-        try {
-            $promoId = session('pending_promo_id');
-            $reference = session('pending_promo_reference');
-
-            if (!$promoId || !$reference) {
-                \Log::warning('❌ Missing promo session data');
-                return redirect()->route('agent.promotions.index')->with('error', 'Missing promo session.');
-            }
-
-            $promotion = \App\Models\SwapPromotion::with('rider')->findOrFail($promoId);
-
-            // ✅ FIX 1: Use Carbon with proper timezone for promotion times
-            $kampalaTime = Carbon::now('Africa/Kampala');
-            $startsAt = $kampalaTime->copy();
-            $endsAt = $kampalaTime->copy()->addDay(); // exactly 24 hours from now
-
-            \Log::info('🕐 Promotion timing', [
-                'kampala_time' => $kampalaTime->toDateTimeString(),
-                'starts_at' => $startsAt->toDateTimeString(),
-                'ends_at' => $endsAt->toDateTimeString(),
-            ]);
-
-            // Update promo status with correct timezone
-            $promotion->update([
-                'status' => 'active',
-                'starts_at' => $startsAt,
-                'ends_at' => $endsAt,
-            ]);
-
-            \Log::info('✅ Promotion updated successfully', [
-                'promotion_id' => $promotion->id,
-                'rider_id' => $promotion->rider_id,
-                'new_status' => $promotion->status,
-            ]);
-
-            // ✅ FIX 2: Create motorcycle payment for the promotion
-            $purchase = \App\Models\Purchase::where('user_id', $promotion->rider_id)
-                ->where('status', 'active')
-                ->latest()
-                ->first();
-
-            if ($purchase) {
-                \Log::info('🏍️ Found active purchase for rider', [
-                    'purchase_id' => $purchase->id,
-                    'rider_id' => $promotion->rider_id,
-                ]);
-
-                // Check if payment already exists for today
-                $todayDate = $kampalaTime->toDateString();
-                $alreadyPaid = MotorcyclePayment::where('user_id', $promotion->rider_id)
-                    ->where('payment_date', $todayDate)
-                    ->exists();
-
-                if (!$alreadyPaid) {
-                    // Create the motorcycle payment record
-                    $motorcyclePayment = MotorcyclePayment::create([
-                        'purchase_id' => $purchase->id,
-                        'user_id' => $promotion->rider_id, // ✅ Make sure this field exists
-                        'payment_date' => $todayDate, // ✅ Use payment_date not date
-                        'amount' => 12000,
-                        'type' => 'daily', // ✅ Add type field
-                        'method' => 'promo',
-                        'reference' => $reference,
-                        'status' => 'paid',
-                        'note' => 'Auto-paid via promotion activation',
-                    ]);
-
-                    \Log::info('✅ Motorcycle payment created', [
-                        'payment_id' => $motorcyclePayment->id,
-                        'amount' => 12000,
-                        'date' => $todayDate,
-                        'rider_id' => $promotion->rider_id,
-                    ]);
-                } else {
-                    \Log::info("🟡 Rider {$promotion->rider_id} already paid UGX 12,000 today. Skipping duplicate payment.");
-                }
-            } else {
-                \Log::warning('❌ No active purchase found for rider', [
-                    'rider_id' => $promotion->rider_id,
-                ]);
-            }
-
-            // Clear session data
-            session()->forget(['pending_promo_id', 'pending_promo_reference']);
-
-            return redirect()->route('agent.promotions.index')->with('success', 'Promotion activated successfully! Daily fee of UGX 12,000 has been recorded.');
-
-        } catch (\Exception $e) {
-            \Log::error('❌ Promo Callback Error: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-            ]);
-            return redirect()->route('agent.promotions.index')->with('error', 'Something went wrong: ' . $e->getMessage());
-        }
+    if (!$promoId || !$reference) {
+        return redirect()->route('agent.promotions.index')->with('error', 'Missing promo session.');
     }
 
+    try {
+        $promotion = \App\Models\SwapPromotion::with('rider')->findOrFail($promoId);
+
+        // Activate promotion for 24 hours
+        $now = now('Africa/Kampala');
+        $promotion->update([
+            'status' => 'active',
+            'starts_at' => $now,
+            'ends_at' => $now->copy()->addDay(),
+            'payment_reference' => $reference,
+        ]);
+
+        // Record 12k motorcycle payment if not already paid today
+        $purchase = \App\Models\Purchase::where('user_id', $promotion->rider_id)
+            ->where('status', 'active')->first();
+
+        if ($purchase) {
+            $today = $now->toDateString();
+            $alreadyPaid = \App\Models\MotorcyclePayment::where('purchase_id', $purchase->id)
+                ->where('payment_date', $today)->exists();
+
+            if (!$alreadyPaid) {
+                \App\Models\MotorcyclePayment::create([
+                    'purchase_id' => $purchase->id,
+                    'user_id' => $purchase->user_id,
+                    'payment_date' => $today,
+                    'amount' => 12000,
+                    'type' => 'daily',
+                    'method' => 'promo',
+                    'reference' => $reference,
+                    'note' => 'Auto-paid via promotion activation',
+                    'status' => 'paid'
+                ]);
+
+                $purchase->increment('amount_paid', 12000);
+                $purchase->decrement('remaining_balance', 12000);
+            }
+        }
+
+        session()->forget(['pending_promo_id', 'pending_promo_reference']);
+
+        return redirect()->route('agent.promotions.index')->with('success', 'Promotion activated and daily fee paid.');
+    } catch (\Exception $e) {
+        \Log::error('Promotion Callback Error: ' . $e->getMessage());
+        return redirect()->route('agent.promotions.index')->with('error', 'Promotion activation failed.');
+    }
+}
+
+    
     public function handleDailyPaymentCallback(Request $request)
     {
         $data = session('pending_daily_payment');
-
+    
         if (!$data) {
-            return abort(400, 'Missing session data');
+            return redirect()->route('agent.dashboard')->with('error', 'Missing payment session data.');
         }
+    
+        try {
+            // Confirm payment completed
+            $token = app(PesapalService::class)->getAccessToken();
+            $response = Http::withToken($token)->get(
+                config('pesapal.base_url') . '/api/Transactions/GetTransactionStatus',
+                ['orderTrackingId' => $request->get('order_tracking_id')]
+            );
+    
+            if (!$response->successful() || strtolower($response['payment_status_description']) !== 'completed') {
+                return redirect()->route('agent.dashboard')->with('error', 'Payment not completed.');
+            }
+    $purchase = \App\Models\Purchase::findOrFail($data['purchase_id']);
 
-        $status = app(PesapalService::class)->getPaymentStatus($data['tracking_id'], $data['reference']);
-
-        if (strtolower($status) === 'completed') {
-            MotorcyclePayment::create([
+            // Record motorcycle payment
+            \App\Models\MotorcyclePayment::create([
                 'purchase_id' => $data['purchase_id'],
-                'user_id' => $data['rider_id'],
-                'payment_date' => now()->toDateString(),
-                'amount' => $data['amount'], // ✅ Save exact amount chosen
-                'method' => 'pesapal',
+                'user_id' => $purchase->user_id,
+                'payment_date' => now('Africa/Kampala')->toDateString(),
+                'amount' => $data['amount'],
                 'type' => 'daily',
-                'note' => 'Agent Initiated',
+                'method' => 'pesapal',
                 'reference' => $data['reference'],
-                'status' => 'paid',
+                'note' => 'Agent initiated daily payment',
+                'status' => 'paid'
             ]);
-
+    
             session()->forget('pending_daily_payment');
-
-            return redirect()->route('agent.dashboard')->with('success', 'Daily payment of UGX ' . number_format($data['amount']) . ' recorded successfully.');
+    
+            return redirect()->route('agent.dashboard')->with('success', 'Daily payment recorded successfully.');
+        } catch (\Exception $e) {
+            \Log::error('Daily Payment Callback Error: ' . $e->getMessage());
+            return redirect()->route('agent.dashboard')->with('error', 'Daily payment processing failed.');
         }
-
-        return redirect()->route('agent.dashboard')->with('error', 'Payment not completed.');
     }
+
 
 
 

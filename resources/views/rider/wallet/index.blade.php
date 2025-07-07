@@ -52,7 +52,7 @@
                 <tbody>
                     @foreach($transactions as $txn)
                         <tr>
-                            <td>{{ $txn->created_at->format('Y-m-d H:i') }}</td>
+                            <td>{{ $txn->created_at->format('l, d-M-Y h:i A') }}</td>
                             <td class="text-end fw-semibold {{ $txn->type === 'credit' ? 'text-success' : 'text-danger' }}">
                                 {{ $txn->type === 'credit' ? '+' : '-' }}UGX {{ number_format($txn->amount, 0) }}
                             </td>

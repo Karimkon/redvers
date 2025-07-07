@@ -19,30 +19,38 @@ class MotorcyclePaymentController extends Controller
             'note' => 'nullable|string|max:255',
         ]);
 
+        // ✅ SAFETY CHECK: ensure purchase has a user linked
+        if (!$purchase->user_id) {
+            return back()->with('error', 'Cannot record payment: the selected purchase has no rider assigned. Please check the purchase details.');
+        }
+
         // Store payment
         MotorcyclePayment::create([
             'purchase_id' => $purchase->id,
+            'user_id' => $purchase->user_id, // ✅ direct link to the rider
             'payment_date' => $request->payment_date,
             'amount' => $request->amount,
             'type' => $request->type,
             'note' => $request->note,
+            'status' => 'paid', // ✅ set status
         ]);
 
         // Update purchase record
         $purchase->amount_paid += $request->amount;
         $purchase->remaining_balance -= $request->amount;
-        
+
         if ($purchase->remaining_balance <= 0) {
             $purchase->remaining_balance = 0;
             $purchase->status = 'cleared';
         } else {
-           $purchase->status = $purchase->determineStatusBasedOnMissedDays();
+            $purchase->status = $purchase->determineStatusBasedOnMissedDays();
         }
 
         $purchase->save();
 
         return back()->with('success', 'Payment recorded successfully.');
     }
+
 
     public function destroy(Purchase $purchase, MotorcyclePayment $payment)
     {

@@ -39,6 +39,7 @@
                         data-bike-plate="{{ optional($rider->purchases->first())->motorcycleUnit->number_plate ?? '' }}"
                         data-battery-id="{{ optional(\App\Models\Battery::where('current_rider_id', $rider->id)->where('status', 'in_use')->first())->id ?? '' }}"
                         data-battery-serial="{{ optional(\App\Models\Battery::where('current_rider_id', $rider->id)->where('status', 'in_use')->first())->serial_number ?? '' }}"
+                        data-wallet="{{ $rider->wallet ? number_format($rider->wallet->balance) : 0 }}"
                     >
                         {{ $rider->name }} ({{ $rider->phone }})
                     </option>
@@ -115,6 +116,12 @@
             </select>
         </div>
 
+        <div class="mb-4">
+            <label class="form-label">Rider Wallet Balance</label>
+            <input type="text" id="walletBalanceDisplay" class="form-control" value="Select rider to view" readonly>
+        </div>
+
+
         {{-- 🎯 Actions --}}
         <div class="d-flex justify-content-start gap-2">
             <button type="submit" class="btn btn-success">
@@ -137,6 +144,7 @@
         const batteryReturnedSelect = $('#batteryReturnedSelect');
         const motorcycleDisplay = $('#motorcycleDisplay');
         const motorcycleUnitId = $('#motorcycleUnitId');
+        const walletBalanceDisplay = $('#walletBalanceDisplay');
 
         // Select2 Init
         $('.select2').select2({
@@ -184,6 +192,10 @@
             } else {
                 batteryReturnedSelect.html('<option value="">No battery found</option>');
             }
+
+            // ✅ Display wallet balance
+            const wallet = selected.getAttribute('data-wallet');
+            walletBalanceDisplay.val(wallet ? `UGX ${wallet}` : 'UGX 0');
         });
     });
 </script>

@@ -42,10 +42,11 @@ class RiderDashboardController extends Controller
 
     $purchase = $rider->purchases()->latest()->first();
     $remainingBalance = $purchase ? $purchase->remaining_balance : 0;
+    $scheduleSummary = $purchase ? $purchase->getPaymentScheduleSummary() : null;
 
     return view('rider.dashboard', compact(
         'rider', 'swaps', 'recentSwaps', 'totalSwaps', 'totalRevenue',
-        'currentBattery', 'swapStats', 'remainingBalance'
+        'currentBattery', 'swapStats', 'remainingBalance', 'scheduleSummary'
     ));
 }
 }
