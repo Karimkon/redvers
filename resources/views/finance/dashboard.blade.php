@@ -36,6 +36,20 @@
         Total Revenue: UGX {{ number_format($totalRevenue) }}
     </div>
 
+    {{-- Compact Total Due Amount Box --}}
+    <div class="col-md-6 mb-4 mx-auto">
+        <div class="card border-start border-danger border-4 shadow-sm">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center gap-3 mb-2">
+                    <i class="bi bi-exclamation-circle-fill text-danger fs-3"></i>
+                    <h5 class="mb-0 text-danger fw-semibold">Total Motorcycle Due from All Riders</h5>
+                </div>
+                <h4 class="fw-bold text-dark">UGX {{ number_format($totalDue) }}</h4>
+            </div>
+        </div>
+    </div>
+
+
     {{-- Revenue Charts --}}
     <div class="row mb-4">
         <div class="col-md-6">

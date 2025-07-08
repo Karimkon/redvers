@@ -40,8 +40,13 @@
         💰 Total Revenue: UGX {{ number_format($totalRevenue) }}
     </div>
     <div class="dashboard-breakdown alert alert-glass-info text-center animate__animated animate__fadeInUp animate__delay-2s">
-        Breakdown: UGX {{ number_format($totalPayments) }} from swaps + UGX {{ number_format($totalPromotions) }} from promotions
-    </div>
+    Breakdown:
+    <span class="fw-bold text-success">UGX {{ number_format($totalPayments) }}</span> from swaps +
+    <span class="fw-bold text-primary">UGX {{ number_format($totalPromotions) }}</span> from promotions +
+    <span class="fw-bold" style="color: #ffba08; text-shadow: 1px 1px 2px #000;">UGX {{ number_format($totalMotorcyclePayments) }}</span> from motorcycle payments
+
+</div>
+
 
     {{-- Quick Stats --}}
     <div class="row justify-content-center mb-4 animate__animated animate__fadeInUp animate__delay-3s">
@@ -86,6 +91,19 @@
     </div>
 </div>
 @endforeach
+{{-- Compact Total Due Amount Box --}}
+<div class="col-md-6 mb-4 mx-auto">
+    <div class="card border-start border-danger border-4 shadow-sm">
+        <div class="card-body text-center">
+            <div class="d-flex align-items-center justify-content-center gap-3 mb-2">
+                <i class="bi bi-exclamation-circle-fill text-danger fs-3"></i>
+                <h5 class="mb-0 text-danger fw-semibold">Total Motorcycle Due from All Riders</h5>
+            </div>
+            <h4 class="fw-bold text-dark">UGX {{ number_format($totalDue) }}</h4>
+        </div>
+    </div>
+</div>
+
 
     </div>
 

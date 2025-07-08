@@ -376,15 +376,6 @@
                 <i class="bi bi-speedometer2 me-2"></i> Dashboard
             </a>
 
-            <!-- Swaps (standalone) -->
-            <a href="{{ route('admin.swaps.index') }}" class="{{ request()->routeIs('admin.swaps.*') ? 'active' : '' }}">
-                <i class="bi bi-battery-charging me-2"></i> Swaps
-            </a>
-
-            <!-- Payments (standalone) -->
-            <a href="{{ route('admin.payments.index') }}" class="{{ request()->routeIs('admin.payments.*') ? 'active' : '' }}">
-                <i class="bi bi-credit-card me-2"></i> Swap Payments
-            </a>
 
             <!-- Stations (standalone) -->
             <a href="{{ route('admin.stations.index') }}" class="{{ request()->routeIs('admin.stations.*') ? 'active' : '' }}">
@@ -393,6 +384,32 @@
 
             <!-- Accordion Groups -->
             <div class="accordion" id="adminModules">
+
+            <!-- Battery Swaps Group -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#batterySwapsCollapse"
+                            aria-expanded="false" aria-controls="batterySwapsCollapse">
+                        <i class="bi bi-battery-charging me-2"></i> Battery Swaps
+                    </button>
+                </h2>
+                <div id="batterySwapsCollapse"
+                    class="accordion-collapse collapse {{ request()->is('admin/swaps*') || request()->is('admin/payments*') || request()->is('admin/promotions*') ? 'show' : '' }}">
+                    <div class="accordion-body">
+                        <a href="{{ route('admin.swaps.index') }}" class="{{ request()->routeIs('admin.swaps.*') ? 'active' : '' }}">
+                            <i class="bi bi-battery me-2"></i> All Swaps
+                        </a>
+                        <a href="{{ route('admin.payments.index') }}" class="{{ request()->routeIs('admin.payments.*') ? 'active' : '' }}">
+                            <i class="bi bi-credit-card me-2"></i> Swap Payments
+                        </a>
+                        <a href="{{ route('admin.promotions.index') }}" class="{{ request()->routeIs('admin.promotions.*') ? 'active' : '' }}">
+                            <i class="bi bi-stars me-2"></i> Swap Promotions
+                        </a>
+                    </div>
+                </div>
+            </div>
+
                 <!-- User Administration -->
                 <div class="accordion-item">
                     <h2 class="accordion-header">

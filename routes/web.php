@@ -51,6 +51,7 @@ use \App\Http\Controllers\Admin\AdminPartController;
 use \App\Http\Controllers\Admin\FinanceController;
 use \App\Http\Controllers\Admin\AdminWalletController;
 use \App\Http\Controllers\Rider\RiderWalletController;
+use \App\Http\Controllers\Admin\AdminSwapPromotionsController;
 
 // Home
 Route::get('/', fn () => view('welcome'));
@@ -179,8 +180,14 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('swaps', SwapController::class);
     Route::resource('payments', PaymentController::class);
     Route::resource('motorcycle-units', MotorcycleUnitController::class);
-    Route::resource('finance', FinanceController::class);
+    Route::resource('finance', FinanceController::class);   
 
+    /**Swap Promotion Admin */
+    Route::get('/promotions/payment', [AdminSwapPromotionsController::class, 'redirectToPayment'])
+        ->name('promotions.pesapal');
+    Route::post('/promotions/pay/pesapal', [AdminSwapPromotionsController::class, 'payViaPesapal'])
+        ->name('promotions.pay.pesapal');
+    Route::resource('promotions', AdminSwapPromotionsController::class); 
 
     /** -----------------------------------
      * 🔹 Motorcycle Purchase System

@@ -9,6 +9,7 @@ use App\Models\Station;
 use App\Models\Swap;
 use App\Models\Payment;
 use App\Models\Battery;
+use App\Models\Purchase;
 
 class FinanceDashboardController extends Controller
 {
@@ -98,9 +99,16 @@ class FinanceDashboardController extends Controller
 
         $topStation = collect($revenueByStation)->sortDesc()->keys()->first();
 
+        $allPurchases = Purchase::with(['payments', 'discounts', 'motorcycle'])->where('status', 'active')->get();
+
+        $totalDue = $allPurchases->sum(function ($purchase) {
+            return $purchase->getAdjustedOverdueSummary()['due_amount'] ?? 0;
+        });
+
+
         return view('finance.dashboard', compact(
             'swapStats', 'paymentStats', 'revenueByStation', 'weeklyAverages',
-            'topStation', 'totalRevenue', 'paymentsCount', 'startDate', 'endDate', 'period'
+            'topStation', 'totalRevenue', 'paymentsCount', 'startDate', 'endDate', 'period', 'totalDue'
         ));
     }
 }
