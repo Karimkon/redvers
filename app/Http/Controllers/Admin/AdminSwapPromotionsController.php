@@ -28,14 +28,21 @@ class AdminSwapPromotionsController extends Controller
 
         // ✅ Only auto-expire, not auto-activate
         $promotions->getCollection()->transform(function ($promo) {
-            if ($promo->status === 'active' && now()->gt($promo->ends_at)) {
-                $promo->status = 'expired';
-                $promo->save(); // Persist the expiry
-            }
+        $now = now('Africa/Kampala');
 
-            // ❌ DO NOT auto-activate fbased on time alone
-            return $promo;
-        });
+        if ($promo->status !== 'expired') {
+            if ($now->gt($promo->ends_at)) {
+                $promo->status = 'expired';
+            } elseif ($now->between($promo->starts_at, $promo->ends_at)) {
+                $promo->status = 'active';
+            } else {
+                $promo->status = 'pending';
+            }
+        }
+
+        return $promo;
+    });
+
 
         return view('admin.promotions.index', compact('promotions'));
     }

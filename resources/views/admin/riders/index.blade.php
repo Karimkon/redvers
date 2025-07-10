@@ -3,30 +3,33 @@
 @section('title', 'Riders')
 
 @section('content')
-<div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-3">
-    {{-- Search Form --}}
-    <form id="riderSearchForm" method="GET" class="d-flex align-items-center flex-grow-1">
-        <input type="text"
-               name="q"
-               value="{{ request('q') }}"
-               id="riderSearchInput"
-               class="form-control form-control-sm me-2"
-               placeholder="Search name, phone or email…"
-               autocomplete="off">
+<div class="row g-2 align-items-center mb-3">
+    <!-- Search Form (full width on mobile) -->
+    <div class="col-12 col-md-8">
+        <form id="riderSearchForm" method="GET" class="d-flex flex-column flex-md-row gap-2">
+            <input type="text"
+                   name="q"
+                   value="{{ request('q') }}"
+                   id="riderSearchInput"
+                   class="form-control form-control-sm"
+                   placeholder="Search name, phone or email…"
+                   autocomplete="off">
 
-        @if(request()->has('q') && request('q') !== '')
-            <a href="{{ route('admin.riders.index') }}" class="btn btn-sm btn-outline-secondary">
-                Clear
-            </a>
-        @endif
-    </form>
+            @if(request()->has('q') && request('q') !== '')
+                <a href="{{ route('admin.riders.index') }}" class="btn btn-sm btn-outline-secondary">
+                    Clear
+                </a>
+            @endif
+        </form>
+    </div>
 
-    {{-- Add Rider Button --}}
-    <a href="{{ route('admin.riders.create') }}" class="btn btn-primary">
-        <i class="bi bi-plus-lg me-1"></i> Add Rider
-    </a>
+    <!-- Add Rider Button -->
+    <div class="col-12 col-md-4 text-md-end">
+        <a href="{{ route('admin.riders.create') }}" class="btn btn-primary w-100 w-md-auto">
+            <i class="bi bi-plus-lg me-1"></i> Add Rider
+        </a>
+    </div>
 </div>
-
 
 
 @if(session('success'))

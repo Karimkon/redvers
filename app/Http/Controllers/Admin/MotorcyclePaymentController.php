@@ -24,6 +24,17 @@ class MotorcyclePaymentController extends Controller
             return back()->with('error', 'Cannot record payment: the selected purchase has no rider assigned. Please check the purchase details.');
         }
 
+        // ✅ DUPLICATE PREVENTION LOGIC
+        $alreadyPaid = MotorcyclePayment::where('purchase_id', $purchase->id)
+            ->whereDate('payment_date', Carbon::parse($request->payment_date)->toDateString())
+            ->where('type', $request->type)
+            ->where('amount', $request->amount)
+            ->exists();
+
+        if ($alreadyPaid) {
+            return back()->with('error', 'A payment with the same date and amount already exists for this rider.');
+        }
+
         // Store payment
         MotorcyclePayment::create([
             'purchase_id' => $purchase->id,

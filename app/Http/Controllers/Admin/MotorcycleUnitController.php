@@ -52,6 +52,11 @@ class MotorcycleUnitController extends Controller
     {
         $motorcycles = Motorcycle::all();
         return view('admin.motorcycle-units.edit', compact('motorcycleUnit', 'motorcycles'));
+
+        // Load any existing purchase
+    $existingPurchase = Purchase::where('motorcycle_unit_id', $motorcycleUnit->id)
+        ->where('status', 'active')
+        ->first();
     }
 
     public function update(Request $request, MotorcycleUnit $motorcycleUnit)

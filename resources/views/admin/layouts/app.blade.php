@@ -46,9 +46,10 @@
     }
 
     .sidebar-content {
-        flex: 1;
-        overflow-y: auto;
-    }
+    flex: 1;
+    overflow-y: auto;
+}
+
 
     .sidebar-footer {
         margin-top: auto;
@@ -324,6 +325,7 @@
         .content {
             margin-left: 0 !important;
             padding: 1rem;
+            margin-top: 90px !important;
         }
 
         .mobile-header {
@@ -385,6 +387,32 @@
             <!-- Accordion Groups -->
             <div class="accordion" id="adminModules">
 
+             <!-- User Administration -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#userAdminCollapse" aria-expanded="false" aria-controls="userAdminCollapse">
+                        <i class="bi bi-people-fill me-2"></i> User Administration
+                    </button>
+                </h2>
+                <div id="userAdminCollapse" class="accordion-collapse collapse {{ request()->is('admin/riders*') || request()->is('admin/agents*') ? 'show' : '' }}">
+                    <div class="accordion-body">
+                        <a href="{{ route('admin.riders.index') }}" class="{{ request()->routeIs('admin.riders.*') ? 'active' : '' }}">
+                            <i class="bi bi-person-fill me-2"></i> Riders
+                        </a>
+                        <a href="{{ route('admin.agents.index') }}" class="{{ request()->routeIs('admin.agents.*') ? 'active' : '' }}">
+                            <i class="bi bi-person-badge-fill me-2"></i> Agents
+                        </a>
+                        <a href="{{ route('admin.inventory.index') }}" class="{{ request()->routeIs('admin.inventory.*') ? 'active' : '' }}">
+                            <i class="bi bi-person-workspace me-2"></i> Inventory Operators
+                        </a>
+                        <a href="{{ route('admin.finance.index') }}" class="{{ request()->routeIs('admin.finance.*') ? 'active' : '' }}">
+                            <i class="bi bi-cash-stack me-2"></i> Finance Staff
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+
             <!-- Battery Swaps Group -->
             <div class="accordion-item">
                 <h2 class="accordion-header">
@@ -409,31 +437,6 @@
                     </div>
                 </div>
             </div>
-
-                <!-- User Administration -->
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#userAdminCollapse" aria-expanded="false" aria-controls="userAdminCollapse">
-                            <i class="bi bi-people-fill me-2"></i> User Administration
-                        </button>
-                    </h2>
-                    <div id="userAdminCollapse" class="accordion-collapse collapse {{ request()->is('admin/riders*') || request()->is('admin/agents*') ? 'show' : '' }}">
-                        <div class="accordion-body">
-                            <a href="{{ route('admin.riders.index') }}" class="{{ request()->routeIs('admin.riders.*') ? 'active' : '' }}">
-                                <i class="bi bi-person-fill me-2"></i> Riders
-                            </a>
-                            <a href="{{ route('admin.agents.index') }}" class="{{ request()->routeIs('admin.agents.*') ? 'active' : '' }}">
-                                <i class="bi bi-person-badge-fill me-2"></i> Agents
-                            </a>
-                            <a href="{{ route('admin.inventory.index') }}" class="{{ request()->routeIs('admin.inventory.*') ? 'active' : '' }}">
-                                <i class="bi bi-person-workspace me-2"></i> Inventory Operators
-                            </a>
-                            <a href="{{ route('admin.finance.index') }}" class="{{ request()->routeIs('admin.finance.*') ? 'active' : '' }}">
-                                <i class="bi bi-cash-stack me-2"></i> Finance Staff
-                            </a>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Battery Management -->
                 <div class="accordion-item">
@@ -536,14 +539,27 @@
         </div>
 
         <!-- Sidebar Footer with Logout -->
-        <div class="sidebar-footer">
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button class="logout-button" type="submit">
-                    <i class="bi bi-box-arrow-right"></i> Logout
-                </button>
-            </form>
-        </div>
+    <!-- Sidebar Footer for Desktop -->
+<div class="sidebar-footer d-none d-md-block">
+    <form method="POST" action="{{ route('logout') }}">
+        @csrf
+        <button class="logout-button" type="submit">
+            <i class="bi bi-box-arrow-right"></i> Logout
+        </button>
+    </form>
+</div>
+
+<!-- Sidebar Footer for Mobile -->
+<div class="sidebar-footer d-md-none mt-3">
+    <form method="POST" action="{{ route('logout') }}">
+        @csrf
+        <button class="logout-button w-100" type="submit">
+            <i class="bi bi-box-arrow-right"></i> Logout
+        </button>
+    </form>
+</div>
+
+
     </div>
 
     <!-- Overlay -->

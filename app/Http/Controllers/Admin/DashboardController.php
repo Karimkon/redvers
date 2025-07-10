@@ -37,7 +37,7 @@ class DashboardController extends Controller
 
 
         if ($period || ($startDate && $endDate)) {
-            $swapPromos = $this->applyDateFilter($swapPromos, $startDate, $endDate, $period);
+            $swapPromos = $this->applyDateFilter($swapPromos, $startDate, $endDate, $period, 'starts_at');
         }
 
         $promotionCount = $swapPromos->count();
@@ -115,27 +115,28 @@ class DashboardController extends Controller
     /**
      * Apply date filters to a query
      */
-    private function applyDateFilter($query, $startDate, $endDate, $period)
+    private function applyDateFilter($query, $startDate, $endDate, $period, $column = 'created_at')
     {
         if ($period) {
             switch ($period) {
                 case 'today':
-                    $query->whereDate('created_at', today());
+                    $query->whereDate($column, today());
                     break;
                 case 'week':
-                    $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+                    $query->whereBetween($column, [now()->startOfWeek(), now()->endOfWeek()]);
                     break;
                 case 'month':
-                    $query->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year);
+                    $query->whereMonth($column, now()->month)->whereYear($column, now()->year);
                     break;
                 case 'year':
-                    $query->whereYear('created_at', now()->year);
+                    $query->whereYear($column, now()->year);
                     break;
             }
         } elseif ($startDate && $endDate) {
-            $query->whereBetween('created_at', [$startDate, $endDate]);
+            $query->whereBetween($column, [$startDate, $endDate]);
         }
 
         return $query;
     }
+
 }

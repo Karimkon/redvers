@@ -184,50 +184,58 @@ class PesapalController extends Controller
 }
 
     
-    public function handleDailyPaymentCallback(Request $request)
-    {
-        $data = session('pending_daily_payment');
-    
-        if (!$data) {
-            return redirect()->route('agent.dashboard')->with('error', 'Missing payment session data.');
-        }
-    
-        try {
-            // Confirm payment completed
-            $token = app(PesapalService::class)->getAccessToken();
-            $response = Http::withToken($token)->get(
-                config('pesapal.base_url') . '/api/Transactions/GetTransactionStatus',
-                ['orderTrackingId' => $request->get('order_tracking_id')]
-            );
-    
-            if (!$response->successful() || strtolower($response['payment_status_description']) !== 'completed') {
-                return redirect()->route('agent.dashboard')->with('error', 'Payment not completed.');
-            }
-    $purchase = \App\Models\Purchase::findOrFail($data['purchase_id']);
+   public function handleDailyPaymentCallback(Request $request)
+{
+    $data = session('pending_daily_payment');
 
-            // Record motorcycle payment
-            \App\Models\MotorcyclePayment::create([
-                'purchase_id' => $data['purchase_id'],
-                'user_id' => $purchase->user_id,
-                'payment_date' => now('Africa/Kampala')->toDateString(),
-                'amount' => $data['amount'],
-                'type' => 'daily',
-                'method' => 'pesapal',
-                'reference' => $data['reference'],
-                'note' => 'Agent initiated daily payment',
-                'status' => 'paid'
-            ]);
-    
-            session()->forget('pending_daily_payment');
-    
-            return redirect()->route('agent.dashboard')->with('success', 'Daily payment recorded successfully.');
-        } catch (\Exception $e) {
-            \Log::error('Daily Payment Callback Error: ' . $e->getMessage());
-            return redirect()->route('agent.dashboard')->with('error', 'Daily payment processing failed.');
-        }
+    if (!$data) {
+        \Log::warning('🚫 No pending_daily_payment found in session during callback.');
+        return redirect()->route('agent.daily-payments.create')->with('error', 'Session expired or invalid payment attempt.');
     }
 
+    try {
+        // ✅ Verify payment status from Pesapal API
+        $token = app(PesapalService::class)->getAccessToken();
 
+        $trackingId = $request->input('OrderTrackingId'); // From Pesapal redirect
+        $merchantReference = $request->input('OrderMerchantReference'); // From session
 
+        $response = Http::withToken($token)->get(config('pesapal.base_url') . "/api/Transactions/GetTransactionStatus", [
+            'orderTrackingId' => $trackingId,
+        ]);
+
+        $paymentStatus = $response['payment_status'] ?? 'FAILED';
+
+        if ($paymentStatus !== 'COMPLETED') {
+            \Log::warning('❌ Pesapal payment not completed.', ['status' => $paymentStatus]);
+            return redirect()->route('agent.daily-payments.create')->with('error', 'Payment was not successful.');
+        }
+
+        // ✅ Proceed to save the motorcycle payment
+        DB::beginTransaction();
+
+        MotorcyclePayment::create([
+            'purchase_id' => $data['purchase_id'],
+            'user_id' => $data['rider_id'],
+            'amount' => $data['amount'],
+            'method' => 'pesapal',
+            'status' => 'completed',
+            'reference' => $data['reference'],
+            'paid_at' => now('Africa/Kampala'),
+            'recorded_by' => 'agent',
+        ]);
+
+        DB::commit();
+
+        session()->forget('pending_daily_payment');
+
+        return redirect()->route('agent.daily-payments.create')->with('success', '✅ Daily payment recorded successfully.');
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        \Log::error('🔥 Error in handleDailyPaymentCallback: ' . $e->getMessage());
+        return redirect()->route('agent.daily-payments.create')->with('error', 'Unexpected error occurred.');
+    }
+}
 
 }

@@ -69,10 +69,11 @@ class AgentSwapController extends Controller
         // Check if rider has active promotion
         $activePromo = SwapPromotion::where('rider_id', $request->rider_id)
             ->where('status', 'active')
-            ->where('starts_at', '<=', now())
-            ->where('ends_at', '>=', now())
+            ->where('starts_at', '<=', now('Africa/Kampala'))
+            ->where('ends_at', '>=', now('Africa/Kampala'))
             ->latest()
             ->first();
+
 
         $currentBattery = Battery::where('current_rider_id', $request->rider_id)
             ->where('status', 'in_use')
@@ -191,66 +192,95 @@ class AgentSwapController extends Controller
 
 
      public function finalizeSwap($request, $battery, $amount, $method = null, $status = 'completed')
-    {
-        $reference = 'SWAP-' . uniqid();
+{
+    $reference = 'SWAP-' . uniqid();
+    $now = now('Africa/Kampala');
 
-        DB::beginTransaction();
+    DB::beginTransaction();
 
-        try {
-            $swap = Swap::create([
-                'rider_id' => $request->rider_id,
-                'motorcycle_unit_id' => $request->motorcycle_unit_id,
-                'station_id' => $request->station_id,
-                'agent_id' => auth()->id(),
-                'battery_id' => $battery->id,
-                'battery_returned_id' => $request->battery_returned_id,
-                'percentage_difference' => $request->percentage_difference,
-                'payable_amount' => $amount,
-                'payment_method' => $method,
-                'swapped_at' => now(),
-            ]);
-
-            BatterySwap::create([
-                'battery_id' => $battery->id,
-                'swap_id' => $swap->id,
-                'from_station_id' => $request->station_id,
-                'to_station_id' => $request->station_id,
-                'swapped_at' => now(),
-            ]);
-
-            $battery->update([
-                'status' => 'in_use',
-                'current_station_id' => null,
-                'current_rider_id' => $request->rider_id,
-            ]);
-
-            if ($request->filled('battery_returned_id')) {
-                Battery::where('id', $request->battery_returned_id)->update([
-                    'status' => 'charging',
-                    'current_station_id' => $request->station_id,
-                    'current_rider_id' => null,
-                ]);
-            }
-
-            if ($amount > 0) {
-                Payment::create([
-                    'swap_id' => $swap->id,
-                    'amount' => $amount,
-                    'method' => $method,
-                    'status' => $status,
-                    'reference' => $reference,
-                    'initiated_by' => 'agent',
-                ]);
-            }
-
-            DB::commit();
-            return redirect()->route('agent.swaps.index')->with('success', 'Swap created successfully.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            \Log::error('Swap Finalization Error: ' . $e->getMessage());
-            return back()->with('error', 'Failed to finalize swap.')->withInput();
+    try {
+        // Validate battery status again
+        $freshBattery = Battery::findOrFail($battery->id);
+        if (!in_array($freshBattery->status, ['in_stock', 'charging'])) {
+            throw new \Exception("Battery {$freshBattery->id} is no longer available (status: {$freshBattery->status})");
         }
+
+        $swapData = [
+            'rider_id' => $request->rider_id,
+            'motorcycle_unit_id' => $request->motorcycle_unit_id,
+            'station_id' => $request->station_id,
+            'agent_id' => auth()->id(),
+            'battery_id' => $freshBattery->id,
+            'battery_returned_id' => $request->battery_returned_id,
+            'percentage_difference' => $request->percentage_difference,
+            'payable_amount' => $amount,
+            'payment_method' => $method,
+            'swapped_at' => $now,
+            'status' => $status,
+        ];
+
+        $swap = Swap::create($swapData);
+
+        // Battery swap history
+        BatterySwap::create([
+            'battery_id' => $freshBattery->id,
+            'swap_id' => $swap->id,
+            'from_station_id' => $request->station_id,
+            'to_station_id' => $request->station_id,
+            'swapped_at' => $now,
+        ]);
+
+        // Update new battery
+        $freshBattery->update([
+            'status' => 'in_use',
+            'current_station_id' => null,
+            'current_rider_id' => $request->rider_id,
+            'last_swap_at' => $now,
+        ]);
+
+        // Update returned battery if exists
+        if ($request->filled('battery_returned_id')) {
+            $returnedBattery = Battery::findOrFail($request->battery_returned_id);
+            $returnedBattery->update([
+                'status' => 'charging',
+                'current_station_id' => $request->station_id,
+                'current_rider_id' => null,
+                'last_swap_at' => $now,
+            ]);
+        }
+
+        // Create payment record if amount > 0
+        if ($amount > 0) {
+            Payment::create([
+                'swap_id' => $swap->id,
+                'amount' => $amount,
+                'method' => $method,
+                'status' => $status,
+                'reference' => $reference,
+                'initiated_by' => 'agent',
+                'paid_at' => $now,
+            ]);
+        }
+
+        DB::commit();
+        
+        return redirect()->route('agent.swaps.index')
+            ->with('success', 'Swap completed successfully.')
+            ->with('swap_id', $swap->id); // For tracking
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        \Log::error('Swap Finalization Error: ' . $e->getMessage(), [
+            'request' => $request->all(),
+            'battery' => $battery->toArray(),
+            'error' => $e->getTraceAsString()
+        ]);
+        
+        return back()
+            ->with('error', 'Failed to finalize swap: ' . $e->getMessage())
+            ->withInput();
     }
+}
 
 
     public function show($id)
