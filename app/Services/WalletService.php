@@ -16,6 +16,7 @@ class WalletService
 
             $wallet->logs()->create([
                 'amount' =>  $amount,
+                'type'   => 'credit',
                 'reason' =>  $reason,
                 'reference' => $ref,
                 'description'=> $desc,
@@ -33,6 +34,7 @@ class WalletService
 
             $wallet->logs()->create([
                 'amount' => -$amount,
+                'type'   => 'credit',
                 'reason' => $reason,
                 'reference'=>$ref,
                 'description'=>$desc

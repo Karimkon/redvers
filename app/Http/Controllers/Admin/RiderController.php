@@ -73,6 +73,11 @@ class RiderController extends Controller
         }
 
         $user->save();
+        // Create wallet for the new rider
+        $user->wallet()->create([
+            'balance' => 0,
+        ]);
+
 
         return redirect()->route('admin.riders.index')->with('success', 'Rider created successfully.');
     }

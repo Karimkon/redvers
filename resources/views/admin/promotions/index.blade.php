@@ -46,8 +46,16 @@
                         @forelse($promotions as $promo)
                             <tr class="text-center">
                                 <td class="text-start">{{ $promo->rider->name }}</td>
-                                <td>{{ \Carbon\Carbon::parse($promo->starts_at)->timezone('Africa/Kampala')->format('d M Y, H:i') }}</td>
-                                <td>{{ \Carbon\Carbon::parse($promo->ends_at)->timezone('Africa/Kampala')->format('d M Y, H:i') }}</td>
+                                <td>
+                                    {{ \Carbon\Carbon::parse($promo->starts_at)
+                                        ->timezone('Africa/Kampala')
+                                        ->isoFormat('dddd, MMMM Do YYYY [at] h:mm A') }}
+                                </td>
+                                <td>
+                                    {{ \Carbon\Carbon::parse($promo->ends_at)
+                                        ->timezone('Africa/Kampala')
+                                        ->isoFormat('dddd, MMMM Do YYYY [at] h:mm A') }}
+                                </td>
                                 <td>
                                     <span class="badge bg-{{ 
                                         $promo->status === 'active' ? 'success' : 
@@ -83,10 +91,16 @@
         </div>
     </div>
 
-    {{-- 📄 Pagination --}}
-    <div class="mt-4">
-        {{ $promotions->links() }}
+   
+     {{-- Pagination --}}
+    <div class="mt-3 d-flex justify-content-center">
+        <nav>
+            <ul class="pagination pagination-sm">
+                {{ $promotions->onEachSide(1)->links('pagination::bootstrap-5') }}
+            </ul>
+        </nav>
     </div>
+
 
 </div>
 @endsection

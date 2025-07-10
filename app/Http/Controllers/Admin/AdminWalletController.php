@@ -14,13 +14,25 @@ class AdminWalletController extends Controller
     /**
      * Display paginated list of all wallets with user info.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $wallets = Wallet::with('user')->paginate(20);
+        $query = $request->input('q');
+
+        $wallets = Wallet::with('user')
+            ->when($query, function ($q) use ($query) {
+                $q->whereHas('user', function ($sub) use ($query) {
+                    $sub->where('name', 'like', "%$query%")
+                        ->orWhere('phone', 'like', "%$query%")
+                        ->orWhere('email', 'like', "%$query%");
+                });
+            })
+            ->paginate(15);
+
         $totalBalance = Wallet::sum('balance');
 
         return view('admin.wallets.index', compact('wallets', 'totalBalance'));
     }
+
 
     /**
      * Display paginated list of wallets for top-up selection.
@@ -69,6 +81,7 @@ class AdminWalletController extends Controller
                 'reason'     => $validated['reason'] ?? 'Admin top-up',
                 'reference'  => 'ADMIN_TOPUP_' . time(),
                 'description'=> 'Wallet topped up by admin: ' . auth()->user()->name,
+                'type' => 'credit'
             ]);
         });
 

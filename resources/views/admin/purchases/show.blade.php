@@ -114,7 +114,10 @@
             <tbody>
                 @foreach($purchase->payments as $index => $payment)
                     <tr class="{{ $index >= 5 ? 'd-none extra-payment' : '' }}">
-                        <td>{{ $payment->payment_date }}</td>
+                        <td>
+                            {{ \Carbon\Carbon::parse($payment->created_at)->locale('en')->isoFormat('dddd, MMMM Do YYYY [at] h:mm:ss A') }}
+                        </td>
+
                         <td>UGX {{ number_format($payment->amount) }}</td>
                         <td>{{ ucfirst($payment->type) }}</td>
                         <td>{{ $payment->note ?? '-' }}</td>

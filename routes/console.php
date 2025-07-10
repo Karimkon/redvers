@@ -4,13 +4,12 @@ use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 
-
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// ✅ Register your daily motorcycle payment deduction command
+// ✅ Run auto-deduction every 5 minutes
 Schedule::command('motorcycle:autodeduct')
-    ->dailyAt('00:05')
+    ->everyMinute()
     ->withoutOverlapping()
     ->onOneServer();
