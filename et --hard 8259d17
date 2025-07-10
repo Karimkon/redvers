@@ -1,0 +1,41 @@
+[33md4f922a[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m HEAD@{0}: commit: Bugs
+[33m8259d17[m HEAD@{1}: commit: Wallet Admin Filters and Wallet Service Update
+[33m380d716[m HEAD@{2}: commit: Total Revenue Logic and Admin Side Swap promotions
+[33mb29054c[m HEAD@{3}: commit: Rider Due Dates
+[33m132ccb2[m HEAD@{4}: commit: Swap Update
+[33m7760e43[m HEAD@{5}: commit: Wallet Module
+[33mbbbfefd[m HEAD@{6}: commit: Admin finance user create logic
+[33m562c1e5[m HEAD@{7}: commit: Admin analytics updates
+[33maa96e98[m HEAD@{8}: commit: Admin low stocks alert update and profits and lifitime investment
+[33m132891b[m HEAD@{9}: commit: Admin low stocks alert fixed
+[33m78632c4[m HEAD@{10}: commit: Admin lookup modal
+[33mcab185d[m HEAD@{11}: commit: Rider Search Bar
+[33m8f40e97[m HEAD@{12}: commit: Inventory Update Modal lookup
+[33mc5c4446[m HEAD@{13}: commit: Battery swap update 15000, 20000
+[33m1b5c749[m HEAD@{14}: commit: Inventory Management Module UI update and removing excess Columns
+[33m414a18f[m HEAD@{15}: commit: Inventory Management Module update
+[33me562027[m HEAD@{16}: commit: Inventory Management Module
+[33m1e1228d[m HEAD@{17}: commit: Agent promotionTime Zone update
+[33m9f4b31c[m HEAD@{18}: commit: Battery Module update
+[33mad9db57[m HEAD@{19}: commit: Admin Pagination
+[33m9c66f2f[m HEAD@{20}: commit: Agent Mortorcycle Daily Payments
+[33m997cc2a[m HEAD@{21}: commit: Admin promotions money display
+[33m4a3cf73[m HEAD@{22}: commit: Admin Delete payments
+[33m58b675f[m HEAD@{23}: commit: Pesapal payment save Haha
+[33m39da715[m HEAD@{24}: commit: UI update
+[33ma93bb05[m HEAD@{25}: commit: Swap Promotions
+[33me3b19b3[m HEAD@{26}: commit: UI Enhancement
+[33md85f641[m HEAD@{27}: commit: Welcome Page Enhancement Responsive
+[33mcf1b502[m HEAD@{28}: commit: Fevicon all files
+[33m5645307[m HEAD@{29}: commit: Pesapal API Updates
+[33m21dc75b[m HEAD@{30}: commit: Bug fixes Back dating and Purchase
+[33m119eb8f[m HEAD@{31}: commit: Battery Module Enhanced
+[33me8e0ddb[m HEAD@{32}: commit: Pesapal API
+[33ma0918d8[m HEAD@{33}: commit: Chat Module
+[33mb5093d3[m HEAD@{34}: commit: Overdue Logic, updated now discounts elimineted during calculation part 2
+[33mf49a892[m HEAD@{35}: commit: Overdue Logic, updated now discounts elimineted during calculation
+[33ma447b5f[m HEAD@{36}: commit: Push from update copy with fixes
+[33m0e2c1f8[m HEAD@{37}: Branch: renamed refs/heads/main to refs/heads/main
+[33m0e2c1f8[m HEAD@{39}: commit: Redvers Smart Battery System API
+[33m2bf1a55[m HEAD@{40}: Branch: renamed refs/heads/master to refs/heads/main
+[33m2bf1a55[m HEAD@{42}: commit (initial): Redvers Smart Battery System
