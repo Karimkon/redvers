@@ -55,7 +55,7 @@ class AgentSwapController extends Controller
             'battery_id' => 'required|exists:batteries,id',
             'battery_returned_id' => 'nullable|exists:batteries,id',
             'percentage_difference' => 'required|numeric|min:0|max:100',
-            'payment_method' => 'nullable|in:mtn,airtel,pesapal,wallet',
+            'payment_method' => 'nullable|in:cash,pesapal,wallet',
             'base_price' => 'required|in:15000,20000',
         ]);
 
@@ -96,8 +96,11 @@ class AgentSwapController extends Controller
 
 
         if ($payableAmount <= 0) {
-            return $this->finalizeSwap($request, $battery, 0, null, 'completed');
-        }
+    $method = $activePromo ? 'promo' : 'free';
+    $status = $activePromo ? 'unpaid' : 'completed';
+    return $this->finalizeSwap($request, $battery, 0, $method, $status);
+}
+
 
         if ($request->payment_method === 'wallet') {
             $rider = User::findOrFail($request->rider_id);
@@ -127,6 +130,12 @@ class AgentSwapController extends Controller
 
             return redirect()->route('agent.swaps.index')->with('success', 'Swap created and paid from wallet.');
         }
+
+    if ($activePromo && $request->payment_method === 'pesapal') {
+    // Auto-handle as promo, unpaid
+    return $this->finalizeSwap($request, $battery, 0, 'promo', 'unpaid');
+}
+
 
         // Store in session for delayed save
         if ($request->payment_method === 'pesapal') {

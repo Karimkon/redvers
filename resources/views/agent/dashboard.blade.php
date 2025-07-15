@@ -100,5 +100,23 @@
             }
         }
     });
+
+    document.addEventListener('DOMContentLoaded', function () {
+    const toggleBtn = document.getElementById('toggleDesktopView');
+    const cancelBtn = document.getElementById('cancelViewBtn');
+    const defaultView = document.getElementById('defaultView');
+    const desktopView = document.getElementById('desktopView');
+
+    toggleBtn.addEventListener('click', () => {
+        const showDesktop = desktopView.style.display === 'none';
+        desktopView.style.display = showDesktop ? 'block' : 'none';
+        defaultView.style.display = showDesktop ? 'none' : 'block';
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        desktopView.style.display = 'none';
+        defaultView.style.display = 'block';
+    });
+});
 </script>
 @endsection

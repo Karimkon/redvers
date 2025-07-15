@@ -24,64 +24,90 @@ class AgentMotorcycleDailyPaymentController extends Controller
         return view('agent.daily_payments.create', compact('riders'));
     }
 
-    public function store(Request $request)
+public function store(Request $request) 
 {
     $request->validate([
         'rider_id' => 'required|exists:users,id',
         'purchase_id' => 'required|exists:purchases,id',
-        'payment_method' => 'required|in:pesapal',
-        'amount' => 'required|in:12000,13000,16000'
-    ]);
-
-    $rider = User::findOrFail($request->rider_id);
-    $purchase = Purchase::where('user_id', $rider->id)
-    ->where('status', 'active')
-    ->latest()
-    ->firstOrFail();
-
-    $amount = $request->input('amount', 12000); // fallback if not set
-    $reference = 'DAILY-PESAPAL-' . uniqid();
-
-    // Save to session for use in callback
-    session([
-        'pending_daily_payment' => [
-            'rider_id' => $rider->id,
-            'purchase_id' => $purchase->id,
-            'amount' => $amount,
-            'reference' => $reference,
-        ]
+        'amount' => 'required|in:12000,13000,16000',
+        'phone_number' => 'required|string|regex:/^(0|256)[0-9]{9}$/',
     ]);
 
     try {
-        $token = app(PesapalService::class)->getAccessToken();
+        DB::beginTransaction();
 
-        $response = Http::withToken($token)->post(config('pesapal.base_url') . '/api/Transactions/SubmitOrderRequest', [
-            "id" => Str::uuid()->toString(),
-            "currency" => "UGX",
-            "amount" => $amount,
-            "description" => "Daily Motorcycle Payment",
-            "callback_url" => route('pesapal.callback.daily'), // Use route in web.php
-            "notification_id" => "34f2ce63-9c4c-430d-adb8-dbba55243d85", // Inline notification_id
-            "billing_address" => [
-                "email_address" => $rider->email,
-                "phone_number" => $rider->phone, // No modification
-                "first_name" => explode(' ', $rider->name)[0],
-                "last_name" => explode(' ', $rider->name)[1] ?? '',
-                "line_1" => "Redvers Station",
-                "city" => "Kampala",
-                "state" => "Central",
-                "postal_code" => "256",
-                "zip_code" => "256",
-                "country_code" => "UG"
+        $rider = User::findOrFail($request->rider_id);
+        $purchase = Purchase::findOrFail($request->purchase_id);
+
+        // Verify the purchase belongs to the rider
+        if ($purchase->user_id != $rider->id) {
+            throw new \Exception("Purchase does not belong to selected rider");
+        }
+
+        $amount = $request->input('amount', 12000);
+        $reference = 'DAILY-' . Str::upper(Str::random(8));
+
+        // Save to session for callback
+        session([
+            'pending_daily_payment' => [
+                'rider_id' => $rider->id,
+                'purchase_id' => $purchase->id,
+                'amount' => $amount,
+                'reference' => $reference,
+                'method' => 'pesapal',
+                'phone_number' => $request->phone_number,
             ]
         ]);
 
+        \Log::info('Initiating daily payment', [
+            'rider' => $rider->id,
+            'amount' => $amount,
+            'reference' => $reference
+        ]);
+
+        $token = app(PesapalService::class)->getAccessToken();
+        
+        $paymentData = [
+            "id" => Str::uuid()->toString(),
+            "currency" => "UGX",
+            "amount" => $amount,
+            "description" => "Daily Motorcycle Payment for " . $rider->name,
+            "callback_url" => route('pesapal.callback.daily'),
+            "notification_id" => config('pesapal.notification_id'),
+            "billing_address" => [
+                "email_address" => $rider->email,
+                "phone_number" => $request->phone_number,
+                "first_name" => explode(' ', $rider->name)[0],
+                "last_name" => explode(' ', $rider->name)[1] ?? '',
+                "country_code" => "UG"
+            ]
+        ];
+
+        $response = Http::withToken($token)
+            ->timeout(30)
+            ->retry(3, 1000)
+            ->post(config('pesapal.base_url') . '/api/Transactions/SubmitOrderRequest', $paymentData);
+
+        if (!$response->successful() || !isset($response['redirect_url'])) {
+            \Log::error('Pesapal payment failed', [
+                'status' => $response->status(),
+                'response' => $response->body()
+            ]);
+            throw new \Exception("Failed to initiate payment with Pesapal");
+        }
+
+        DB::commit();
+
         return redirect()->away($response['redirect_url']);
+        
     } catch (\Exception $e) {
-        \Log::error('Pesapal Error (Daily Payment): ' . $e->getMessage());
-        return back()->withErrors(['pesapal' => 'Payment initiation failed.'])->withInput();
+        DB::rollBack();
+        \Log::error('Payment error: ' . $e->getMessage());
+        
+        return back()
+            ->withInput()
+            ->withErrors(['error' => 'Payment initiation failed. Please try again.']);
     }
 }
-
 
 }

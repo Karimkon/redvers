@@ -171,6 +171,7 @@ class PesapalController extends Controller
 
                 $purchase->increment('amount_paid', 12000);
                 $purchase->decrement('remaining_balance', 12000);
+                $purchase->save();
             }
         }
 
@@ -184,50 +185,114 @@ class PesapalController extends Controller
 }
 
     
-    public function handleDailyPaymentCallback(Request $request)
-    {
-        $data = session('pending_daily_payment');
-    
-        if (!$data) {
-            return redirect()->route('agent.dashboard')->with('error', 'Missing payment session data.');
-        }
-    
-        try {
-            // Confirm payment completed
-            $token = app(PesapalService::class)->getAccessToken();
-            $response = Http::withToken($token)->get(
-                config('pesapal.base_url') . '/api/Transactions/GetTransactionStatus',
-                ['orderTrackingId' => $request->get('order_tracking_id')]
-            );
-    
-            if (!$response->successful() || strtolower($response['payment_status_description']) !== 'completed') {
-                return redirect()->route('agent.dashboard')->with('error', 'Payment not completed.');
-            }
-    $purchase = \App\Models\Purchase::findOrFail($data['purchase_id']);
+public function handleDailyPaymentCallback(Request $request)
+{
+    \Log::info('📥 Daily Payment Callback Triggered', [
+        'request_data' => $request->all(),
+        'session_data' => session('pending_daily_payment')
+    ]);
 
-            // Record motorcycle payment
-            \App\Models\MotorcyclePayment::create([
-                'purchase_id' => $data['purchase_id'],
-                'user_id' => $purchase->user_id,
-                'payment_date' => now('Africa/Kampala')->toDateString(),
-                'amount' => $data['amount'],
-                'type' => 'daily',
-                'method' => 'pesapal',
-                'reference' => $data['reference'],
-                'note' => 'Agent initiated daily payment',
-                'status' => 'paid'
-            ]);
-    
-            session()->forget('pending_daily_payment');
-    
-            return redirect()->route('agent.dashboard')->with('success', 'Daily payment recorded successfully.');
-        } catch (\Exception $e) {
-            \Log::error('Daily Payment Callback Error: ' . $e->getMessage());
-            return redirect()->route('agent.dashboard')->with('error', 'Daily payment processing failed.');
-        }
+    $data = session('pending_daily_payment');
+
+    if (!$data) {
+        \Log::error('❌ Missing daily payment session data');
+        return redirect()->route('agent.dashboard')->with('error', 'Missing payment session data.');
     }
 
+    try {
+        // Get the transaction tracking ID from the request
+        $orderTrackingId = $request->input('OrderTrackingId');
+        
+        if (!$orderTrackingId) {
+            \Log::error('❌ No OrderTrackingId in callback');
+            return redirect()->route('agent.dashboard')->with('error', 'Invalid payment callback.');
+        }
 
+        // Verify payment status with Pesapal
+        $token = app(PesapalService::class)->getAccessToken();
+        
+        $response = Http::withToken($token)->get(
+            config('pesapal.base_url') . '/api/Transactions/GetTransactionStatus',
+            ['orderTrackingId' => $orderTrackingId]
+        );
 
+        if (!$response->successful()) {
+            \Log::error('❌ Failed to verify payment status', [
+                'tracking_id' => $orderTrackingId,
+                'response' => $response->body()
+            ]);
+            return redirect()->route('agent.dashboard')->with('error', 'Payment verification failed.');
+        }
+
+        $paymentStatus = strtolower($response['payment_status_description']);
+        
+        if ($paymentStatus !== 'completed') {
+            \Log::warning('⚠️ Payment not completed', [
+                'status' => $paymentStatus,
+                'tracking_id' => $orderTrackingId
+            ]);
+            return redirect()->route('agent.dashboard')->with('error', 'Payment was not completed successfully.');
+        }
+
+        // Payment is successful, proceed with creating the record
+        $purchase = \App\Models\Purchase::findOrFail($data['purchase_id']);
+        $today = now('Africa/Kampala')->toDateString();
+
+        // Check if payment already exists for today (prevent duplicates)
+        $existingPayment = \App\Models\MotorcyclePayment::where('purchase_id', $data['purchase_id'])
+            ->where('payment_date', $today)
+            ->where('reference', $data['reference'])
+            ->first();
+
+        if ($existingPayment) {
+            \Log::warning('⚠️ Payment already exists', [
+                'purchase_id' => $data['purchase_id'],
+                'reference' => $data['reference']
+            ]);
+            session()->forget('pending_daily_payment');
+            return redirect()->route('agent.dashboard')->with('info', 'Payment already processed.');
+        }
+
+        // Create the motorcycle payment record
+        $payment = \App\Models\MotorcyclePayment::create([
+            'purchase_id' => $data['purchase_id'],
+            'user_id' => $purchase->user_id,
+            'payment_date' => $today,
+            'amount' => $data['amount'],
+            'type' => 'daily',
+            'method' => $data['method'] ?? 'pesapal',
+            'reference' => $orderTrackingId, // Use the actual tracking ID
+            'note' => 'Daily payment processed via Pesapal on behalf of rider by agent.',
+            'status' => 'paid'
+        ]);
+
+        // Update purchase balances
+        $purchase->increment('amount_paid', $data['amount']);
+        $purchase->decrement('remaining_balance', $data['amount']);
+        
+        // Check if purchase is fully paid
+        if ($purchase->remaining_balance <= 0) {
+            $purchase->update(['status' => 'cleared']);
+        }
+
+        // Clear session data
+        session()->forget('pending_daily_payment');
+
+        \Log::info('✅ Daily payment processed successfully', [
+            'payment_id' => $payment->id,
+            'amount' => $data['amount'],
+            'tracking_id' => $orderTrackingId
+        ]);
+
+        return redirect()->route('agent.dashboard')->with('success', 'Daily payment recorded successfully.');
+        
+    } catch (\Exception $e) {
+        \Log::error('❌ Daily payment processing error: ' . $e->getMessage(), [
+            'session_data' => $data,
+            'trace' => $e->getTraceAsString()
+        ]);
+        return redirect()->route('agent.dashboard')->with('error', 'Daily payment processing failed: ' . $e->getMessage());
+    }
+}
 
 }

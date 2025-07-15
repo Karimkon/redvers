@@ -13,7 +13,7 @@ class SwapController extends Controller
 {
     public function index()
     {
-        $swaps = Swap::with(['riderUser', 'station', 'agentUser'])->latest()->paginate(20);
+        $swaps = Swap::with(['riderUser', 'station', 'agentUser', 'payment'])->latest()->paginate(20);
         return view('admin.swaps.index', compact('swaps'));
     }
 

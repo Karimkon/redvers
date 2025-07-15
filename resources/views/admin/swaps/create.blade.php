@@ -115,8 +115,8 @@
                     <label class="form-label fw-semibold"><i class="bi bi-credit-card me-1"></i> Payment Method</label>
                     <select name="payment_method" class="form-select" id="paymentMethod">
                         <option value="">None</option>
-                        <option value="mtn">MTN</option>
-                        <option value="airtel">Airtel</option>
+                        <!-- <option value="mtn">MTN</option> -->
+                        <option value="cash">Cash</option>
                         <option value="pesapal">Pesapal</option>
                     </select>
                 </div>

@@ -47,7 +47,19 @@
                         <td>{{ $swap->agentUser?->name ?? '—' }}</td>
                         <td>{{ number_format($swap->percentage_difference, 2) }}%</td>
                         <td>{{ number_format($swap->payable_amount, 2) }} UGX</td>
-                        <td>{{ ucfirst($swap->payment_method) ?? '—' }}</td>
+                        <td>
+                            <div>
+                                    <span class="badge bg-secondary">{{ strtoupper($swap->payment_method ?? '-') }}</span>
+                                    @if($swap->payment && $swap->payment->status === 'completed')
+                                        <span class="badge bg-success">Paid</span>
+                                    @elseif($swap->payment && $swap->payment->status === 'pending')
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    @else
+                                        <span class="badge bg-danger">Unpaid</span>
+                                    @endif
+                                </div>
+                            </td>
+
                         <td>{{ $swap->swapped_at ? \Carbon\Carbon::parse($swap->swapped_at)->format('d M Y H:i') : '—' }}</td>
                         <td>
                             <div class="d-flex flex-wrap gap-1">

@@ -8,7 +8,23 @@
         <i class="bi bi-cash-coin me-2"></i> Initiate Daily Motorcycle Payment (UGX 12,000)
     </h4>
 
-    <form method="POST" action="{{ route('agent.daily-payments.store') }}" class="card p-4 shadow-sm border-0">
+    @if (session('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <form method="POST" action="{{ route('agent.daily-payments.store') }}" class="card p-4 shadow-sm border-0" id="paymentForm">
         @csrf
 
         {{-- Rider Dropdown --}}
@@ -23,7 +39,8 @@
                 @endforeach
             </select>
         </div>
-        {{-- 💰 Payment Amount Dropdown --}}
+
+        {{-- Payment Amount --}}
         <div class="mb-3">
             <label class="form-label fw-semibold">Payment Amount (UGX)</label>
             <select class="form-select" name="amount" required>
@@ -33,29 +50,29 @@
             </select>
         </div>
 
-
-        {{-- Purchase ID (Hidden) --}}
-        <input type="hidden" name="purchase_id" id="purchaseInput">
-
-        {{-- Payment Method --}}
+        {{-- Mobile Money Number --}}
         <div class="mb-3">
-            <label class="form-label fw-semibold">Payment Method</label>
-            <select class="form-select" name="payment_method" required>
-                <option value="pesapal">Pesapal</option>
-            </select>
+            <label class="form-label fw-semibold">Mobile Money Number to Pay From</label>
+            <input type="tel" class="form-control" name="phone_number" 
+                   placeholder="e.g., 0777123456" required
+                   pattern="[0-9]{9,10}">
+            <small class="text-muted">Format: 0777123456 or 256777123456</small>
         </div>
 
-        <button class="btn btn-success">
+        <input type="hidden" name="purchase_id" id="purchaseInput">
+        <input type="hidden" name="payment_method" value="pesapal">
+
+        <button type="submit" class="btn btn-success" id="submitBtn">
             <i class="bi bi-credit-card me-1"></i> Proceed to Payment
+            <span id="spinner" class="spinner-border spinner-border-sm d-none"></span>
         </button>
     </form>
 </div>
 @endsection
 
 @push('scripts')
-{{-- Enable Select2 --}}
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
         $('#riderSelect').select2({
             theme: 'bootstrap-5',
             width: '100%',
@@ -63,9 +80,14 @@
             allowClear: true
         });
 
-        $('#riderSelect').on('change', function () {
+        $('#riderSelect').on('change', function() {
             const selected = this.options[this.selectedIndex];
             $('#purchaseInput').val($(selected).data('purchase-id'));
+        });
+
+        $('#paymentForm').on('submit', function() {
+            $('#submitBtn').prop('disabled', true);
+            $('#spinner').removeClass('d-none');
         });
     });
 </script>
