@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
+use App\Services\WalletService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -20,9 +21,18 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // ✅ Rebind public_path to use public_html
+        $customPublicPath = base_path('public_html');
+        if (is_dir($customPublicPath)) {
+            $this->app->bind('path.public', function () use ($customPublicPath) {
+                return $customPublicPath;
+            });
+        }
+
+        // ✅ Keep your existing route logic
         if (file_exists(base_path('routes/admin.php'))) {
-        Route::middleware('web')
-            ->group(base_path('routes/admin.php'));
-    }
+            Route::middleware('web')
+                ->group(base_path('routes/admin.php'));
+        }
     }
 }

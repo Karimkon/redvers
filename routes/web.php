@@ -53,6 +53,19 @@ use \App\Http\Controllers\Admin\AdminWalletController;
 use \App\Http\Controllers\Rider\RiderWalletController;
 use \App\Http\Controllers\Admin\AdminSwapPromotionsController;
 
+use App\Http\Controllers\Finance\RevenueController;
+use App\Http\Controllers\Finance\ExpenditureController;
+use App\Http\Controllers\Finance\COGSController;
+use App\Http\Controllers\Finance\LoanController;
+use App\Http\Controllers\Finance\InvestorController;
+use App\Http\Controllers\Finance\DepreciationController;
+use App\Http\Controllers\Finance\TaxSettingController;
+use App\Http\Controllers\Finance\ProductController;
+use App\Http\Controllers\Finance\ProductCategoryController;
+use App\Http\Controllers\Finance\IncomeStatementController;
+use App\Http\Controllers\Finance\BalanceSheetController;
+use App\Models\Attachment;
+
 // Home
 Route::get('/', fn () => view('welcome'));
 Route::get('/pesapal/request-token', [PesapalTokenTestController::class, 'getToken']);
@@ -478,6 +491,26 @@ Route::middleware(['auth', 'role:finance'])->prefix('finance')->name('finance.')
     Route::post('/followup/mark/{purchase}', [\App\Http\Controllers\Finance\FinanceOverdueController::class, 'markAsContacted'])->name('followup.mark');
     Route::get('/followup/history/{purchase}', [FollowUpController::class, 'history'])->name('followup.history');
 
+    Route::resource('revenues', RevenueController::class);
+    Route::resource('expenditures', ExpenditureController::class);
+    Route::resource('cogs', COGSController::class);
+    Route::resource('loans', LoanController::class);
+    Route::resource('investors', InvestorController::class);
+    Route::resource('depreciations', DepreciationController::class);
+    Route::resource('taxes', TaxSettingController::class);
+    Route::resource('products', ProductController::class);
+    Route::resource('product_categories', ProductCategoryController::class);
+
+    Route::resource('investors', App\Http\Controllers\Finance\InvestorController::class);
+
+    // ✅ Add this for viewing attachments
+    Route::get('/investors/attachment/{attachment}', [App\Http\Controllers\Finance\InvestorController::class, 'viewAttachment'])->name('investors.attachment');
+    
+    Route::get('/income-statement', [IncomeStatementController::class, 'index'])->name('income.index');
+    Route::get('/income-statement/export/{format}', [IncomeStatementController::class, 'export'])->name('income.export');
+
+    Route::get('/balance-sheet', [BalanceSheetController::class, 'index'])->name('balance.index');
+    Route::get('/balance-sheet/export/{format}', [BalanceSheetController::class, 'export'])->name('balance.export');
 
     Route::get('/chat', [ChatController::class, 'users'])->name('chat.users');
     Route::get('/chat/{user}', [ChatController::class, 'index'])->name('chat.index');
