@@ -28,16 +28,22 @@ public function store(Request $request)
 {
     $request->validate([
         'rider_id' => 'required|exists:users,id',
-        'purchase_id' => 'required|exists:purchases,id',
         'amount' => 'required|in:12000,13000,16000',
-        'phone_number' => 'required|string|regex:/^(0|256)[0-9]{9}$/',
+        'phone_number' => ['nullable', 'string', 'regex:/^(07|\+2567|2567)[0-9]{8}$/'],
     ]);
 
     try {
         DB::beginTransaction();
 
         $rider = User::findOrFail($request->rider_id);
-        $purchase = Purchase::findOrFail($request->purchase_id);
+        $purchase = Purchase::where('user_id', $rider->id)
+            ->where('status', 'active')
+            ->latest()
+            ->first();
+
+        if (!$purchase) {
+            throw new \Exception("No active purchase found for this rider.");
+        }
 
         // Verify the purchase belongs to the rider
         if ($purchase->user_id != $rider->id) {
@@ -45,7 +51,13 @@ public function store(Request $request)
         }
 
         $amount = $request->input('amount', 12000);
-        $reference = 'DAILY-' . Str::upper(Str::random(8));
+        $reference = 'DAILY-' . now()->format('Ymd') . '-' . strtoupper(Str::random(6));
+
+        $phone = $request->phone_number ?? $rider->phone;
+
+        if (!$phone) {
+            throw new \Exception("No phone number available for this rider.");
+        }
 
         // Save to session for callback
         session([
@@ -55,7 +67,8 @@ public function store(Request $request)
                 'amount' => $amount,
                 'reference' => $reference,
                 'method' => 'pesapal',
-                'phone_number' => $request->phone_number,
+                'phone_number' => $phone,
+                'created_at' => now()->toDateTimeString(),
             ]
         ]);
 
@@ -73,10 +86,10 @@ public function store(Request $request)
             "amount" => $amount,
             "description" => "Daily Motorcycle Payment for " . $rider->name,
             "callback_url" => route('pesapal.callback.daily'),
-            "notification_id" => config('pesapal.notification_id'),
+            "notification_id" => "6e8802b0-bd8f-447b-a1d2-dbb201b4a089",
             "billing_address" => [
                 "email_address" => $rider->email,
-                "phone_number" => $request->phone_number,
+                "phone_number" => $phone,
                 "first_name" => explode(' ', $rider->name)[0],
                 "last_name" => explode(' ', $rider->name)[1] ?? '',
                 "country_code" => "UG"

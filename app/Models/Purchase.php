@@ -166,6 +166,11 @@ public function getPaymentScheduleSummary()
         return $missed >= 25 ? 'defaulted' : 'active';
     }
 
+    public function motorcyclePayments()
+    {
+        return $this->hasMany(MotorcyclePayment::class);
+    }
+
 
     public function missedPayments()
     {

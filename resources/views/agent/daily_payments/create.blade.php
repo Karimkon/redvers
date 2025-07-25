@@ -33,9 +33,12 @@
             <select class="form-select select2" name="rider_id" required id="riderSelect">
                 <option value="">-- Choose Rider --</option>
                 @foreach($riders as $rider)
-                    <option value="{{ $rider->id }}" data-purchase-id="{{ $rider->purchases->first()->id ?? '' }}">
+                    <option value="{{ $rider->id }}" 
+                            data-purchase-id="{{ $rider->purchases->first()->id ?? '' }}"
+                            data-phone="{{ $rider->phone }}">
                         {{ $rider->name }} - {{ $rider->phone }}
                     </option>
+
                 @endforeach
             </select>
         </div>
@@ -54,12 +57,11 @@
         <div class="mb-3">
             <label class="form-label fw-semibold">Mobile Money Number to Pay From</label>
             <input type="tel" class="form-control" name="phone_number" 
-                   placeholder="e.g., 0777123456" required
+                   placeholder="e.g., 0777123456"
                    pattern="[0-9]{9,10}">
             <small class="text-muted">Format: 0777123456 or 256777123456</small>
         </div>
 
-        <input type="hidden" name="purchase_id" id="purchaseInput">
         <input type="hidden" name="payment_method" value="pesapal">
 
         <button type="submit" class="btn btn-success" id="submitBtn">
@@ -80,11 +82,14 @@
             allowClear: true
         });
 
-        $('#riderSelect').on('change', function() {
-            const selected = this.options[this.selectedIndex];
-            $('#purchaseInput').val($(selected).data('purchase-id'));
+        // Autofill phone number when rider is selected
+        $('#riderSelect').on('change', function () {
+            const phone = $(this).find('option:selected').data('phone');
+            if (phone) {
+                $('input[name="phone_number"]').val(phone);
+            }
         });
-
+        
         $('#paymentForm').on('submit', function() {
             $('#submitBtn').prop('disabled', true);
             $('#spinner').removeClass('d-none');
