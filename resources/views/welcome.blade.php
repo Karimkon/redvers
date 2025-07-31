@@ -114,6 +114,8 @@
 
         <div class="mt-6 text-xs sm:text-sm text-gray-300 dark:text-gray-700">
     <a href="/inventory/login" class="bg-orange-600 hover:bg-orange-700 px-3 py-2 sm:px-5 sm:py-3 rounded-xl shadow-lg text-center font-semibold transition-all duration-300">Inventory</a>
+    <a href="/mechanic/login" class="bg-yellow-600 hover:bg-yellow-700 px-3 py-2 sm:px-5 sm:py-3 rounded-xl shadow-lg text-center font-semibold transition-all duration-300">Mechanic</a>
+</div>
             <br>
             <br>
             <a href="https://redversemobility.com" target="_blank" class="inline-flex items-center gap-2 text-cyan-400 hover:text-white dark:text-blue-600 dark:hover:text-black transition">

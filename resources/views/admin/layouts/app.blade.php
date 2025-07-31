@@ -431,6 +431,9 @@
                             <a href="{{ route('admin.finance.index') }}" class="{{ request()->routeIs('admin.finance.*') ? 'active' : '' }}">
                                 <i class="bi bi-cash-stack me-2"></i> Finance Staff
                             </a>
+                            <a href="{{ route('admin.mechanics.index') }}" class="{{ request()->routeIs('admin.mechanics.*') ? 'active' : '' }}">
+                                <i class="bi bi-tools me-2"></i> Mechanics
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -474,6 +477,9 @@
                             </a>
                             <a href="{{ route('admin.motorcycle-units.index') }}" class="{{ request()->routeIs('admin.motorcycle-units.*') ? 'active' : '' }}">
                                 <i class="bi bi-hash me-2"></i> Motorcycle Units
+                            </a>
+                            <a href="{{ route('admin.maintenance.index') }}" class="{{ request()->routeIs('admin.maintenance.*') ? 'active' : '' }}">
+                                <i class="bi bi-tools me-2"></i> Maintenance Logs
                             </a>
                         </div>
                     </div>

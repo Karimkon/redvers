@@ -42,7 +42,9 @@
                     <tbody>
                         @forelse($swaps as $swap)
                             <tr class="text-center">
-                                <td>{{ $swap->swapped_at->format('d M Y') }}</td>
+                                <td>
+                                    {{ $swap->swapped_at ? $swap->swapped_at->format('D, d M Y — h:i:s A') : 'Pending' }}
+                                </td>
                                 <td class="text-start">{{ $swap->riderUser->name ?? 'N/A' }}</td>
                                 <td>{{ $swap->station->name ?? 'N/A' }}</td>
                                 <td>{{ $swap->percentage_difference }}%</td>
@@ -64,13 +66,13 @@
                                         <a href="{{ route('agent.swaps.show', $swap->id) }}" class="btn btn-outline-info" title="View">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <form action="{{ route('agent.swaps.destroy', $swap->id) }}" method="POST" onsubmit="return confirm('Are you sure?')">
+                                        <!-- <form action="{{ route('agent.swaps.destroy', $swap->id) }}" method="POST" onsubmit="return confirm('Are you sure?')">
                                             @csrf
                                             @method('DELETE')
                                             <button class="btn btn-outline-danger" title="Delete">
                                                 <i class="bi bi-trash"></i>
                                             </button>
-                                        </form>
+                                        </form> -->
                                     </div>
                                 </td>
                             </tr>

@@ -50,9 +50,10 @@ use \App\Http\Controllers\Admin\ShopController;
 use \App\Http\Controllers\Admin\AdminPartController;
 use \App\Http\Controllers\Admin\FinanceController;
 use \App\Http\Controllers\Admin\AdminWalletController;
+use \App\Http\Controllers\Admin\AdminMaintenanceController;
 use \App\Http\Controllers\Rider\RiderWalletController;
 use \App\Http\Controllers\Admin\AdminSwapPromotionsController;
-
+use App\Http\Controllers\Admin\MechanicController;
 use App\Http\Controllers\Finance\RevenueController;
 use App\Http\Controllers\Finance\ExpenditureController;
 use App\Http\Controllers\Finance\COGSController;
@@ -65,6 +66,8 @@ use App\Http\Controllers\Finance\ProductCategoryController;
 use App\Http\Controllers\Finance\IncomeStatementController;
 use App\Http\Controllers\Finance\BalanceSheetController;
 use App\Models\Attachment;
+use \App\Http\Controllers\Mechanic\MechanicDashboardController;
+use \App\Http\Controllers\Mechanic\MechanicMaintenanceController;
 
 // Home
 Route::get('/', fn () => view('welcome'));
@@ -76,6 +79,7 @@ Route::get('/agent/login', fn () => view('auth.agent-login'))->name('agent.login
 Route::get('/rider/login', fn () => view('auth.rider-login'))->name('rider.login');
 Route::get('/finance/login', fn () => view('auth.finance-login'))->name('finance.login');
 Route::get('/inventory/login', fn () => view('auth.inventory-login'))->name('inventory.login');
+Route::get('/mechanic/login', fn () => view('auth.mechanic-login'))->name('mechanic.login');
 
 
 Route::get('/pesapal/auth', [\App\Http\Controllers\PesapalController::class, 'authenticate'])->name('pesapal.auth');
@@ -161,11 +165,27 @@ Route::post('/inventory/login', function (\Illuminate\Http\Request $request) {
     if (Auth::attempt($credentials, $request->boolean('remember')) && Auth::user()->role === 'inventory') {
         $request->session()->regenerate();
         return redirect()->intended(route('inventory.dashboard'));
-    }
+    }   
 
     Auth::logout();
     return redirect()->route('inventory.login')->with('error', 'Only inventory users can login here.');
 })->name('inventory.login.submit');
+
+Route::post('/mechanic/login', function (Request $request) {
+    $credentials = $request->validate([
+        'email' => ['required', 'email'],
+        'password' => ['required'],
+    ]);
+
+    if (Auth::attempt($credentials, $request->boolean('remember')) && Auth::user()->role === 'mechanic') {
+        $request->session()->regenerate();
+        return redirect()->intended(route('mechanic.maintenances.index'));
+    }
+
+    Auth::logout();
+    return redirect()->route('mechanic.login')->with('error', 'Only mechanics can login here.');
+})->name('mechanic.login.submit');
+
 
 // Logout (shared)
 Route::post('/logout', function (Request $request) {
@@ -194,6 +214,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('payments', PaymentController::class);
     Route::resource('motorcycle-units', MotorcycleUnitController::class);
     Route::resource('finance', FinanceController::class);   
+    Route::resource('mechanics', MechanicController::class);
+
 
     /**Swap Promotion Admin */
     Route::get('/promotions/payment', [AdminSwapPromotionsController::class, 'redirectToPayment'])
@@ -390,6 +412,9 @@ Route::post('/chat/send', [ChatController::class, 'store'])->name('chat.send');
     Route::get('/{user}',         [AdminWalletController::class,'show'])->name('show');            // ledger
 });
 
+Route::get('/maintenance/history', [AdminMaintenanceController::class, 'index'])->name('maintenance.index');
+Route::get('/maintenance/{maintenance}', [AdminMaintenanceController::class, 'show'])->name('maintenance.show');
+
 
 });
 
@@ -546,6 +571,12 @@ Route::middleware(['auth', 'role:inventory'])->prefix('inventory')->name('invent
         
 
 });
+
+Route::middleware(['auth', 'role:mechanic'])->prefix('mechanic')->name('mechanic.')->group(function () {
+    Route::get('/dashboard', [MechanicDashboardController::class, 'index'])->name('dashboard');
+    Route::resource('maintenances', MechanicMaintenanceController::class);
+});
+
 
 
 // Profile & Pesapal

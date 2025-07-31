@@ -76,6 +76,11 @@ class User extends Authenticatable
         return $this->hasMany(WalletTransaction::class); 
     }
 
+    public function maintenances()
+    {
+        return $this->hasMany(Maintenance::class, 'mechanic_id');
+    }
+
 
 }
 
