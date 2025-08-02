@@ -499,7 +499,17 @@ Route::middleware(['auth', 'role:rider'])->prefix('rider')->name('rider.')->grou
 
     Route::get('/schedule', [\App\Http\Controllers\Rider\PaymentScheduleController::class, 'index'])->name('schedule');
 
+     // Initiate daily payment
+    Route::get('/daily-payment', [App\Http\Controllers\Rider\RiderDailyPaymentController::class, 'create'])
+        ->name('daily-payment.create');
 
+    // Submit payment request to Pesapal
+    Route::post('/daily-payment/pay', [App\Http\Controllers\Rider\RiderDailyPaymentController::class, 'payViaPesapal'])
+        ->name('daily-payment.pay');
+
+    // Pesapal Callback handling
+    Route::match(['GET', 'POST'], '/daily-payment/callback', [App\Http\Controllers\Rider\RiderDailyPaymentController::class, 'handleCallback'])
+        ->name('daily-payment.callback');
 });
 
 

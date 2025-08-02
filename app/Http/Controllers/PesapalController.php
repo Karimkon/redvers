@@ -186,283 +186,316 @@ class PesapalController extends Controller
 
     
 public function handleDailyPaymentCallback(Request $request)
-{
-    \Log::info('📥 Daily Payment Callback Triggered', [
-        'request_data' => $request->all(),
-        'session_exists' => session()->has('pending_daily_payment'),
-        'ip' => $request->ip(),
-        'user_agent' => $request->userAgent(),
-    ]);
-
-    // Check session expiry
-    $expiresAt = session('pending_payment_expires');
-    if ($expiresAt && now()->timestamp > $expiresAt) {
-        \Log::warning('⏰ Payment session expired', [
-            'expires_at' => $expiresAt,
-            'current_time' => now()->timestamp,
+    {
+        \Log::info('📥 Daily Payment Callback Triggered', [
+            'request_data' => $request->all(),
+            'session_exists' => session()->has('pending_daily_payment'),
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
         ]);
-        session()->forget(['pending_daily_payment', 'pending_payment_expires']);
-        return redirect()->route('agent.dashboard')->with('warning', 'Payment session has expired. Please initiate a new payment.');
-    }
 
-    $data = session('pending_daily_payment');
-
-    if (!$data) {
-        \Log::error('❌ Missing daily payment session data');
-        return redirect()->route('agent.dashboard')->with('error', 'Payment session not found. Please try again.');
-    }
-
-    // Validate session data integrity
-    if (!$this->validateSessionData($data)) {
-        \Log::error('❌ Invalid session data structure', ['data' => $data]);
-        session()->forget(['pending_daily_payment', 'pending_payment_expires']);
-        return redirect()->route('agent.dashboard')->with('error', 'Invalid payment session. Please try again.');
-    }
-
-    try {
-        DB::beginTransaction();
-
-        $orderTrackingId = $request->input('OrderTrackingId');
-        $merchantReference = $request->input('OrderMerchantReference');
-        
-        if (!$orderTrackingId) {
-            throw new \Exception('Missing OrderTrackingId in callback');
-        }
-
-        // Verify payment with Pesapal
-        $paymentStatus = $this->verifyPaymentWithPesapal($orderTrackingId);
-        
-        if ($paymentStatus !== 'completed') {
-            \Log::warning('⚠️ Payment not completed', [
-                'status' => $paymentStatus,
-                'tracking_id' => $orderTrackingId,
-                'data' => $data,
+        // Check session expiry
+        $expiresAt = session('pending_payment_expires');
+        if ($expiresAt && now()->timestamp > $expiresAt) {
+            \Log::warning('⏰ Payment session expired', [
+                'expires_at' => $expiresAt,
+                'current_time' => now()->timestamp,
             ]);
-            
-            $message = $this->getPaymentStatusMessage($paymentStatus);
-            return redirect()->route('agent.dashboard')->with('warning', $message);
-        }
-
-        // Get models
-        $purchase = Purchase::with('user')->findOrFail($data['purchase_id']);
-        $rider = $purchase->user;
-        
-        // Verify data consistency
-        if ($purchase->user_id != $data['rider_id']) {
-            throw new \Exception('Data inconsistency: Purchase does not belong to rider');
-        }
-
-        // Check for duplicate payment
-        $today = now('Africa/Kampala')->toDateString();
-        $existingPayment = MotorcyclePayment::where('purchase_id', $data['purchase_id'])
-            ->where('payment_date', $today)
-            ->where('status', 'paid')
-            ->first();
-
-        if ($existingPayment) {
-            \Log::warning('⚠️ Duplicate payment attempt', [
-                'existing_payment_id' => $existingPayment->id,
-                'tracking_id' => $orderTrackingId,
-                'purchase_id' => $data['purchase_id'],
-            ]);
-            
             session()->forget(['pending_daily_payment', 'pending_payment_expires']);
+            return redirect()->route('agent.dashboard')->with('warning', 'Payment session has expired. Please initiate a new payment.');
+        }
+
+        $data = session('pending_daily_payment');
+
+        if (!$data) {
+            \Log::error('❌ Missing daily payment session data');
+            return redirect()->route('agent.dashboard')->with('error', 'Payment session not found. Please try again.');
+        }
+
+        // Validate session data integrity
+        if (!$this->validateSessionData($data)) {
+            \Log::error('❌ Invalid session data structure', ['data' => $data]);
+            session()->forget(['pending_daily_payment', 'pending_payment_expires']);
+            return redirect()->route('agent.dashboard')->with('error', 'Invalid payment session. Please try again.');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $orderTrackingId = $request->input('OrderTrackingId');
+            $merchantReference = $request->input('OrderMerchantReference');
+            
+            if (!$orderTrackingId) {
+                throw new \Exception('Missing OrderTrackingId in callback');
+            }
+
+            // Verify payment with Pesapal
+            $paymentStatus = $this->verifyPaymentWithPesapal($orderTrackingId);
+            
+            if ($paymentStatus !== 'completed') {
+                \Log::warning('⚠️ Payment not completed', [
+                    'status' => $paymentStatus,
+                    'tracking_id' => $orderTrackingId,
+                    'data' => $data,
+                ]);
+                
+                $message = $this->getPaymentStatusMessage($paymentStatus);
+                return redirect()->route('agent.dashboard')->with('warning', $message);
+            }
+
+            // Get models
+            $purchase = Purchase::with('user')->findOrFail($data['purchase_id']);
+            $rider = $purchase->user;
+            
+            // Verify data consistency
+            if ($purchase->user_id != $data['rider_id']) {
+                throw new \Exception('Data inconsistency: Purchase does not belong to rider');
+            }
+
+            // Check for duplicate payment
+            $today = now('Africa/Kampala')->toDateString();
+            $existingPayment = MotorcyclePayment::where('purchase_id', $data['purchase_id'])
+                ->where('payment_date', $today)
+                ->where('status', 'paid')
+                ->first();
+
+            if ($existingPayment) {
+                \Log::warning('⚠️ Duplicate payment attempt', [
+                    'existing_payment_id' => $existingPayment->id,
+                    'tracking_id' => $orderTrackingId,
+                    'purchase_id' => $data['purchase_id'],
+                ]);
+                
+                session()->forget(['pending_daily_payment', 'pending_payment_expires']);
+                return redirect()->route('agent.dashboard')
+                    ->with('info', 'Payment has already been processed for today.');
+            }
+
+            // Verify purchase is still active
+            if ($purchase->status !== 'active') {
+                throw new \Exception('Purchase is no longer active');
+            }
+
+            // Create payment record
+            $payment = $this->createPaymentRecord($data, $purchase, $orderTrackingId, $today);
+
+            // Update purchase balances
+            $this->updatePurchaseBalances($purchase, $data['amount']);
+
+            // Log success
+            \Log::info('✅ Daily payment processed successfully', [
+                'payment_id' => $payment->id,
+                'rider_name' => $rider->name,
+                'amount' => $data['amount'],
+                'tracking_id' => $orderTrackingId,
+                'agent_id' => $data['agent_id'] ?? null,
+                'new_balance' => $purchase->fresh()->remaining_balance,
+            ]);
+
+            // Clear session
+            session()->forget(['pending_daily_payment', 'pending_payment_expires']);
+
+            DB::commit();
+
+            // Redirect with appropriate message
+            $message = "Daily payment of UGX " . number_format($data['amount']) . " processed successfully for {$rider->name}.";
+            
+            if ($purchase->fresh()->remaining_balance <= 0) {
+                $message .= " 🎉 Motorcycle purchase is now fully paid!";
+            }
+
+            return redirect()->route('agent.dashboard')->with('success', $message);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            \Log::error('❌ Daily payment processing error', [
+                'error' => $e->getMessage(),
+                'session_data' => $data,
+                'tracking_id' => $orderTrackingId ?? 'N/A',
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            // Keep session data for retry unless it's a fatal error
+            if ($this->isFatalError($e->getMessage())) {
+                session()->forget(['pending_daily_payment', 'pending_payment_expires']);
+            }
+
             return redirect()->route('agent.dashboard')
-                ->with('info', 'Payment has already been processed for today.');
+                ->with('error', 'Payment processing failed: ' . $this->getUserFriendlyError($e->getMessage()));
         }
-
-        // Verify purchase is still active
-        if ($purchase->status !== 'active') {
-            throw new \Exception('Purchase is no longer active');
-        }
-
-        // Create payment record
-        $payment = $this->createPaymentRecord($data, $purchase, $orderTrackingId, $today);
-
-        // Update purchase balances
-        $this->updatePurchaseBalances($purchase, $data['amount']);
-
-        // Log success
-        \Log::info('✅ Daily payment processed successfully', [
-            'payment_id' => $payment->id,
-            'rider_name' => $rider->name,
-            'amount' => $data['amount'],
-            'tracking_id' => $orderTrackingId,
-            'agent_id' => $data['agent_id'] ?? null,
-            'new_balance' => $purchase->fresh()->remaining_balance,
-        ]);
-
-        // Clear session
-        session()->forget(['pending_daily_payment', 'pending_payment_expires']);
-
-        DB::commit();
-
-        // Redirect with appropriate message
-        $message = "Daily payment of UGX " . number_format($data['amount']) . " processed successfully for {$rider->name}.";
-        
-        if ($purchase->fresh()->remaining_balance <= 0) {
-            $message .= " 🎉 Motorcycle purchase is now fully paid!";
-        }
-
-        return redirect()->route('agent.dashboard')->with('success', $message);
-        
-    } catch (\Exception $e) {
-        DB::rollBack();
-        
-        \Log::error('❌ Daily payment processing error', [
-            'error' => $e->getMessage(),
-            'session_data' => $data,
-            'tracking_id' => $orderTrackingId ?? 'N/A',
-            'trace' => $e->getTraceAsString(),
-        ]);
-
-        // Keep session data for retry unless it's a fatal error
-        if ($this->isFatalError($e->getMessage())) {
-            session()->forget(['pending_daily_payment', 'pending_payment_expires']);
-        }
-
-        return redirect()->route('agent.dashboard')
-            ->with('error', 'Payment processing failed: ' . $this->getUserFriendlyError($e->getMessage()));
     }
-}
 
-private function validateSessionData(array $data): bool
-{
-    $required = ['rider_id', 'purchase_id', 'amount', 'reference', 'phone_number', 'created_at'];
-    
-    foreach ($required as $field) {
-        if (!isset($data[$field]) || empty($data[$field])) {
+    private function validateSessionData(array $data): bool
+    {
+        $required = ['rider_id', 'purchase_id', 'amount', 'reference', 'phone_number', 'created_at'];
+        
+        foreach ($required as $field) {
+            if (!isset($data[$field]) || empty($data[$field])) {
+                return false;
+            }
+        }
+        
+        // Validate data types
+        if (!is_numeric($data['rider_id']) || !is_numeric($data['purchase_id']) || !is_numeric($data['amount'])) {
             return false;
         }
+        
+        // Check if session is not too old (max 1 hour)
+        $createdAt = Carbon::parse($data['created_at']);
+        if ($createdAt->diffInHours(now()) > 1) {
+            return false;
+        }
+        
+        return true;
     }
-    
-    // Validate data types
-    if (!is_numeric($data['rider_id']) || !is_numeric($data['purchase_id']) || !is_numeric($data['amount'])) {
-        return false;
-    }
-    
-    // Check if session is not too old (max 1 hour)
-    $createdAt = Carbon::parse($data['created_at']);
-    if ($createdAt->diffInHours(now()) > 1) {
-        return false;
-    }
-    
-    return true;
-}
 
-private function verifyPaymentWithPesapal(string $orderTrackingId): string
-{
-    $token = app(PesapalService::class)->getAccessToken();
-    
-    $response = Http::withToken($token)
-        ->timeout(30)
-        ->retry(3, 2000)
-        ->get(config('pesapal.base_url') . '/api/Transactions/GetTransactionStatus', [
-            'orderTrackingId' => $orderTrackingId
+    private function verifyPaymentWithPesapal(string $orderTrackingId): string
+    {
+        $token = app(PesapalService::class)->getAccessToken();
+        
+        $response = Http::withToken($token)
+            ->timeout(30)
+            ->retry(3, 2000)
+            ->get(config('pesapal.base_url') . '/api/Transactions/GetTransactionStatus', [
+                'orderTrackingId' => $orderTrackingId
+            ]);
+
+        if (!$response->successful()) {
+            \Log::error('❌ Failed to verify payment status', [
+                'tracking_id' => $orderTrackingId,
+                'status' => $response->status(),
+                'response' => $response->body()
+            ]);
+            throw new \Exception('Unable to verify payment status with gateway');
+        }
+
+        $responseData = $response->json();
+        
+        if (!isset($responseData['payment_status_description'])) {
+            \Log::error('❌ Invalid payment verification response', [
+                'tracking_id' => $orderTrackingId,
+                'response' => $responseData
+            ]);
+            throw new \Exception('Invalid payment verification response');
+        }
+
+        return strtolower($responseData['payment_status_description']);
+    }
+
+    private function createPaymentRecord(array $data, Purchase $purchase, string $orderTrackingId, string $today): MotorcyclePayment
+    {
+        $paymentData = [
+            'purchase_id'   => $data['purchase_id'],
+            'user_id'       => $purchase->user_id,
+            'payment_date'  => $today,
+            'amount'        => $data['amount'],
+            'type'          => 'daily',
+            'method'        => $data['method'] ?? 'pesapal', // fallback
+            'reference'     => $orderTrackingId,
+            'note'          => sprintf(
+                'Daily payment via Pesapal. Original Ref: %s',
+                $data['reference'] ?? 'N/A'
+            ),
+            'status'        => 'paid'
+        ];
+
+        // 🔍 LOG everything for debugging
+        \Log::info('🧾 Attempting to create MotorcyclePayment record', [
+            'payment_data' => $paymentData,
+            'fillable' => (new MotorcyclePayment)->getFillable()
         ]);
 
-    if (!$response->successful()) {
-        \Log::error('❌ Failed to verify payment status', [
-            'tracking_id' => $orderTrackingId,
-            'status' => $response->status(),
-            'response' => $response->body()
-        ]);
-        throw new \Exception('Unable to verify payment status with gateway');
-    }
+        // 🔒 Sanity check required fields before DB insert
+        foreach (['purchase_id', 'user_id', 'payment_date', 'amount', 'type', 'method', 'reference'] as $field) {
+            if (empty($paymentData[$field])) {
+                throw new \Exception("Missing or invalid field: {$field}");
+            }
+        }
 
-    $responseData = $response->json();
-    
-    if (!isset($responseData['payment_status_description'])) {
-        \Log::error('❌ Invalid payment verification response', [
-            'tracking_id' => $orderTrackingId,
-            'response' => $responseData
-        ]);
-        throw new \Exception('Invalid payment verification response');
-    }
+        try {
+            $payment = MotorcyclePayment::create($paymentData);
 
-    return strtolower($responseData['payment_status_description']);
-}
+            \Log::info('✅ MotorcyclePayment successfully created', [
+                'id' => $payment->id,
+                'rider_id' => $payment->user_id,
+                'amount' => $payment->amount,
+                'date' => $payment->payment_date,
+            ]);
 
-private function createPaymentRecord(array $data, Purchase $purchase, string $orderTrackingId, string $today): MotorcyclePayment
-{
-    return MotorcyclePayment::create([
-        'purchase_id' => $data['purchase_id'],
-        'user_id' => $purchase->user_id,
-        'payment_date' => $today,
-        'amount' => $data['amount'],
-        'type' => 'daily',
-        'method' => 'pesapal',
-        'reference' => $orderTrackingId,
-        'note' => sprintf(
-            'Daily payment via Pesapal. Agent: %s, Original Ref: %s',
-            $data['agent_id'] ?? 'Unknown',
-            $data['reference']
-        ),
-        'status' => 'paid'
-    ]);
-}
+            return $payment;
 
-private function updatePurchaseBalances(Purchase $purchase, int $amount): void
-{
-    $purchase->increment('amount_paid', $amount);
-    $purchase->decrement('remaining_balance', $amount);
-    
-    // Check if purchase is fully paid
-    if ($purchase->fresh()->remaining_balance <= 0) {
-        $purchase->update([
-            'status' => 'cleared',
-            'cleared_at' => now('Africa/Kampala')
-        ]);
-    }
-}
-
-private function getPaymentStatusMessage(string $status): string
-{
-    $messages = [
-        'pending' => 'Payment is still pending. Please complete the payment process.',
-        'failed' => 'Payment failed. Please try again.',
-        'cancelled' => 'Payment was cancelled.',
-        'invalid' => 'Payment verification failed.',
-    ];
-
-    return $messages[$status] ?? "Payment status: {$status}. Please contact support if this continues.";
-}
-
-private function isFatalError(string $error): bool
-{
-    $fatalErrors = [
-        'Data inconsistency',
-        'Purchase is no longer active',
-        'Invalid payment verification response',
-    ];
-
-    foreach ($fatalErrors as $fatal) {
-        if (str_contains($error, $fatal)) {
-            return true;
+        } catch (\Exception $e) {
+            \Log::error('❌ Failed to save MotorcyclePayment record', [
+                'error' => $e->getMessage(),
+                'data' => $paymentData,
+            ]);
+            throw $e; // Let the transaction rollback
         }
     }
 
-    return false;
-}
 
-private function getUserFriendlyError(string $error): string
-{
-    $friendlyMessages = [
-        'Missing OrderTrackingId' => 'Payment reference is missing. Please try again.',
-        'Data inconsistency' => 'Payment data is inconsistent. Please initiate a new payment.',
-        'Purchase is no longer active' => 'The motorcycle purchase is no longer active.',
-        'Unable to verify payment status' => 'Unable to verify payment. Please contact support.',
-        'Invalid payment verification response' => 'Payment verification failed. Please contact support.',
-    ];
-
-    foreach ($friendlyMessages as $key => $message) {
-        if (str_contains($error, $key)) {
-            return $message;
+    private function updatePurchaseBalances(Purchase $purchase, int $amount): void
+    {
+        $purchase->increment('amount_paid', $amount);
+        $purchase->decrement('remaining_balance', $amount);
+        
+        // Check if purchase is fully paid
+        if ($purchase->fresh()->remaining_balance <= 0) {
+            $purchase->update([
+                'status' => 'cleared',
+                'cleared_at' => now('Africa/Kampala')
+            ]);
         }
     }
 
-    return 'An unexpected error occurred. Please try again or contact support.';
-}
+    private function getPaymentStatusMessage(string $status): string
+    {
+        $messages = [
+            'pending' => 'Payment is still pending. Please complete the payment process.',
+            'failed' => 'Payment failed. Please try again.',
+            'cancelled' => 'Payment was cancelled.',
+            'invalid' => 'Payment verification failed.',
+        ];
+
+        return $messages[$status] ?? "Payment status: {$status}. Please contact support if this continues.";
+    }
+
+    private function isFatalError(string $error): bool
+    {
+        $fatalErrors = [
+            'Data inconsistency',
+            'Purchase is no longer active',
+            'Invalid payment verification response',
+        ];
+
+        foreach ($fatalErrors as $fatal) {
+            if (str_contains($error, $fatal)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function getUserFriendlyError(string $error): string
+    {
+        $friendlyMessages = [
+            'Missing OrderTrackingId' => 'Payment reference is missing. Please try again.',
+            'Data inconsistency' => 'Payment data is inconsistent. Please initiate a new payment.',
+            'Purchase is no longer active' => 'The motorcycle purchase is no longer active.',
+            'Unable to verify payment status' => 'Unable to verify payment. Please contact support.',
+            'Invalid payment verification response' => 'Payment verification failed. Please contact support.',
+        ];
+
+        foreach ($friendlyMessages as $key => $message) {
+            if (str_contains($error, $key)) {
+                return $message;
+            }
+        }
+
+        return 'An unexpected error occurred. Please try again or contact support.';
+    }
 
 
 }

@@ -28,6 +28,12 @@
         <a href="{{ route('rider.payments.download') }}" class="btn btn-sm btn-outline-dark mt-3">
             <i class="bi bi-download"></i> Download PDF Summary
         </a>
+
+        {{-- ✅ Pay Now Button --}}
+        <a href="{{ route('rider.daily-payment.create') }}" class="btn btn-sm btn-success mt-3 ms-2">
+            <i class="bi bi-credit-card"></i> Pay Now
+        </a>
+
     </div>
 </div>
 @endif

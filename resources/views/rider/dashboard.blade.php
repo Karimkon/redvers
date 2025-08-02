@@ -15,11 +15,17 @@
     <!-- Horizontal Summary: Remaining + Due -->
     <div class="d-flex flex-wrap gap-3 mb-4">
 
-        <!-- Remaining Balance -->
-        <div class="bg-danger text-white p-3 rounded text-center flex-fill shadow-sm" style="min-width: 150px;">
-            <div class="fs-4 fw-bold">UGX {{ number_format($remainingBalance) }}</div>
-            <div class="small"><i class="bi bi-wallet2 me-1"></i>Remaining Balance</div>
+        <!-- Remaining Balance with Pay Now -->
+        <div class="bg-danger text-white p-3 rounded text-center flex-fill shadow-sm d-flex flex-column justify-content-between" style="min-width: 150px;">
+            <div>
+                <div class="fs-4 fw-bold">UGX {{ number_format($remainingBalance) }}</div>
+                <div class="small"><i class="bi bi-wallet2 me-1"></i>Remaining Balance</div>
+            </div>
+            <a href="{{ route('rider.daily-payment.create') }}" class="btn btn-sm btn-light mt-3">
+                <i class="bi bi-credit-card me-1"></i> Pay Now
+            </a>
         </div>
+
 
         <!-- Due Amount (only if purchase not completed) -->
         @if($purchase && $purchase->status !== 'completed' && $overdueSummary)
