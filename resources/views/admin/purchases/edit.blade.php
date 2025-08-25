@@ -16,6 +16,7 @@
                 <option value="active" {{ $purchase->status == 'active' ? 'selected' : '' }}>Active</option>
                 <option value="completed" {{ $purchase->status == 'completed' ? 'selected' : '' }}>Completed</option>
                 <option value="defaulted" {{ $purchase->status == 'defaulted' ? 'selected' : '' }}>Defaulted</option>
+                <option value="inactive" {{ $purchase->status == 'inactive' ? 'selected' : '' }}>Inactive</option>
             </select>
         </div>
 

@@ -145,7 +145,7 @@ public function create()
     public function update(Request $request, Purchase $purchase)
     {
         $request->validate([
-            'status' => 'required|in:active,completed,defaulted',
+            'status' => 'required|in:active,completed,defaulted,inactive',
         ]);
 
         $purchase->update([

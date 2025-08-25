@@ -99,7 +99,7 @@ class FinanceDashboardController extends Controller
 
         $topStation = collect($revenueByStation)->sortDesc()->keys()->first();
 
-        $allPurchases = Purchase::with(['payments', 'discounts', 'motorcycle'])->where('status', 'active')->get();
+        $allPurchases = Purchase::with(['payments', 'discounts', 'motorcycle'])->whereIn('status', ['active', 'defaulted'])->get();
 
         $totalDue = $allPurchases->sum(function ($purchase) {
             return $purchase->getAdjustedOverdueSummary()['due_amount'] ?? 0;

@@ -9,19 +9,29 @@ use App\Models\Shop;
 
 class AdminPartController extends Controller
 {
-        public function index(Request $request)
-    {
-        $shops = \App\Models\Shop::all();
-        $query = \App\Models\Part::with('shop');
+       public function index(Request $request)
+{
+    $shops = Shop::all();
+    $query = Part::with('shop');
 
-        if ($request->shop_id) {
-            $query->where('shop_id', $request->shop_id);
-        }
-
-        $parts = $query->latest()->paginate(20);
-
-        return view('admin.parts.index', compact('parts', 'shops'));
+    if ($request->shop_id) {
+        $query->where('shop_id', $request->shop_id);
     }
+
+    if ($request->search) {
+    $search = $request->search;
+    $query->where(function($q) use ($search) {
+        $q->where('name', 'like', "%{$search}%")
+          ->orWhere('brand', 'like', "%{$search}%");
+    });
+}
+
+
+    $parts = $query->latest()->paginate(20)->appends($request->all());
+
+    return view('admin.parts.index', compact('parts', 'shops'));
+}
+
 
     public function create()
     {

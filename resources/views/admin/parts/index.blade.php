@@ -36,6 +36,18 @@
                 @endforeach
             </select>
         </div>
+    
+        <div class="col-md-4">
+    <label class="form-label">Search Part</label>
+        <input type="text" name="search" value="{{ request('search') }}" class="form-control"
+                placeholder="Enter part name, brand, or category">
+    </div>
+
+    <div class="col-md-4 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary w-100">
+            <i class="bi bi-search me-1"></i> Search
+        </button>
+    </div>
     </form>
 
     <div class="table-responsive">

@@ -101,8 +101,10 @@ class RiderDailyPaymentController extends Controller
         }
 
         $orderTrackingId = $request->input('OrderTrackingId');
-        $status = $this->pesapalService->getPaymentStatus($orderTrackingId);
-
+        $merchantReference = $request->input('OrderMerchantReference'); 
+        
+        $status = $this->pesapalService->getPaymentStatus($orderTrackingId, $merchantReference);
+        
         if ($status === 'completed') {
             MotorcyclePayment::create([
                 'purchase_id' => $sessionData['purchase_id'],

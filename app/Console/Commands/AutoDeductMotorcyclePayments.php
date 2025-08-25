@@ -26,13 +26,23 @@ class AutoDeductMotorcyclePayments extends Command
 
     private function processTodayPayments()
     {
-        $today = Carbon::today()->toDateString();
+        $todayCarbon = Carbon::today();
+
+        // 🚫 Skip Sundays
+        if ($todayCarbon->isSunday()) {
+            $this->info("⏩ Skipping auto deduction for Sunday {$todayCarbon->toDateString()}");
+            return;
+        }
+
+        $today = $todayCarbon->toDateString();
 
         $purchases = Purchase::with('user.wallet')
             ->where('status', 'active')
             ->get();
 
         foreach ($purchases as $purchase) {
+            if ($purchase->remaining_balance <= 0) continue;
+
             // Skip if already paid today
             if ($purchase->payments()->whereDate('payment_date', $today)->exists()) {
                 continue;
@@ -112,39 +122,49 @@ class AutoDeductMotorcyclePayments extends Command
         $dailyAmount = 12000;
         $deductedCount = 0;
 
-        foreach ($missedDates as $missedDate) {
-            if ($wallet->balance < $dailyAmount) {
-                break;
-            }
+        foreach ($missedDates->sort() as $missedDate) {
+            $missedCarbonDate = Carbon::parse($missedDate)->startOfDay();
+             // 🚫 Skip Sundays
+    if ($missedCarbonDate->isSunday()) {
+        continue;
+    }
 
-            // Deduct balance
-            $wallet->decrement('balance', $dailyAmount);
+    if ($wallet->balance < $dailyAmount) {
+        break;
+    }
 
-            // Log wallet transaction
-            WalletTransaction::create([
-                'user_id' => $wallet->user_id,
-                'amount' => $dailyAmount,
-                'type' => 'debit',
-                'reason' => 'Auto payment for missed date',
-                'description' => "Auto deduction for {$missedDate}",
-                'reference' => 'AUTO-MISS-' . uniqid(),
-            ]);
+    // Deduct balance
+    $wallet->decrement('balance', $dailyAmount);
 
-            // Save motorcycle payment
-            MotorcyclePayment::create([
-                'purchase_id' => $purchase->id,
-                'user_id' => $wallet->user_id,
-                'payment_date' => $missedDate,
-                'amount' => $dailyAmount,
-                'type' => 'daily',
-                'status' => 'paid',
-                'note' => 'Auto payment from wallet for missed date',
-            ]);
+    // Log wallet transaction with created_at set to missed date
+    WalletTransaction::create([
+        'user_id'    => $wallet->user_id,
+        'amount'     => $dailyAmount,
+        'type'       => 'debit',
+        'reason'     => 'Auto payment for missed date',
+        'description'=> "Auto deduction for {$missedDate}",
+        'reference'  => 'AUTO-MISS-' . $missedCarbonDate->format('Ymd') . '-' . uniqid(),
+        'created_at' => $missedCarbonDate,
+        'updated_at' => $missedCarbonDate,
+    ]);
 
-            $purchase->amount_paid += $dailyAmount;
-            $purchase->remaining_balance -= $dailyAmount;
-            $deductedCount++;
-        }
+    // Save motorcycle payment also with proper date
+    MotorcyclePayment::create([
+        'purchase_id'   => $purchase->id,
+        'user_id'       => $wallet->user_id,
+        'payment_date'  => $missedDate,
+        'amount'        => $dailyAmount,
+        'type'          => 'daily',
+        'status'        => 'paid',
+        'note'          => 'Auto payment from wallet for missed date',
+        'created_at'    => $missedCarbonDate,
+        'updated_at'    => $missedCarbonDate,
+    ]);
+
+    $purchase->amount_paid += $dailyAmount;
+    $purchase->remaining_balance -= $dailyAmount;
+    $deductedCount++;
+}
 
         if ($purchase->remaining_balance <= 0) {
             $purchase->remaining_balance = 0;

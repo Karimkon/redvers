@@ -230,7 +230,8 @@ public function handleDailyPaymentCallback(Request $request)
             }
 
             // Verify payment with Pesapal
-            $paymentStatus = $this->verifyPaymentWithPesapal($orderTrackingId);
+            $paymentStatus = $this->verifyPaymentWithPesapal($orderTrackingId, $merchantReference);
+
             
             if ($paymentStatus !== 'completed') {
                 \Log::warning('⚠️ Payment not completed', [
@@ -350,16 +351,19 @@ public function handleDailyPaymentCallback(Request $request)
         return true;
     }
 
-    private function verifyPaymentWithPesapal(string $orderTrackingId): string
+    private function verifyPaymentWithPesapal(string $orderTrackingId, string $merchantReference): string
+
     {
         $token = app(PesapalService::class)->getAccessToken();
         
         $response = Http::withToken($token)
-            ->timeout(30)
-            ->retry(3, 2000)
-            ->get(config('pesapal.base_url') . '/api/Transactions/GetTransactionStatus', [
-                'orderTrackingId' => $orderTrackingId
-            ]);
+        ->timeout(30)
+        ->retry(3, 2000)
+        ->get(config('pesapal.base_url') . '/api/Transactions/GetTransactionStatus', [
+            'orderTrackingId' => $orderTrackingId,
+            'orderMerchantReference' => $merchantReference // ✅ Add this line
+        ]);
+
 
         if (!$response->successful()) {
             \Log::error('❌ Failed to verify payment status', [
