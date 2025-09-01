@@ -152,7 +152,18 @@ public function create()
             'status' => $request->status,
         ]);
 
-        return redirect()->route('admin.purchases.index')->with('success', 'Purchase status updated successfully.');
+        // ✅ If marked inactive, free the motorcycle unit
+        if ($request->status === 'inactive' && $purchase->motorcycleUnit) {
+            $purchase->motorcycleUnit->update(['status' => 'available']);
+        }
+
+        // ✅ If marked active again, ensure it's locked as assigned
+        if ($request->status === 'active' && $purchase->motorcycleUnit) {
+            $purchase->motorcycleUnit->update(['status' => 'assigned']);
+        }
+
+        return redirect()->route('admin.purchases.index')
+            ->with('success', 'Purchase status updated successfully.');
     }
 
     /**
