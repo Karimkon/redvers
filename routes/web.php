@@ -68,6 +68,7 @@ use App\Http\Controllers\Finance\BalanceSheetController;
 use App\Models\Attachment;
 use \App\Http\Controllers\Mechanic\MechanicDashboardController;
 use \App\Http\Controllers\Mechanic\MechanicMaintenanceController;
+use \App\Http\Controllers\Admin\AdminUserController;
 
 // Home
 Route::get('/', fn () => view('welcome'));
@@ -208,6 +209,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
      * ---------------------------------- */
     Route::resource('riders', RiderController::class);
     Route::resource('agents', AgentController::class);
+    Route::resource('admins', AdminUserController::class);
     Route::resource('stations', StationController::class);
     Route::resource('batteries', BatteryController::class);
     Route::resource('swaps', SwapController::class);

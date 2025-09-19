@@ -34,11 +34,12 @@ class Purchase extends Model
     public function motorcycle()
     {
         return $this->belongsTo(Motorcycle::class);
-    }
+    }  
 
     public function payments()
     {
-        return $this->hasMany(MotorcyclePayment::class);
+        return $this->hasMany(MotorcyclePayment::class)
+        ->orderBy('payment_date', 'desc');
     }
 
     public function discounts()
@@ -54,7 +55,8 @@ class Purchase extends Model
 
 public function getPaymentScheduleSummary()
 {
-    if ($this->status === 'completed') {
+    // If purchase is completed, cleared, or inactive → no schedule needed
+    if (in_array($this->status, ['completed', 'cleared', 'inactive'])) {
         return [
             'expected_days' => 0,
             'actual_payments' => 0,
@@ -67,7 +69,8 @@ public function getPaymentScheduleSummary()
             'expected_dates' => [],
         ];
     }
-    
+
+    // ✅ only for "active" or "defaulted" continue calculating
     $startDate = $this->start_date ?? $this->created_at->copy()->startOfDay();
     $today = now()->startOfDay();
     $dailyRate = $this->motorcycle->daily_payment ?? 0;
@@ -85,6 +88,7 @@ public function getPaymentScheduleSummary()
             'expected_dates' => [],
         ];
     }
+
 
     // 1️⃣ Build all expected dates from start to today (excluding Sundays)
     $expectedDates = collect();

@@ -417,25 +417,49 @@
                             <i class="bi bi-people-fill me-2"></i> User Administration
                         </button>
                     </h2>
-                    <div id="userAdminCollapse" class="accordion-collapse collapse {{ request()->is('admin/riders*') || request()->is('admin/agents*') ? 'show' : '' }}">
-                        <div class="accordion-body">
-                            <a href="{{ route('admin.riders.index') }}" class="{{ request()->routeIs('admin.riders.*') ? 'active' : '' }}">
-                                <i class="bi bi-person-fill me-2"></i> Riders
-                            </a>
-                            <a href="{{ route('admin.agents.index') }}" class="{{ request()->routeIs('admin.agents.*') ? 'active' : '' }}">
-                                <i class="bi bi-person-badge-fill me-2"></i> Agents
-                            </a>
-                            <a href="{{ route('admin.inventory.index') }}" class="{{ request()->routeIs('admin.inventory.*') ? 'active' : '' }}">
-                                <i class="bi bi-person-workspace me-2"></i> Inventory Operators
-                            </a>
-                            <a href="{{ route('admin.finance.index') }}" class="{{ request()->routeIs('admin.finance.*') ? 'active' : '' }}">
-                                <i class="bi bi-cash-stack me-2"></i> Finance Staff
-                            </a>
-                            <a href="{{ route('admin.mechanics.index') }}" class="{{ request()->routeIs('admin.mechanics.*') ? 'active' : '' }}">
-                                <i class="bi bi-tools me-2"></i> Mechanics
-                            </a>
-                        </div>
+                    <div id="userAdminCollapse"
+                    class="accordion-collapse collapse
+                        {{ request()->is('admin/riders*') 
+                        || request()->is('admin/agents*') 
+                        || request()->is('admin/admins*')
+                        || request()->is('admin/inventory*')
+                        || request()->is('admin/finance*') 
+                        || request()->is('admin/mechanics*')    {{-- add this so Admin Users menu auto-expands --}}
+                        ? 'show' : '' }}">
+                    <div class="accordion-body">
+                        <a href="{{ route('admin.riders.index') }}" 
+                        class="{{ request()->routeIs('admin.riders.*') ? 'active' : '' }}">
+                            <i class="bi bi-person-fill me-2"></i> Riders
+                        </a>
+
+                        <a href="{{ route('admin.agents.index') }}" 
+                        class="{{ request()->routeIs('admin.agents.*') ? 'active' : '' }}">
+                            <i class="bi bi-person-badge-fill me-2"></i> Agents
+                        </a>
+
+                        <a href="{{ route('admin.inventory.index') }}" 
+                        class="{{ request()->routeIs('admin.inventory.*') ? 'active' : '' }}">
+                            <i class="bi bi-person-workspace me-2"></i> Inventory Operators
+                        </a>
+
+                        <a href="{{ route('admin.finance.index') }}" 
+                        class="{{ request()->routeIs('admin.finance.*') ? 'active' : '' }}">
+                            <i class="bi bi-cash-stack me-2"></i> Finance Staff
+                        </a>
+
+                        <a href="{{ route('admin.mechanics.index') }}" 
+                        class="{{ request()->routeIs('admin.mechanics.*') ? 'active' : '' }}">
+                            <i class="bi bi-tools me-2"></i> Mechanics
+                        </a>
+
+                        {{-- NEW: Admin Users link --}}
+                        <a href="{{ route('admin.admins.index') }}" 
+                        class="{{ request()->routeIs('admin.admins.*') ? 'active' : '' }}">
+                            <i class="bi bi-shield-lock me-2"></i> Admin Users
+                        </a>
                     </div>
+                </div>
+
                 </div>
 
                 <!-- Battery Management -->
