@@ -13,6 +13,7 @@ class Sale extends Model
         'total_price',
         'cost_price',
         'customer_name',
+        'payment_method',
         'sold_at',
     ];
 

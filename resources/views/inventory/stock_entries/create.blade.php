@@ -10,19 +10,22 @@
     <form method="POST" action="{{ route('inventory.stock-entries.store') }}">
         @csrf
         <div class="row g-3">
+            <!-- 🔍 Searchable Parts Dropdown -->
             <div class="col-md-6">
                 <label class="form-label">Part</label>
-                <select name="part_id" class="form-select" required>
+                <select name="part_id" id="part_id" class="form-select" required>
                     <option value="" disabled selected>-- Select Part --</option>
                     @foreach($parts as $part)
-                        <option value="{{ $part->id }}">{{ $part->name }}</option>
+                        <option value="{{ $part->id }}">
+                            {{ $part->name }} (Stock: {{ $part->stock }})
+                        </option>
                     @endforeach
                 </select>
             </div>
 
             <div class="col-md-6">
                 <label class="form-label">Quantity Received</label>
-                <input type="number" name="quantity" class="form-control" required>
+                <input type="number" name="quantity" class="form-control" min="1" required>
             </div>
 
             <div class="col-md-6">
@@ -32,14 +35,37 @@
 
             <div class="col-md-6">
                 <label class="form-label">Received Date</label>
-                <input type="date" name="received_at" class="form-control" value="{{ now()->format('Y-m-d') }}" required>
+                <input type="date" name="received_at" class="form-control" 
+                       value="{{ now()->format('Y-m-d') }}" required>
             </div>
         </div>
 
         <div class="mt-4">
-            <button type="submit" class="btn btn-success">Save Entry</button>
-            <a href="{{ route('inventory.stock-entries.index') }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-save me-1"></i> Save Entry
+            </button>
+            <a href="{{ route('inventory.stock-entries.index') }}" class="btn btn-secondary">
+                <i class="bi bi-x-circle me-1"></i> Cancel
+            </a>
         </div>
     </form>
 </div>
 @endsection
+
+@push('scripts')
+    <!-- jQuery (required for Select2) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Select2 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#part_id').select2({
+                placeholder: "-- Select Part --",
+                allowClear: true,
+                width: '100%'
+            });
+        });
+    </script>
+@endpush

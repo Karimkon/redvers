@@ -91,7 +91,9 @@ Route::match(['GET', 'POST'], '/pesapal/promo-callback', [PesapalController::cla
 
 Route::match(['GET', 'POST'], '/pesapal/callback/daily', [PesapalController::class, 'handleDailyPaymentCallback'])->name('pesapal.callback.daily');
 
-
+Route::match(['GET', 'POST'], '/pesapal/inventory/callback', [SaleController::class, 'pesapalCallback'])
+    ->name('pesapal.inventory.callback');
+    
 Route::post('/pesapal/ipn', [PesapalController::class, 'handleIPN'])->name('pesapal.ipn');
 
 
